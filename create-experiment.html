@@ -411,7 +411,7 @@
                     <label class="mode-toggle">
                         <input type="checkbox" id="rawCodeToggle" onchange="toggleRawCodeMode()">
                         <span class="toggle-slider"></span>
-                        <span class="toggle-label">Raw Code</span>
+                        <span class="toggle-label">Raw JSON</span>
                     </label>
                 </div>
                 
@@ -532,9 +532,17 @@ A response that is vague, contains factual errors, or doesn't address the user's
 <script>
     // Form logic
     document.addEventListener('DOMContentLoaded', function() {
+        const experimentTypeSelect = document.getElementById('experimentType');
         const dataSchemaInputs = document.querySelectorAll('input[name="dataSchema"]');
         const dataSourceInputs = document.querySelectorAll('input[name="dataSource"]');
         const querySetInputs = document.querySelectorAll('input[name="querySet"]');
+        
+        // Handle experiment type selection
+        experimentTypeSelect.addEventListener('change', function() {
+            if (this.value) {
+                configureExperimentDefaults(this.value);
+            }
+        });
         
         // Show/hide sections based on data source selection
         dataSourceInputs.forEach(input => {
@@ -594,6 +602,9 @@ A response that is vague, contains factual errors, or doesn't address the user's
                 // Enable dependent sections and show/hide default fields based on schema
                 enableDependentSections();
                 updateDefaultFields(this.value);
+                
+                // Handle Turn 1 disable/enable logic for chat-multiturn
+                handleTurnFieldsVisibility(this.value);
             });
         });
         
@@ -650,8 +661,175 @@ A response that is vague, contains factual errors, or doesn't address the user's
                 if (searchFields) searchFields.style.display = 'block';
             }
             
+            // Add a small delay to ensure DOM elements are ready
+            setTimeout(() => {
+                handleTurnFieldsVisibility(schema);
+            }, 100);
+            
             // Add default quiz questions based on schema
             addDefaultQuizQuestions(schema);
+        }
+        
+        // Function to handle Turn fields for chat-multiturn
+        function handleTurnFieldsVisibility(schema) {
+            if (schema === 'chat-multiturn') {
+                // Default select Turn 1, Turn 2 and their sub-options
+                const turn1Checkbox = document.querySelector('input[value="turn1"]');
+                const turn1QueryCheckbox = document.querySelector('input[value="turn1_query"]');
+                const turn1ResponseCheckbox = document.querySelector('input[value="turn1_sydney_response"]');
+                const turn2Checkbox = document.querySelector('input[value="turn2"]');
+                const turn2QueryCheckbox = document.querySelector('input[value="turn2_query"]');
+                const turn2ResponseCheckbox = document.querySelector('input[value="turn2_sydney_response"]');
+                
+                // Default check all Turn 1 and Turn 2 options
+                if (turn1Checkbox) turn1Checkbox.checked = true;
+                if (turn1QueryCheckbox) turn1QueryCheckbox.checked = true;
+                if (turn1ResponseCheckbox) turn1ResponseCheckbox.checked = true;
+                if (turn2Checkbox) turn2Checkbox.checked = true;
+                if (turn2QueryCheckbox) turn2QueryCheckbox.checked = true;
+                if (turn2ResponseCheckbox) turn2ResponseCheckbox.checked = true;
+                
+                // Add event listeners for parent-child relationships
+                setupTurnParentChildRelationship();
+            }
+        }
+        
+        // Function to setup parent-child relationship for Turn options
+        function setupTurnParentChildRelationship() {
+            // Handle Turn 1 and its sub-options
+            const turn1Checkbox = document.querySelector('input[value="turn1"]');
+            const turn1QueryCheckbox = document.querySelector('input[value="turn1_query"]');
+            const turn1ResponseCheckbox = document.querySelector('input[value="turn1_sydney_response"]');
+            
+            // Handle Turn 2 and its sub-options
+            const turn2Checkbox = document.querySelector('input[value="turn2"]');
+            const turn2QueryCheckbox = document.querySelector('input[value="turn2_query"]');
+            const turn2ResponseCheckbox = document.querySelector('input[value="turn2_sydney_response"]');
+            
+            // Turn 1 parent checkbox event
+            if (turn1Checkbox) {
+                // Remove existing listeners to prevent duplicates
+                turn1Checkbox.removeEventListener('change', handleTurn1Change);
+                turn1Checkbox.addEventListener('change', handleTurn1Change);
+            }
+            
+            // Turn 2 parent checkbox event
+            if (turn2Checkbox) {
+                // Remove existing listeners to prevent duplicates
+                turn2Checkbox.removeEventListener('change', handleTurn2Change);
+                turn2Checkbox.addEventListener('change', handleTurn2Change);
+            }
+        }
+        
+        // Handle Turn 1 checkbox change
+        function handleTurn1Change() {
+            const turn1QueryCheckbox = document.querySelector('input[value="turn1_query"]');
+            const turn1ResponseCheckbox = document.querySelector('input[value="turn1_sydney_response"]');
+            
+            if (!this.checked) {
+                // If Turn 1 is unchecked, uncheck its sub-options
+                if (turn1QueryCheckbox) turn1QueryCheckbox.checked = false;
+                if (turn1ResponseCheckbox) turn1ResponseCheckbox.checked = false;
+            } else {
+                // If Turn 1 is checked, check its sub-options
+                if (turn1QueryCheckbox) turn1QueryCheckbox.checked = true;
+                if (turn1ResponseCheckbox) turn1ResponseCheckbox.checked = true;
+            }
+        }
+        
+        // Handle Turn 2 checkbox change
+        function handleTurn2Change() {
+            const turn2QueryCheckbox = document.querySelector('input[value="turn2_query"]');
+            const turn2ResponseCheckbox = document.querySelector('input[value="turn2_sydney_response"]');
+            
+            if (!this.checked) {
+                // If Turn 2 is unchecked, uncheck its sub-options
+                if (turn2QueryCheckbox) turn2QueryCheckbox.checked = false;
+                if (turn2ResponseCheckbox) turn2ResponseCheckbox.checked = false;
+            } else {
+                // If Turn 2 is checked, check its sub-options
+                if (turn2QueryCheckbox) turn2QueryCheckbox.checked = true;
+                if (turn2ResponseCheckbox) turn2ResponseCheckbox.checked = true;
+            }
+        }
+        
+        // Function to generate question preview based on type and options
+        function generateQuestionPreview(questionData) {
+            const type = questionData.type;
+            const options = questionData.options || [];
+            
+            switch (type) {
+                case 'single-choice':
+                    if (options.length > 0) {
+                        return `
+                            <div class="preview-options-horizontal">
+                                ${options.map(option => `
+                                    <label class="preview-radio">
+                                        <input type="radio" name="preview_${Date.now()}" disabled>
+                                        <span>${option.text}</span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                    return '<div class="preview-placeholder">Single choice options will appear here</div>';
+                    
+                case 'multiple-choice':
+                    if (options.length > 0) {
+                        return `
+                            <div class="preview-options-horizontal">
+                                ${options.map(option => `
+                                    <label class="preview-checkbox">
+                                        <input type="checkbox" disabled>
+                                        <span>${option.text}</span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                    return '<div class="preview-placeholder">Multiple choice options will appear here</div>';
+                    
+                case 'toggle':
+                    if (options.length > 0) {
+                        const totalOptions = options.length;
+                        
+                        // Calculate width based on text length and number of options
+                        const avgTextLength = options.reduce((sum, opt) => sum + opt.text.length, 0) / options.length;
+                        const baseWidth = Math.max(avgTextLength * 8, 60); // Minimum 60px per option
+                        const trackWidth = Math.min(400, Math.max(150, baseWidth * totalOptions + 40)); // Add padding
+                        
+                        return `
+                            <div class="preview-toggle-slider" style="width: ${trackWidth}px;">
+                                <div class="toggle-track" style="width: ${trackWidth}px;">
+                                    ${options.map((option, index) => {
+                                        const position = totalOptions === 1 ? 50 : (index / (totalOptions - 1)) * 100;
+                                        return `<div class="toggle-dot" style="left: ${position}%" title="${option.text}"></div>`;
+                                    }).join('')}
+                                </div>
+                                <div class="toggle-labels" style="width: ${trackWidth}px;">
+                                    ${options.map((option, index) => {
+                                        const position = totalOptions === 1 ? 50 : (index / (totalOptions - 1)) * 100;
+                                        return `<span class="toggle-label" style="left: ${position}%;">${option.text}</span>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    return '<div class="preview-placeholder">Toggle options will appear here</div>';
+                    
+                case 'text':
+                    return '<input type="text" class="preview-text-input" placeholder="Input your answer here..." disabled>';
+                    
+                case 'list':
+                    return `
+                        <div class="preview-list">
+                            <div class="preview-list-item">Add your list item</div>
+                        </div>
+                    `;
+                    
+                default:
+                    return '<div class="preview-placeholder">Question preview will appear here</div>';
+            }
         }
         
         // Function to add default quiz questions based on schema
@@ -758,7 +936,12 @@ A response that is vague, contains factual errors, or doesn't address the user's
                 <div class="question-header" onclick="toggleQuestionDetails('question_${questionCounter}')">
                     <div class="question-header-left">
                         <div class="question-number">${questionCounter}</div>
-                        <span class="question-title">${questionData.required ? '<span class="required">*</span>' + questionData.text : questionData.text}</span>
+                        <div class="question-header-content">
+                            <span class="question-title">${questionData.required ? '<span class="required">*</span>' + questionData.text : questionData.text}</span>
+                            <div class="question-preview" id="preview_${questionCounter}">
+                                ${generateQuestionPreview(questionData)}
+                            </div>
+                        </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <span class="question-expand-icon" id="expand_${questionCounter}">▶</span>
@@ -860,6 +1043,73 @@ A response that is vague, contains factual errors, or doesn't address the user's
             e.preventDefault();
             alert('Experiment creation submitted! (This is a demo)');
         });
+        
+        // Function to configure default settings based on experiment type
+        function configureExperimentDefaults(experimentType) {
+            switch (experimentType) {
+                case 'search-ndcg':
+                    // Data Schema - Search
+                    document.querySelector('input[name="dataSchema"][value="search"]').checked = true;
+                    document.querySelector('input[name="dataSchema"][value="search"]').dispatchEvent(new Event('change'));
+                    
+                    // Wait for schema change to complete, then set other options
+                    setTimeout(() => {
+                        // Data Source - Real time scraping
+                        document.querySelector('input[name="dataSource"][value="real-time-scraping"]').checked = true;
+                        document.querySelector('input[name="dataSource"][value="real-time-scraping"]').dispatchEvent(new Event('change'));
+                        
+                        setTimeout(() => {
+                            // Query Set Selection - Upload query set
+                            document.querySelector('input[name="querySet"][value="upload-query"]').checked = true;
+                            document.querySelector('input[name="querySet"][value="upload-query"]').dispatchEvent(new Event('change'));
+                        }, 100);
+                    }, 100);
+                    break;
+                    
+                case 'search-quality':
+                    // Data Schema - Search
+                    document.querySelector('input[name="dataSchema"][value="search"]').checked = true;
+                    document.querySelector('input[name="dataSchema"][value="search"]').dispatchEvent(new Event('change'));
+                    
+                    setTimeout(() => {
+                        // Data Source - Real time scraping
+                        document.querySelector('input[name="dataSource"][value="real-time-scraping"]').checked = true;
+                        document.querySelector('input[name="dataSource"][value="real-time-scraping"]').dispatchEvent(new Event('change'));
+                        
+                        setTimeout(() => {
+                            // Query Set Selection - Ad-hoc query provided by judge
+                            document.querySelector('input[name="querySet"][value="ad-hoc"]').checked = true;
+                            document.querySelector('input[name="querySet"][value="ad-hoc"]').dispatchEvent(new Event('change'));
+                        }, 100);
+                    }, 100);
+                    break;
+                    
+                case 'researcher':
+                    // Data Schema - Chat-MultiTurn
+                    document.querySelector('input[name="dataSchema"][value="chat-multiturn"]').checked = true;
+                    document.querySelector('input[name="dataSchema"][value="chat-multiturn"]').dispatchEvent(new Event('change'));
+                    
+                    setTimeout(() => {
+                        // Data Source - Upload local scrape result
+                        document.querySelector('input[name="dataSource"][value="upload-local"]').checked = true;
+                        document.querySelector('input[name="dataSource"][value="upload-local"]').dispatchEvent(new Event('change'));
+                    }, 100);
+                    break;
+                    
+                case 'meeting-copilot':
+                    // Data Schema - Chat-SingleTurn
+                    document.querySelector('input[name="dataSchema"][value="chat-singleturn"]').checked = true;
+                    document.querySelector('input[name="dataSchema"][value="chat-singleturn"]').dispatchEvent(new Event('change'));
+                    
+                    setTimeout(() => {
+                        // Data Source - Import scrape result
+                        document.querySelector('input[name="dataSource"][value="import-scrape"]').checked = true;
+                        document.querySelector('input[name="dataSource"][value="import-scrape"]').dispatchEvent(new Event('change'));
+                    }, 100);
+                    break;
+            }
+        }
+        
     });
 
     // Global variables for quiz questions
@@ -904,7 +1154,12 @@ A response that is vague, contains factual errors, or doesn't address the user's
             <div class="question-header" onclick="toggleQuestionDetails('question_${questionCounter}')">
                 <div class="question-header-left">
                     <div class="question-number">${questionCounter}</div>
-                    <span class="question-title">New Question</span>
+                    <div class="question-header-content">
+                        <span class="question-title">New Question</span>
+                        <div class="question-preview" id="preview_${questionCounter}">
+                            <div class="preview-placeholder">Question preview will appear here</div>
+                        </div>
+                    </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <span class="question-expand-icon" id="expand_${questionCounter}">▶</span>
@@ -1019,7 +1274,8 @@ A response that is vague, contains factual errors, or doesn't address the user's
 
     // Function to update question options based on type
     function updateQuestionOptions(selectElement, questionId) {
-        const optionsContainer = document.getElementById(`options_${questionId.split('_')[1]}`);
+        const questionNumber = questionId.split('_')[1];
+        const optionsContainer = document.getElementById(`options_${questionNumber}`);
         const questionType = selectElement.value;
         
         if (questionType === 'text' || questionType === 'list') {
@@ -1027,6 +1283,40 @@ A response that is vague, contains factual errors, or doesn't address the user's
         } else {
             optionsContainer.style.display = 'block';
         }
+        
+        // Update preview
+        updateQuestionPreview(questionNumber);
+    }
+
+    // Function to update question preview
+    function updateQuestionPreview(questionNumber) {
+        const questionElement = document.getElementById(`question_${questionNumber}`);
+        const previewElement = document.getElementById(`preview_${questionNumber}`);
+        
+        if (!questionElement || !previewElement) return;
+        
+        // Get current question data
+        const textInput = questionElement.querySelector('input[type="text"]');
+        const typeSelect = questionElement.querySelector('.question-type');
+        const optionTexts = questionElement.querySelectorAll('.option-text');
+        
+        const questionData = {
+            text: textInput ? textInput.value : '',
+            type: typeSelect ? typeSelect.value : 'single-choice',
+            options: []
+        };
+        
+        // Extract current options
+        optionTexts.forEach(optionInput => {
+            if (optionInput.value && optionInput.value.trim()) {
+                questionData.options.push({
+                    text: optionInput.value
+                });
+            }
+        });
+        
+        // Update preview
+        previewElement.innerHTML = generateQuestionPreview(questionData);
     }
 
     // Function to add option to question
@@ -1050,12 +1340,19 @@ A response that is vague, contains factual errors, or doesn't address the user's
         const questionNumber = containerId.split('_')[1];
         
         newInputs.forEach(input => {
-            input.addEventListener('input', () => checkForChanges(questionNumber));
-            input.addEventListener('change', () => checkForChanges(questionNumber));
+            input.addEventListener('input', () => {
+                checkForChanges(questionNumber);
+                updateQuestionPreview(questionNumber);
+            });
+            input.addEventListener('change', () => {
+                checkForChanges(questionNumber);
+                updateQuestionPreview(questionNumber);
+            });
         });
         
-        // Trigger change detection immediately
+        // Trigger change detection and preview update immediately
         checkForChanges(questionNumber);
+        updateQuestionPreview(questionNumber);
     }
 
     // Function to remove option from question
@@ -1071,8 +1368,9 @@ A response that is vague, contains factual errors, or doesn't address the user's
             
             optionItem.remove();
             
-            // Trigger change detection after removal
+            // Trigger change detection and preview update after removal
             checkForChanges(questionNumber);
+            updateQuestionPreview(questionNumber);
         } else {
             alert('A question must have at least 2 options');
         }
@@ -1136,6 +1434,9 @@ A response that is vague, contains factual errors, or doesn't address the user's
         } else {
             titleElement.textContent = questionText;
         }
+        
+        // Update preview when question text changes
+        updateQuestionPreview(questionNumber);
     }
 
     // Function to update question required status
@@ -1474,7 +1775,7 @@ A response that is vague, contains factual errors, or doesn't address the user's
         return null;
     }
 
-    // Toggle between UI and Raw Code modes
+    // Toggle between UI and Raw JSON modes
     function toggleRawCodeMode() {
         const toggle = document.getElementById('rawCodeToggle');
         const uiMode = document.getElementById('uiMode');
@@ -1700,6 +2001,138 @@ A response that is vague, contains factual errors, or doesn't address the user's
             </div>
         </div>
     </div>
+
+    <style>
+        /* Question Preview Styles */
+        .question-header-content {
+            flex: 1;
+        }
+        
+        .question-preview {
+            margin-top: 8px;
+            padding: 8px 16px 8px 0;
+            border-top: 1px solid #e5e7eb;
+            font-size: 14px;
+            margin-right: 40px; /* Add space from expand button */
+        }
+        
+        .preview-options-horizontal {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .preview-radio, .preview-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #6b7280;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        
+        .preview-radio input, .preview-checkbox input {
+            margin: 0;
+            flex-shrink: 0;
+        }
+        
+        .preview-toggle-slider {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 300px;
+        }
+        
+        .toggle-track {
+            position: relative;
+            height: 3px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            margin: 6px 0;
+        }
+        
+        .toggle-dot {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            background: #6b7280;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .toggle-dot:hover {
+            background: #374151;
+        }
+        
+        .toggle-labels {
+            display: flex;
+            position: relative;
+        }
+        
+        .toggle-label {
+            position: absolute;
+            font-size: 11px;
+            color: #9ca3af;
+            text-align: center;
+            white-space: nowrap;
+            transform: translateX(-50%);
+            top: 0;
+        }
+        
+        .preview-text-input {
+            width: 100%;
+            max-width: 300px;
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: #f9fafb;
+            color: #6b7280;
+            font-size: 13px;
+        }
+        
+        .preview-list {
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: #f9fafb;
+            max-width: 300px;
+        }
+        
+        .preview-list-item {
+            padding: 8px 12px;
+            color: #6b7280;
+            font-size: 13px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .preview-list-item:last-child {
+            border-bottom: none;
+        }
+        
+        .preview-placeholder {
+            color: #9ca3af;
+            font-style: italic;
+            font-size: 13px;
+        }
+        
+        /* Hide preview when question is expanded */
+        .quiz-question .question-details.expanded ~ .question-header .question-preview {
+            display: none;
+        }
+        
+        /* Ensure toggle label is visible */
+        .mode-toggle .toggle-label {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            font-weight: 600 !important;
+            color: #374151 !important;
+            font-size: 1.1rem !important;
+        }
+    </style>
 
 </body>
 </html>
