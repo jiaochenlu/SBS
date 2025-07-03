@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Experiment - SBS</title>
+    <link rel="stylesheet" href="styles-new.css">
+    <link rel="stylesheet" href="style-create-experiment.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="experiment-header">
+        <div class="header-content">
+            <button class="back-button" onclick="window.location.href='index.html'">
+                ← Back
+            </button>
+            <h1 class="page-title">Create Experiment</h1>
+        </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+        <form id="experimentForm">
+            
+            <!-- Experiment Type -->
+            <div class="form-group">
+                <h2 class="field-title">Experiment Type</h2>
+                <p class="help-text">You can directly select an existing experiment type. Once selected, all configuration options below will be automatically configured.</p>
+                <select id="experimentType" class="form-control">
+                    <option value="">Select existing experiment type...</option>
+                    <option value="search-ndcg">Search NDCG experiment</option>
+                    <option value="search-quality">Search general quality experiment</option>
+                    <option value="meeting-copilot">Meeting Copilot experiment</option>
+                    <option value="researcher">Researcher experiment</option>
+                </select>
+            </div>
+
+            <!-- Divider -->
+            <div class="divider">
+                <hr>
+                <span class="divider-text">Or start from scratch with custom experiment configuration</span>
+                <hr>
+            </div>
+
+            <!-- Basic Information Section -->
+            <div class="form-group">
+                <h2 class="field-title">Basic Information</h2>
+                
+                <!-- Experiment Name -->
+                <div class="sub-section">
+                    <h3 class="field-subtitle"><span class="required">*</span> Experiment Name</h3>
+                    <input type="text" id="experimentName" class="form-control" placeholder="Enter experiment name" required>
+                </div>
+
+                <!-- Add Description Button -->
+                <div class="add-description-section">
+                    <button type="button" class="btn-add-description" onclick="toggleExperimentDescription()">
+                        <span class="add-icon">+</span> Add experiment description
+                    </button>
+                </div>
+
+                <!-- Experiment Description (Hidden by default) -->
+                <div class="sub-section" id="experimentDescriptionSection" style="display: none;">
+                    <div class="section-header-with-close">
+                        <h3 class="field-subtitle">Experiment Description</h3>
+                        <button type="button" class="btn-close-section" onclick="removeExperimentDescription()">×</button>
+                    </div>
+                    <textarea id="experimentDescription" class="form-control" rows="4" placeholder="Enter experiment description..."></textarea>
+                </div>
+            </div>
+
+            <!-- Labeling Data Section -->
+            <div class="form-group">
+                <h2 class="field-title"><span class="required">*</span> Labeling Data</h2>
+                
+                <!-- Data Schema -->
+                <div class="sub-section">
+                    <h3 class="field-subtitle"><span class="required">*</span> Data Schema</h3>
+                    <div class="radio-group-with-support">
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="dataSchema" value="chat-singleturn" required>
+                                <span class="radio-text">Chat-SingleTurn</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="dataSchema" value="chat-multiturn" required>
+                                <span class="radio-text">Chat-MultiTurn</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="dataSchema" value="search" required>
+                                <span class="radio-text">Search</span>
+                            </label>
+                        </div>
+                        <div class="additional-support">
+                            <a href="#" class="support-link" onclick="openContactModal()">Ask additional schema support</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Source -->
+                <div class="sub-section disabled-section" id="dataSourceSection">
+                    <h3 class="field-subtitle"><span class="required">*</span> Data Source</h3>
+                    <p class="dependency-message">Please select a Data Schema first</p>
+                    <div class="radio-group">
+                        <label class="radio-option disabled">
+                            <input type="radio" name="dataSource" value="real-time-scraping" required disabled>
+                            <span class="radio-text">Real-time scraping</span>
+                        </label>
+                        <label class="radio-option disabled">
+                            <input type="radio" name="dataSource" value="upload-local" required disabled>
+                            <span class="radio-text">Upload local scrape result</span>
+                        </label>
+                        <label class="radio-option disabled">
+                            <input type="radio" name="dataSource" value="import-scrape" required disabled>
+                            <span class="radio-text">Import scrape result</span>
+                        </label>
+                    </div>
+                    
+                    <!-- Query Set Selection and Profile Selection will be shown when real-time scraping is selected -->
+                    <div id="realTimeSubOptions" style="display: none;">
+                        <!-- Query Set Selection -->
+                        <div class="nested-config">
+                            <h4 class="field-label"><span class="required">*</span> Query Set Selection</h4>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="querySet" value="ad-hoc">
+                                    <span class="radio-text">Ad-hoc query provided by judge</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="querySet" value="upload-query">
+                                    <span class="radio-text">Upload query set</span>
+                                </label>
+                            </div>
+                            
+                            <!-- Ad-hoc query options -->
+                            <div id="adHocOptions" style="display: none; margin-top: 1rem;">
+                                <div class="sub-config">
+                                    <h5 class="field-label">Upload task type set</h5>
+                                    <input type="file" id="taskTypeFile" class="file-input" accept=".json,.csv,.tsv">
+                                    <div class="file-upload-area" onclick="document.getElementById('taskTypeFile').click()">
+                                        <span>Click to upload task type set file</span>
+                                    </div>
+                                </div>
+                                <div class="sub-config">
+                                    <h5 class="field-label">Query number per task type</h5>
+                                    <input type="number" id="queryNumberPerTask" class="form-control" min="1" placeholder="Enter number">
+                                </div>
+                            </div>
+                            
+                            <!-- Upload query set options -->
+                            <div id="uploadQueryOptions" style="display: none; margin-top: 1rem;">
+                                <div class="sub-config">
+                                    <h5 class="field-label"><span class="required">*</span> Upload query set file</h5>
+                                    <input type="file" id="querySetFile" class="file-input" accept=".json,.csv,.tsv">
+                                    <div class="file-upload-area" onclick="document.getElementById('querySetFile').click()">
+                                        <span>Click to upload query set file</span>
+                                    </div>
+                                    <div id="queryCount" class="file-info" style="display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Control and Treatment Profile -->
+                        <div class="nested-config">
+                            <h4 class="field-label"><span class="required">*</span> Select Control and Treatment Profile</h4>
+                            <div class="profile-grid">
+                                <div>
+                                    <label class="field-label">Control Profile</label>
+                                    <select id="controlProfile" class="form-control" required>
+                                        <option value="">Select control profile...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="field-label">Treatment Profile</label>
+                                    <select id="treatmentProfile" class="form-control" required>
+                                        <option value="">Select treatment profile...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            <!-- Upload local scrape result options -->
+            <div id="uploadLocalOptions" class="conditional-group" style="display: none;">
+                <div class="form-group">
+                    <h3 class="field-subtitle">Upload Scrape Result Files</h3>
+                    <p class="help-text">Upload up to 3 files: Control (required), Treatment 1, and Treatment 2</p>
+                    
+                    <div class="upload-grid">
+                        <div class="upload-item">
+                            <label class="field-label">* Control</label>
+                            <input type="file" id="controlFile" class="file-input" accept=".json,.csv,.tsv" required>
+                            <div class="file-upload-area" onclick="document.getElementById('controlFile').click()">
+                                <span>Upload Control</span>
+                            </div>
+                            <div id="controlFileInfo" class="file-info" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="upload-item">
+                            <label class="field-label">Treatment 1</label>
+                            <input type="file" id="treatment1File" class="file-input" accept=".json,.csv,.tsv">
+                            <div class="file-upload-area" onclick="document.getElementById('treatment1File').click()">
+                                <span>Upload Treatment 1</span>
+                            </div>
+                            <div id="treatment1FileInfo" class="file-info" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="upload-item">
+                            <label class="field-label">Treatment 2</label>
+                            <input type="file" id="treatment2File" class="file-input" accept=".json,.csv,.tsv">
+                            <div class="file-upload-area" onclick="document.getElementById('treatment2File').click()">
+                                <span>Upload Treatment 2</span>
+                            </div>
+                            <div id="treatment2FileInfo" class="file-info" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import scrape result options -->
+            <div id="importScrapeOptions" class="conditional-group" style="display: none;">
+                <div class="form-group">
+                    <h3 class="field-subtitle">Import Scrape Result</h3>
+                    <div class="import-group">
+                        <div class="import-input">
+                            <label class="field-label">* Import URL</label>
+                            <input type="url" id="importUrl" class="form-control" placeholder="Enter URL to import scrape result">
+                        </div>
+                        <button type="button" id="importBtn" class="btn-import">Import</button>
+                    </div>
+                    <div id="importResult" class="file-info" style="display: none;"></div>
+                </div>
+            </div>
+
+                <!-- Data Fields Display -->
+                <div class="sub-section disabled-section" id="dataFieldsSection">
+                    <h3 class="field-subtitle"><span class="required">*</span> Data Fields Display</h3>
+                    <p class="dependency-message">Please select a Data Schema first</p>
+                    <div class="help-text" style="display: none;">Select which fields from your input data to display on the labeling page</div>
+                    
+                    <div id="defaultFields" class="field-selection" style="display: none;">
+                        <h4 class="field-label">Default Fields</h4>
+                        
+                        <!-- Chat-SingleTurn Default Fields -->
+                        <div id="chatSingleTurnDefaultFields" class="default-fields-list" style="display: none;">
+                            <div class="field-item">
+                                <label class="field-checkbox">
+                                    <input type="checkbox" checked name="defaultFields" value="query">
+                                    <span class="field-name">Query</span>
+                                </label>
+                            </div>
+                            <div class="field-item">
+                                <label class="field-checkbox">
+                                    <input type="checkbox" checked name="defaultFields" value="sydney_response">
+                                    <span class="field-name">Sydney Response</span>
+                                </label>
+                            </div>
+                            <div class="field-item">
+                                <label class="field-checkbox">
+                                    <input type="checkbox" checked name="defaultFields" value="suggestion_chips">
+                                    <span class="field-name">Suggestion Chips</span>
+                                </label>
+                            </div>
+                            <div class="field-item">
+                                <label class="field-checkbox">
+                                    <input type="checkbox" checked name="defaultFields" value="grounding_data">
+                                    <span class="field-name">Grounding Data</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Chat-MultiTurn Default Fields -->
+                        <div id="chatMultiTurnDefaultFields" class="default-fields-list" style="display: none;">
+                            <div class="field-group">
+                                <div class="field-item turn-header">
+                                    <label class="field-checkbox">
+                                        <input type="checkbox" checked name="defaultFields" value="turn1">
+                                        <span class="field-name">Turn 1</span>
+                                    </label>
+                                </div>
+                                <div class="field-subgroup">
+                                    <div class="field-item field-subitem">
+                                        <label class="field-checkbox">
+                                            <input type="checkbox" checked name="defaultFields" value="turn1_query">
+                                            <span class="field-name">Turn 1 Query</span>
+                                        </label>
+                                    </div>
+                                    <div class="field-item field-subitem">
+                                        <label class="field-checkbox">
+                                            <input type="checkbox" checked name="defaultFields" value="turn1_sydney_response">
+                                            <span class="field-name">Turn 1 Sydney Response</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="field-group">
+                                <div class="field-item turn-header">
+                                    <label class="field-checkbox">
+                                        <input type="checkbox" checked name="defaultFields" value="turn2">
+                                        <span class="field-name">Turn 2</span>
+                                    </label>
+                                </div>
+                                <div class="field-subgroup">
+                                    <div class="field-item field-subitem">
+                                        <label class="field-checkbox">
+                                            <input type="checkbox" checked name="defaultFields" value="turn2_query">
+                                            <span class="field-name">Turn 2 Query</span>
+                                        </label>
+                                    </div>
+                                    <div class="field-item field-subitem">
+                                        <label class="field-checkbox">
+                                            <input type="checkbox" checked name="defaultFields" value="turn2_sydney_response">
+                                            <span class="field-name">Turn 2 Sydney Response</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="field-group">
+                                <div class="field-item turn-header">
+                                    <label class="field-checkbox">
+                                        <input type="checkbox" checked name="defaultFields" value="turn3">
+                                        <span class="field-name">Turn 3</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Search Default Fields -->
+                        <div id="searchDefaultFields" class="default-fields-list" style="display: none;">
+                            <div class="field-item">
+                                <label class="field-checkbox">
+                                    <input type="checkbox" checked name="defaultFields" value="query">
+                                    <span class="field-name">Query</span>
+                                </label>
+                            </div>
+                            <div class="field-item">
+                                <label class="field-checkbox">
+                                    <input type="checkbox" checked name="defaultFields" value="response">
+                                    <span class="field-name">Response</span>
+                                </label>
+                            </div>
+                            <div class="field-item">
+                                <label class="field-checkbox">
+                                    <input type="checkbox" checked name="defaultFields" value="lu_info_question">
+                                    <span class="field-name">LU Info Question</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="additional-fields">
+                        <div class="collapsible-header" onclick="toggleAdditionalFields()">
+                            <h4 class="field-label">Additional Fields</h4>
+                            <span class="collapse-icon" id="additionalFieldsIcon">▶</span>
+                        </div>
+                        <div id="additionalFieldsContent" class="collapsible-content" style="display: none;">
+                            <div id="additionalFieldsList" class="additional-fields-list">
+                                <div class="field-item">
+                                    <label class="field-checkbox">
+                                        <input type="checkbox" name="additionalFields" value="timestamp">
+                                        <span class="field-name">Timestamp</span>
+                                    </label>
+                                </div>
+                                <div class="field-item">
+                                    <label class="field-checkbox">
+                                        <input type="checkbox" name="additionalFields" value="user_id">
+                                        <span class="field-name">User ID</span>
+                                    </label>
+                                </div>
+                                <div class="field-item">
+                                    <label class="field-checkbox">
+                                        <input type="checkbox" name="additionalFields" value="session_id">
+                                        <span class="field-name">Session ID</span>
+                                    </label>
+                                </div>
+                                <div class="field-item">
+                                    <label class="field-checkbox">
+                                        <input type="checkbox" name="additionalFields" value="location">
+                                        <span class="field-name">Location</span>
+                                    </label>
+                                </div>
+                                <div class="field-item">
+                                    <label class="field-checkbox">
+                                        <input type="checkbox" name="additionalFields" value="device_type">
+                                        <span class="field-name">Device Type</span>
+                                    </label>
+                                </div>
+                                <div class="field-item">
+                                    <label class="field-checkbox">
+                                        <input type="checkbox" name="additionalFields" value="intent_confidence">
+                                        <span class="field-name">Intent Confidence</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Judgement Questions -->
+            <div class="form-group">
+                <div class="section-header-with-toggle">
+                    <div>
+                        <h2 class="field-title"><span class="required">*</span> Judgement Questions</h2>
+                        <p class="help-text">Add questions for judges to answer during labeling</p>
+                    </div>
+                    <label class="mode-toggle">
+                        <input type="checkbox" id="rawCodeToggle" onchange="toggleRawCodeMode()">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Raw Code</span>
+                    </label>
+                </div>
+                
+                <!-- UI Mode -->
+                <div id="uiMode" class="questions-mode">
+                    <div id="quizQuestions" class="quiz-questions">
+                        <!-- Questions will be dynamically added here -->
+                    </div>
+                    
+                    <button type="button" class="btn-add-question" onclick="addQuizQuestion()">Add Question</button>
+                </div>
+                
+                <!-- JSON Mode -->
+                <div id="jsonMode" class="questions-mode" style="display: none;">
+                    <div class="json-editor-container">
+                        <div class="json-editor-header">
+                            <span class="json-label">Questions JSON Schema</span>
+                            <div class="json-actions">
+                                <button type="button" class="btn-format-json" onclick="formatJSON()">Format</button>
+                                <button type="button" class="btn-validate-json" onclick="validateJSON()">Validate</button>
+                            </div>
+                        </div>
+                        <textarea id="questionsJsonEditor" class="json-editor" placeholder="Enter questions in JSON format..."></textarea>
+                        <div id="jsonValidationMessage" class="json-validation-message"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blind Test -->
+            <div class="form-group">
+                <h2 class="field-title">* Blind Test</h2>
+                <label class="checkbox-option">
+                    <input type="checkbox" id="blindTest" checked>
+                    <span class="checkbox-text">Enable blind test (judges won't see which is control/treatment)</span>
+                </label>
+            </div>
+
+            <!-- Allow Any to Judge -->
+            <div class="form-group">
+                <h2 class="field-title">* Allow Any to Judge</h2>
+                <label class="checkbox-option">
+                    <input type="checkbox" id="allowAnyToJudge" checked>
+                    <span class="checkbox-text">Allow any user to participate as a judge</span>
+                </label>
+            </div>
+
+            <!-- Judgement Guide -->
+            <div class="form-group">
+                <h2 class="field-title">Judgement Guide</h2>
+                <p class="help-text">Write your experiment guidelines in Markdown format (optional)</p>
+                
+                <div class="markdown-editor-container">
+                    <div class="markdown-editor-header">
+                        <div class="editor-tabs">
+                            <button type="button" class="tab-button active" onclick="switchToEditor()">Editor</button>
+                            <button type="button" class="tab-button" onclick="switchToPreview()">Preview</button>
+                        </div>
+                        <div class="editor-toolbar">
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('**', '**')" title="Bold">
+                                <strong>B</strong>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('*', '*')" title="Italic">
+                                <em>I</em>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('# ', '')" title="Heading">
+                                H1
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('- ', '')" title="List">
+                                •
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('[', '](url)')" title="Link">
+                                🔗
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="markdown-content">
+                        <textarea id="judgementGuide" class="markdown-textarea" rows="12" placeholder="# Experiment Guidelines
+
+## Instructions for Judges
+
+Please provide clear instructions for judges on how to evaluate the data...
+
+## Scoring Criteria
+
+- **Excellent (5)**: Clear, accurate, and helpful response
+- **Good (4)**: Generally accurate with minor issues
+- **Average (3)**: Adequate but could be improved
+- **Poor (2)**: Contains errors or unclear information
+- **Very Poor (1)**: Inaccurate or unhelpful response
+
+## Examples
+
+### Good Response Example:
+A response that directly answers the question with accurate information and clear explanations.
+
+### Poor Response Example:
+A response that is vague, contains factual errors, or doesn't address the user's question."></textarea>
+                        
+                        <div id="markdownPreview" class="markdown-preview" style="display: none;">
+                            <div class="preview-content">
+                                <!-- Preview content will be generated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Actions -->
+            <div class="submit-actions">
+                <button type="button" class="btn-cancel" onclick="window.location.href='index.html'">Cancel</button>
+                <button type="submit" class="btn-submit">Create Experiment</button>
+            </div>
+            
+        </form>
+    </div>
+
+<script>
+    // Form logic
+    document.addEventListener('DOMContentLoaded', function() {
+        const dataSchemaInputs = document.querySelectorAll('input[name="dataSchema"]');
+        const dataSourceInputs = document.querySelectorAll('input[name="dataSource"]');
+        const querySetInputs = document.querySelectorAll('input[name="querySet"]');
+        
+        // Show/hide sections based on data source selection
+        dataSourceInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                // Hide all conditional sections
+                document.getElementById('realTimeSubOptions').style.display = 'none';
+                document.getElementById('uploadLocalOptions').style.display = 'none';
+                document.getElementById('importScrapeOptions').style.display = 'none';
+                
+                // Show relevant section
+                if (this.value === 'real-time-scraping') {
+                    document.getElementById('realTimeSubOptions').style.display = 'block';
+                } else if (this.value === 'upload-local') {
+                    document.getElementById('uploadLocalOptions').style.display = 'block';
+                } else if (this.value === 'import-scrape') {
+                    document.getElementById('importScrapeOptions').style.display = 'block';
+                }
+            });
+        });
+        
+        // Show/hide query set options
+        querySetInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                document.getElementById('adHocOptions').style.display = 'none';
+                document.getElementById('uploadQueryOptions').style.display = 'none';
+                
+                if (this.value === 'ad-hoc') {
+                    document.getElementById('adHocOptions').style.display = 'block';
+                } else if (this.value === 'upload-query') {
+                    document.getElementById('uploadQueryOptions').style.display = 'block';
+                }
+            });
+        });
+        
+        // Update profile options based on data schema
+        dataSchemaInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const controlSelect = document.getElementById('controlProfile');
+                const treatmentSelect = document.getElementById('treatmentProfile');
+                
+                // Clear existing options
+                controlSelect.innerHTML = '<option value="">Select control profile...</option>';
+                treatmentSelect.innerHTML = '<option value="">Select treatment profile...</option>';
+                
+                let options = [];
+                if (this.value === 'chat-singleturn' || this.value === 'chat-multiturn') {
+                    options = ['copilot web', 'copilot work', 'researcher'];
+                } else if (this.value === 'search') {
+                    options = ['userp', 'workplace search', 'copilot web', 'copilot work'];
+                }
+                
+                options.forEach(option => {
+                    controlSelect.add(new Option(option, option));
+                    treatmentSelect.add(new Option(option, option));
+                });
+                
+                // Enable dependent sections and show/hide default fields based on schema
+                enableDependentSections();
+                updateDefaultFields(this.value);
+            });
+        });
+        
+        // Function to enable sections that depend on Data Schema
+        function enableDependentSections() {
+            const dataSourceSection = document.getElementById('dataSourceSection');
+            const dataFieldsSection = document.getElementById('dataFieldsSection');
+            
+            // Enable Data Source section
+            dataSourceSection.classList.remove('disabled-section');
+            const dataSourceMessage = dataSourceSection.querySelector('.dependency-message');
+            if (dataSourceMessage) dataSourceMessage.style.display = 'none';
+            
+            const dataSourceInputs = dataSourceSection.querySelectorAll('input[type="radio"]');
+            const dataSourceLabels = dataSourceSection.querySelectorAll('.radio-option');
+            
+            dataSourceInputs.forEach(input => {
+                input.disabled = false;
+            });
+            
+            dataSourceLabels.forEach(label => {
+                label.classList.remove('disabled');
+            });
+            
+            // Enable Data Fields section
+            dataFieldsSection.classList.remove('disabled-section');
+            const dataFieldsMessage = dataFieldsSection.querySelector('.dependency-message');
+            if (dataFieldsMessage) dataFieldsMessage.style.display = 'none';
+            
+            const helpText = dataFieldsSection.querySelector('.help-text');
+            const defaultFields = dataFieldsSection.querySelector('#defaultFields');
+            
+            if (helpText) helpText.style.display = 'block';
+            if (defaultFields) defaultFields.style.display = 'block';
+        }
+        
+        // Update default fields display based on schema
+        function updateDefaultFields(schema) {
+            const chatSingleTurnFields = document.getElementById('chatSingleTurnDefaultFields');
+            const chatMultiTurnFields = document.getElementById('chatMultiTurnDefaultFields');
+            const searchFields = document.getElementById('searchDefaultFields');
+            
+            // Hide all field lists first
+            if (chatSingleTurnFields) chatSingleTurnFields.style.display = 'none';
+            if (chatMultiTurnFields) chatMultiTurnFields.style.display = 'none';
+            if (searchFields) searchFields.style.display = 'none';
+            
+            // Show relevant fields based on schema
+            if (schema === 'chat-singleturn') {
+                if (chatSingleTurnFields) chatSingleTurnFields.style.display = 'block';
+            } else if (schema === 'chat-multiturn') {
+                if (chatMultiTurnFields) chatMultiTurnFields.style.display = 'block';
+            } else if (schema === 'search') {
+                if (searchFields) searchFields.style.display = 'block';
+            }
+            
+            // Add default quiz questions based on schema
+            addDefaultQuizQuestions(schema);
+        }
+        
+        // Function to add default quiz questions based on schema
+        function addDefaultQuizQuestions(schema) {
+            const container = document.getElementById('quizQuestions');
+            
+            // Clear existing questions
+            container.innerHTML = '';
+            questionCounter = 0;
+            
+            if (schema === 'chat-singleturn' || schema === 'chat-multiturn') {
+                // Chat schema default questions
+                addDefaultQuestion({
+                    text: "Which side is better?",
+                    type: "single-choice",
+                    required: true,
+                    evalLevel: "overall",
+                    options: [
+                        {text: "A is better", score: 1},
+                        {text: "Same", score: 2},
+                        {text: "B is better", score: 3},
+                        {text: "Both bad", score: 4}
+                    ]
+                });
+                
+                addDefaultQuestion({
+                    text: "Comment",
+                    type: "text",
+                    required: false,
+                    evalLevel: "overall",
+                    options: []
+                });
+                
+            } else if (schema === 'search') {
+                // Search schema default questions
+                addDefaultQuestion({
+                    text: "Item relevance",
+                    type: "toggle",
+                    required: true,
+                    evalLevel: "item-sbs",
+                    options: [
+                        {text: "N/A", score: 1},
+                        {text: "Left is better", score: 2},
+                        {text: "Same", score: 3},
+                        {text: "Right is better", score: 4},
+                        {text: "Both bad", score: 5}
+                    ]
+                });
+                
+                addDefaultQuestion({
+                    text: "Which side is better?",
+                    type: "single-choice",
+                    required: true,
+                    evalLevel: "query-sbs",
+                    options: [
+                        {text: "A is better", score: 1},
+                        {text: "Same", score: 2},
+                        {text: "B is better", score: 3},
+                        {text: "Both bad", score: 4}
+                    ]
+                });
+                
+                addDefaultQuestion({
+                    text: "Comment",
+                    type: "text",
+                    required: false,
+                    evalLevel: "query-sbs",
+                    options: []
+                });
+            }
+        }
+        
+        // Function to add a default question with predefined settings
+        function addDefaultQuestion(questionData) {
+            questionCounter++;
+            const container = document.getElementById('quizQuestions');
+            
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'quiz-question';
+            questionDiv.id = `question_${questionCounter}`;
+            
+            const schema = document.querySelector('input[name="dataSchema"]:checked')?.value || '';
+            const hasMultipleData = document.querySelector('input[name="dataSource"]:checked')?.value !== 'real-time-scraping';
+            
+            // Create options HTML
+            let optionsHtml = '';
+            if (questionData.options.length > 0) {
+                questionData.options.forEach(option => {
+                    optionsHtml += `
+                        <div class="option-item">
+                            <input type="text" class="option-text" value="${option.text}" required>
+                            <input type="number" class="option-score" value="${option.score}" min="1" required>
+                            <button type="button" class="btn-remove-option" onclick="removeOption(this)">×</button>
+                        </div>
+                    `;
+                });
+                optionsHtml += `<button type="button" class="btn-add-option" onclick="addOption('options_${questionCounter}')">Add Option</button>`;
+            }
+            
+            // Get evaluation level options
+            const evalLevelHtml = hasMultipleData ? getEvaluationLevelOptions(schema, questionData.evalLevel) : '';
+            
+            questionDiv.innerHTML = `
+                <div class="question-header" onclick="toggleQuestionDetails('question_${questionCounter}')">
+                    <div class="question-header-left">
+                        <div class="question-number">${questionCounter}</div>
+                        <span class="question-title">${questionData.required ? '<span class="required">*</span>' + questionData.text : questionData.text}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="question-expand-icon" id="expand_${questionCounter}">▶</span>
+                        <button type="button" class="btn-remove-question" onclick="event.stopPropagation(); removeQuestion('question_${questionCounter}')">Remove</button>
+                    </div>
+                </div>
+                
+                <div class="question-details" id="details_${questionCounter}">
+                    <div class="question-text-input">
+                        <label class="field-label">Question Text</label>
+                        <input type="text" class="form-control" value="${questionData.text}" required onchange="updateQuestionTitle(this, ${questionCounter})">
+                    </div>
+                    
+                    <div class="question-config">
+                        <div>
+                            <label class="field-label">Question Type</label>
+                            <select class="form-control question-type" onchange="updateQuestionOptions(this, 'question_${questionCounter}')">
+                                <option value="single-choice" ${questionData.type === 'single-choice' ? 'selected' : ''}>Single Choice</option>
+                                <option value="multiple-choice" ${questionData.type === 'multiple-choice' ? 'selected' : ''}>Multiple Choice</option>
+                                <option value="text" ${questionData.type === 'text' ? 'selected' : ''}>Text Box</option>
+                                <option value="list" ${questionData.type === 'list' ? 'selected' : ''}>List Box</option>
+                                <option value="toggle" ${questionData.type === 'toggle' ? 'selected' : ''}>Toggle</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="field-label">Required</label>
+                            <select class="form-control" onchange="updateQuestionRequired(this, ${questionCounter})">
+                                <option value="required" ${questionData.required ? 'selected' : ''}>Required</option>
+                                <option value="optional" ${!questionData.required ? 'selected' : ''}>Optional</option>
+                            </select>
+                        </div>
+                        
+                        ${evalLevelHtml}
+                    </div>
+                    
+                    <div class="question-options" id="options_${questionCounter}" style="${questionData.type === 'text' || questionData.type === 'list' ? 'display: none;' : ''}">
+                        <label class="field-label">Options</label>
+                        ${optionsHtml}
+                    </div>
+                    
+                    <div class="question-actions" id="actions_${questionCounter}" style="display: none;">
+                        <button type="button" class="btn-save-question" onclick="saveQuestionChanges('question_${questionCounter}')">Save Changes</button>
+                        <button type="button" class="btn-cancel-question" onclick="cancelQuestionChanges('question_${questionCounter}')">Cancel</button>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(questionDiv);
+            
+            // Set the evaluation level if specified
+            if (hasMultipleData && questionData.evalLevel) {
+                setTimeout(() => {
+                    const evalRadio = document.querySelector(`input[name="eval_level_${questionCounter}"][value="${questionData.evalLevel}"]`);
+                    if (evalRadio) {
+                        evalRadio.checked = true;
+                    }
+                }, 100);
+            }
+        }
+        
+        // File upload handlers
+        function setupFileHandler(fileInputId, infoElementId) {
+            const fileInput = document.getElementById(fileInputId);
+            const infoElement = document.getElementById(infoElementId);
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files[0]) {
+                    // Simulate query count (in real implementation, would parse file)
+                    const randomQueryCount = Math.floor(Math.random() * 100) + 10;
+                    infoElement.textContent = `File uploaded: ${this.files[0].name} (${randomQueryCount} queries)`;
+                    infoElement.style.display = 'block';
+                }
+            });
+        }
+        
+        // Setup file handlers
+        setupFileHandler('querySetFile', 'queryCount');
+        setupFileHandler('controlFile', 'controlFileInfo');
+        setupFileHandler('treatment1File', 'treatment1FileInfo');
+        setupFileHandler('treatment2File', 'treatment2FileInfo');
+        
+        // Import functionality
+        document.getElementById('importBtn').addEventListener('click', function() {
+            const url = document.getElementById('importUrl').value;
+            const resultElement = document.getElementById('importResult');
+            
+            if (url) {
+                // Simulate import (in real implementation, would make API call)
+                resultElement.textContent = 'Import successful! 45 queries imported.';
+                resultElement.style.display = 'block';
+            } else {
+                alert('Please enter a URL to import');
+            }
+        });
+        
+        // Form submission
+        document.getElementById('experimentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Experiment creation submitted! (This is a demo)');
+        });
+    });
+
+    // Global variables for quiz questions
+    let questionCounter = 0;
+
+    // Function to select additional fields from file
+    function selectAdditionalFields() {
+        // Simulate field selection from uploaded file
+        const fields = ['timestamp', 'user_id', 'session_id', 'location', 'device_type', 'intent_confidence'];
+        const container = document.getElementById('additionalFieldsList');
+        
+        // Clear existing fields
+        container.innerHTML = '';
+        
+        // Add mock fields for demo
+        fields.forEach(field => {
+            const fieldItem = document.createElement('div');
+            fieldItem.className = 'field-item';
+            fieldItem.innerHTML = `
+                <label class="field-checkbox">
+                    <input type="checkbox" name="additionalFields" value="${field}">
+                    <span class="field-name">${field}</span>
+                </label>
+            `;
+            container.appendChild(fieldItem);
+        });
+    }
+
+    // Function to add quiz question
+    function addQuizQuestion() {
+        questionCounter++;
+        const container = document.getElementById('quizQuestions');
+        
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'quiz-question';
+        questionDiv.id = `question_${questionCounter}`;
+        
+        const schema = document.querySelector('input[name="dataSchema"]:checked')?.value || '';
+        const hasMultipleData = document.querySelector('input[name="dataSource"]:checked')?.value !== 'real-time-scraping';
+        
+        questionDiv.innerHTML = `
+            <div class="question-header" onclick="toggleQuestionDetails('question_${questionCounter}')">
+                <div class="question-header-left">
+                    <div class="question-number">${questionCounter}</div>
+                    <span class="question-title">New Question</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="question-expand-icon" id="expand_${questionCounter}">▶</span>
+                    <button type="button" class="btn-remove-question" onclick="event.stopPropagation(); removeQuestion('question_${questionCounter}')">Remove</button>
+                </div>
+            </div>
+            
+            <div class="question-details" id="details_${questionCounter}">
+                <div class="question-text-input">
+                    <label class="field-label">Question Text</label>
+                    <input type="text" class="form-control" placeholder="Enter your question..." required onchange="updateQuestionTitle(this, ${questionCounter})">
+                </div>
+                
+                <div class="question-config">
+                    <div>
+                        <label class="field-label">Question Type</label>
+                        <select class="form-control question-type" onchange="updateQuestionOptions(this, 'question_${questionCounter}')">
+                            <option value="single-choice">Single Choice</option>
+                            <option value="multiple-choice">Multiple Choice</option>
+                            <option value="text">Text Box</option>
+                            <option value="list">List Box</option>
+                            <option value="toggle">Toggle</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="field-label">Required</label>
+                        <select class="form-control" onchange="updateQuestionRequired(this, ${questionCounter})">
+                            <option value="required">Required</option>
+                            <option value="optional">Optional</option>
+                        </select>
+                    </div>
+                    
+                    ${hasMultipleData ? getEvaluationLevelOptions(schema) : ''}
+                </div>
+                
+                <div class="question-options" id="options_${questionCounter}">
+                    <label class="field-label">Options</label>
+                    <div class="option-item">
+                        <input type="text" class="option-text" placeholder="Option text" required>
+                        <input type="number" class="option-score" placeholder="Score" min="1" value="1" required>
+                        <button type="button" class="btn-remove-option" onclick="removeOption(this)">×</button>
+                    </div>
+                    <div class="option-item">
+                        <input type="text" class="option-text" placeholder="Option text" required>
+                        <input type="number" class="option-score" placeholder="Score" min="1" value="2" required>
+                        <button type="button" class="btn-remove-option" onclick="removeOption(this)">×</button>
+                    </div>
+                    <button type="button" class="btn-add-option" onclick="addOption('options_${questionCounter}')">Add Option</button>
+                </div>
+                
+                <div class="question-actions" id="actions_${questionCounter}" style="display: none;">
+                    <button type="button" class="btn-save-question" onclick="saveQuestionChanges('question_${questionCounter}')">Save Changes</button>
+                    <button type="button" class="btn-cancel-question" onclick="cancelQuestionChanges('question_${questionCounter}')">Cancel</button>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(questionDiv);
+        
+        // Auto-expand new questions and show action buttons
+        setTimeout(() => {
+            toggleQuestionDetails('question_' + questionCounter);
+        }, 100);
+    }
+
+    // Function to get evaluation level options based on schema and data source
+    function getEvaluationLevelOptions(schema, selectedLevel = '') {
+        if (schema === 'chat') {
+            return `
+                <div class="evaluation-level">
+                    <label class="field-label">Evaluation Level</label>
+                    <div class="evaluation-level-options">
+                        <label class="radio-option">
+                            <input type="radio" name="eval_level_${questionCounter}" value="overall" ${selectedLevel === 'overall' ? 'checked' : ''}>
+                            <span class="radio-text">Overall (one answer)</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="eval_level_${questionCounter}" value="sbs" ${selectedLevel === 'sbs' ? 'checked' : ''}>
+                            <span class="radio-text">Side-by-Side (answer for each side)</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        } else if (schema === 'search') {
+            return `
+                <div class="evaluation-level">
+                    <label class="field-label">Evaluation Level</label>
+                    <div class="evaluation-level-options">
+                        <label class="radio-option">
+                            <input type="radio" name="eval_level_${questionCounter}" value="query-overall" ${selectedLevel === 'query-overall' ? 'checked' : ''}>
+                            <span class="radio-text">Query Level Overall</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="eval_level_${questionCounter}" value="query-sbs" ${selectedLevel === 'query-sbs' ? 'checked' : ''}>
+                            <span class="radio-text">Query Level Side-by-Side</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="eval_level_${questionCounter}" value="item-overall" ${selectedLevel === 'item-overall' ? 'checked' : ''}>
+                            <span class="radio-text">Item Level Overall</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="eval_level_${questionCounter}" value="item-sbs" ${selectedLevel === 'item-sbs' ? 'checked' : ''}>
+                            <span class="radio-text">Item Level Side-by-Side</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+        return '';
+    }
+
+    // Function to update question options based on type
+    function updateQuestionOptions(selectElement, questionId) {
+        const optionsContainer = document.getElementById(`options_${questionId.split('_')[1]}`);
+        const questionType = selectElement.value;
+        
+        if (questionType === 'text' || questionType === 'list') {
+            optionsContainer.style.display = 'none';
+        } else {
+            optionsContainer.style.display = 'block';
+        }
+    }
+
+    // Function to add option to question
+    function addOption(containerId) {
+        const container = document.getElementById(containerId);
+        const addButton = container.querySelector('.btn-add-option');
+        const optionCount = container.querySelectorAll('.option-item').length;
+        
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'option-item';
+        optionDiv.innerHTML = `
+            <input type="text" class="option-text" placeholder="Option text" required>
+            <input type="number" class="option-score" placeholder="Score" min="1" value="${optionCount + 1}" required>
+            <button type="button" class="btn-remove-option" onclick="removeOption(this)">×</button>
+        `;
+        
+        container.insertBefore(optionDiv, addButton);
+        
+        // Add change listeners to new option inputs and trigger change detection
+        const newInputs = optionDiv.querySelectorAll('input');
+        const questionNumber = containerId.split('_')[1];
+        
+        newInputs.forEach(input => {
+            input.addEventListener('input', () => checkForChanges(questionNumber));
+            input.addEventListener('change', () => checkForChanges(questionNumber));
+        });
+        
+        // Trigger change detection immediately
+        checkForChanges(questionNumber);
+    }
+
+    // Function to remove option from question
+    function removeOption(button) {
+        const optionItem = button.parentElement;
+        const container = optionItem.parentElement;
+        
+        // Don't allow removing if only 2 options left
+        if (container.querySelectorAll('.option-item').length > 2) {
+            // Get question number for change detection
+            const containerId = container.id;
+            const questionNumber = containerId.split('_')[1];
+            
+            optionItem.remove();
+            
+            // Trigger change detection after removal
+            checkForChanges(questionNumber);
+        } else {
+            alert('A question must have at least 2 options');
+        }
+    }
+
+    // Function to remove question
+    function removeQuestion(questionId) {
+        const questionElement = document.getElementById(questionId);
+        if (questionElement) {
+            questionElement.remove();
+        }
+    }
+
+    // Function to toggle additional fields
+    function toggleAdditionalFields() {
+        const content = document.getElementById('additionalFieldsContent');
+        const icon = document.getElementById('additionalFieldsIcon');
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            icon.textContent = '▼';
+            icon.classList.add('expanded');
+        } else {
+            content.style.display = 'none';
+            icon.textContent = '▶';
+            icon.classList.remove('expanded');
+        }
+    }
+
+    // Function to toggle question details
+    function toggleQuestionDetails(questionId) {
+        const details = document.getElementById('details_' + questionId.split('_')[1]);
+        const icon = document.getElementById('expand_' + questionId.split('_')[1]);
+        
+        if (details.style.display === 'none' || details.style.display === '') {
+            details.style.display = 'block';
+            details.classList.add('expanded');
+            icon.textContent = '▼';
+            icon.classList.add('expanded');
+        } else {
+            details.style.display = 'none';
+            details.classList.remove('expanded');
+            icon.textContent = '▶';
+            icon.classList.remove('expanded');
+        }
+    }
+
+    // Function to update question title in header
+    function updateQuestionTitle(input, questionNumber) {
+        const titleElement = input.closest('.quiz-question').querySelector('.question-title');
+        const questionContainer = input.closest('.quiz-question');
+        
+        // Find the required select dropdown (it's the second select in the question config)
+        const selects = questionContainer.querySelectorAll('select');
+        const requiredSelect = selects[1]; // First is question type, second is required/optional
+        const isRequired = requiredSelect ? requiredSelect.value === 'required' : true;
+        
+        const questionText = input.value || 'New Question';
+        if (isRequired) {
+            titleElement.innerHTML = '<span class="required">*</span>' + questionText;
+        } else {
+            titleElement.textContent = questionText;
+        }
+    }
+
+    // Function to update question required status
+    function updateQuestionRequired(select, questionNumber) {
+        const questionContainer = select.closest('.quiz-question');
+        const titleElement = questionContainer.querySelector('.question-title');
+        const textInput = questionContainer.querySelector('input[type="text"]');
+        const questionText = textInput.value || 'New Question';
+        const isRequired = select.value === 'required';
+        
+        if (isRequired) {
+            titleElement.innerHTML = '<span class="required">*</span>' + questionText;
+        } else {
+            titleElement.textContent = questionText;
+        }
+    }
+
+    // Function to toggle experiment description
+    function toggleExperimentDescription() {
+        const section = document.getElementById('experimentDescriptionSection');
+        const button = document.querySelector('.btn-add-description');
+        
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            button.style.display = 'none';
+        }
+    }
+
+    // Function to remove experiment description
+    function removeExperimentDescription() {
+        const section = document.getElementById('experimentDescriptionSection');
+        const button = document.querySelector('.btn-add-description');
+        const textarea = document.getElementById('experimentDescription');
+        
+        // Clear the textarea content
+        textarea.value = '';
+        
+        // Hide the section and show the add button again
+        section.style.display = 'none';
+        button.style.display = 'flex';
+    }
+
+    // Function to open contact modal
+    function openContactModal() {
+        document.getElementById('contactModal').style.display = 'flex';
+        // Prevent scrolling on background
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Function to close contact modal
+    function closeContactModal() {
+        document.getElementById('contactModal').style.display = 'none';
+        // Restore scrolling
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside of it
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('contactModal');
+        if (event.target === modal) {
+            closeContactModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeContactModal();
+        }
+    });
+
+    // Markdown Editor Functions
+    function switchToEditor() {
+        document.querySelector('.tab-button.active').classList.remove('active');
+        document.querySelectorAll('.tab-button')[0].classList.add('active');
+        document.getElementById('judgementGuide').style.display = 'block';
+        document.getElementById('markdownPreview').style.display = 'none';
+    }
+
+    function switchToPreview() {
+        document.querySelector('.tab-button.active').classList.remove('active');
+        document.querySelectorAll('.tab-button')[1].classList.add('active');
+        document.getElementById('judgementGuide').style.display = 'none';
+        document.getElementById('markdownPreview').style.display = 'block';
+        updatePreview();
+    }
+
+    function insertMarkdown(before, after) {
+        const textarea = document.getElementById('judgementGuide');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        const newText = before + selectedText + after;
+        
+        textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
+        
+        // Set cursor position
+        const newCursorPos = start + before.length + selectedText.length;
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }
+
+    function updatePreview() {
+        const markdown = document.getElementById('judgementGuide').value;
+        const preview = document.querySelector('.preview-content');
+        
+        // Simple markdown to HTML conversion
+        let html = markdown
+            // Headers
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            // Bold
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            // Italic
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            // Links
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+            // Code
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            // Lists
+            .replace(/^\- (.*$)/gim, '<li>$1</li>')
+            // Line breaks
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+        
+        // Wrap lists in ul tags
+        html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+        
+        // Wrap in paragraphs if not already wrapped
+        if (!html.includes('<h1>') && !html.includes('<h2>') && !html.includes('<ul>')) {
+            html = '<p>' + html + '</p>';
+        }
+        
+        preview.innerHTML = html || '<p><em>Preview will appear here...</em></p>';
+    }
+
+    // Auto-update preview when typing (debounced)
+    let previewTimeout;
+    document.getElementById('judgementGuide').addEventListener('input', function() {
+        if (document.getElementById('markdownPreview').style.display !== 'none') {
+            clearTimeout(previewTimeout);
+            previewTimeout = setTimeout(updatePreview, 300);
+        }
+    });
+
+    // Global object to store original question values
+    let originalQuestionValues = {};
+
+    // Enhanced toggle function with change tracking
+    function toggleQuestionDetails(questionId) {
+        const details = document.getElementById('details_' + questionId.split('_')[1]);
+        const icon = document.getElementById('expand_' + questionId.split('_')[1]);
+        const actions = document.getElementById('actions_' + questionId.split('_')[1]);
+        
+        if (details.style.display === 'none' || details.style.display === '') {
+            // Store original values when opening
+            storeOriginalValues(questionId);
+            
+            details.style.display = 'block';
+            details.classList.add('expanded');
+            icon.textContent = '▼';
+            icon.classList.add('expanded');
+            
+            // Add change listeners
+            addChangeListeners(questionId);
+        } else {
+            details.style.display = 'none';
+            details.classList.remove('expanded');
+            icon.textContent = '▶';
+            icon.classList.remove('expanded');
+            actions.style.display = 'none';
+        }
+    }
+
+    // Store original values when question is opened
+    function storeOriginalValues(questionId) {
+        const questionElement = document.getElementById(questionId);
+        const questionNumber = questionId.split('_')[1];
+        
+        const originalData = {
+            text: questionElement.querySelector('input[type="text"]').value,
+            type: questionElement.querySelector('.question-type').value,
+            required: questionElement.querySelectorAll('select')[1].value,
+            evalLevel: getSelectedEvaluationLevel(questionElement),
+            options: []
+        };
+        
+        // Store original options
+        const optionTexts = questionElement.querySelectorAll('.option-text');
+        const optionScores = questionElement.querySelectorAll('.option-score');
+        
+        for (let i = 0; i < optionTexts.length; i++) {
+            originalData.options.push({
+                text: optionTexts[i].value,
+                score: optionScores[i].value
+            });
+        }
+        
+        originalQuestionValues[questionNumber] = originalData;
+    }
+
+    // Add change listeners to detect modifications
+    function addChangeListeners(questionId) {
+        const questionElement = document.getElementById(questionId);
+        const questionNumber = questionId.split('_')[1];
+        const actions = document.getElementById('actions_' + questionNumber);
+        
+        const inputs = questionElement.querySelectorAll('input, select, textarea');
+        
+        inputs.forEach(input => {
+            input.addEventListener('input', () => checkForChanges(questionNumber));
+            input.addEventListener('change', () => checkForChanges(questionNumber));
+        });
+    }
+
+    // Check if question has been modified
+    function checkForChanges(questionNumber) {
+        const questionElement = document.getElementById('question_' + questionNumber);
+        const actions = document.getElementById('actions_' + questionNumber);
+        const original = originalQuestionValues[questionNumber];
+        
+        if (!original) return;
+        
+        const current = {
+            text: questionElement.querySelector('input[type="text"]').value,
+            type: questionElement.querySelector('.question-type').value,
+            required: questionElement.querySelectorAll('select')[1].value,
+            evalLevel: getSelectedEvaluationLevel(questionElement),
+            options: []
+        };
+        
+        // Get current options
+        const optionTexts = questionElement.querySelectorAll('.option-text');
+        const optionScores = questionElement.querySelectorAll('.option-score');
+        
+        for (let i = 0; i < optionTexts.length; i++) {
+            current.options.push({
+                text: optionTexts[i].value,
+                score: optionScores[i].value
+            });
+        }
+        
+        // Compare with original
+        const hasChanges = (
+            current.text !== original.text ||
+            current.type !== original.type ||
+            current.required !== original.required ||
+            current.evalLevel !== original.evalLevel ||
+            JSON.stringify(current.options) !== JSON.stringify(original.options)
+        );
+        
+        actions.style.display = hasChanges ? 'flex' : 'none';
+    }
+
+    // Save question changes
+    function saveQuestionChanges(questionId) {
+        const questionNumber = questionId.split('_')[1];
+        const questionElement = document.getElementById(questionId);
+        
+        // Update the question title in the header
+        const titleInput = questionElement.querySelector('input[type="text"]');
+        updateQuestionTitle(titleInput, questionNumber);
+        
+        // Hide actions and collapse
+        const actions = document.getElementById('actions_' + questionNumber);
+        actions.style.display = 'none';
+        
+        // Store new values as original
+        storeOriginalValues(questionId);
+        
+        // Collapse question
+        toggleQuestionDetails(questionId);
+    }
+
+    // Cancel question changes
+    function cancelQuestionChanges(questionId) {
+        const questionNumber = questionId.split('_')[1];
+        const questionElement = document.getElementById(questionId);
+        const original = originalQuestionValues[questionNumber];
+        
+        if (!original) return;
+        
+        // Restore original values
+        questionElement.querySelector('input[type="text"]').value = original.text;
+        questionElement.querySelector('.question-type').value = original.type;
+        questionElement.querySelectorAll('select')[1].value = original.required;
+        
+        // Restore evaluation level
+        if (original.evalLevel) {
+            const evalRadio = questionElement.querySelector(`input[name^="eval_level_"][value="${original.evalLevel}"]`);
+            if (evalRadio) {
+                evalRadio.checked = true;
+            }
+        }
+        
+        // Restore original options
+        const optionsContainer = questionElement.querySelector('.question-options');
+        const addButton = optionsContainer.querySelector('.btn-add-option');
+        
+        // Clear existing options
+        const existingOptions = optionsContainer.querySelectorAll('.option-item');
+        existingOptions.forEach(option => option.remove());
+        
+        // Recreate original options
+        original.options.forEach(option => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'option-item';
+            optionDiv.innerHTML = `
+                <input type="text" class="option-text" value="${option.text}" required>
+                <input type="number" class="option-score" value="${option.score}" min="1" required>
+                <button type="button" class="btn-remove-option" onclick="removeOption(this)">×</button>
+            `;
+            optionsContainer.insertBefore(optionDiv, addButton);
+        });
+        
+        // Update title
+        updateQuestionTitle(questionElement.querySelector('input[type="text"]'), questionNumber);
+        
+        // Hide actions and collapse
+        const actions = document.getElementById('actions_' + questionNumber);
+        actions.style.display = 'none';
+        
+        // Collapse question
+        toggleQuestionDetails(questionId);
+    }
+
+    // Helper function to get selected evaluation level
+    function getSelectedEvaluationLevel(questionElement) {
+        const evalRadios = questionElement.querySelectorAll('input[name^="eval_level_"]');
+        for (let radio of evalRadios) {
+            if (radio.checked) {
+                return radio.value;
+            }
+        }
+        return null;
+    }
+
+    // Toggle between UI and Raw Code modes
+    function toggleRawCodeMode() {
+        const toggle = document.getElementById('rawCodeToggle');
+        const uiMode = document.getElementById('uiMode');
+        const jsonMode = document.getElementById('jsonMode');
+        const jsonEditor = document.getElementById('questionsJsonEditor');
+        
+        if (toggle.checked) {
+            // Switch to JSON mode
+            const questionsData = extractQuestionsFromUI();
+            const jsonString = JSON.stringify(questionsData, null, 2);
+            jsonEditor.value = jsonString;
+            // Store original JSON to detect changes later
+            jsonEditor.setAttribute('data-original', jsonString);
+            uiMode.style.display = 'none';
+            jsonMode.style.display = 'block';
+        } else {
+            // Switch to UI mode
+            const jsonText = jsonEditor.value.trim();
+            
+            // If JSON editor is empty or unchanged, just switch back without modifying UI
+            if (jsonText === '' || jsonText === jsonEditor.getAttribute('data-original')) {
+                uiMode.style.display = 'block';
+                jsonMode.style.display = 'none';
+                clearValidationMessage();
+                return;
+            }
+            
+            // Only try to parse and reload if JSON has been modified
+            try {
+                const jsonData = JSON.parse(jsonText);
+                loadQuestionsToUI(jsonData);
+                clearValidationMessage();
+            } catch (error) {
+                console.error('JSON Parse Error:', error);
+                console.error('JSON Content:', jsonEditor.value);
+                showValidationMessage(`JSON Parse Error: ${error.message}`, 'error');
+                // Force switch back to UI mode without changing questions
+                uiMode.style.display = 'block';
+                jsonMode.style.display = 'none';
+                toggle.checked = false;
+                clearValidationMessage();
+                return;
+            }
+            
+            uiMode.style.display = 'block';
+            jsonMode.style.display = 'none';
+        }
+    }
+
+    // Extract questions data from UI
+    function extractQuestionsFromUI() {
+        const questions = [];
+        const questionElements = document.querySelectorAll('.quiz-question');
+        
+        questionElements.forEach((element, index) => {
+            try {
+                const textInput = element.querySelector('input[type="text"]');
+                const typeSelect = element.querySelector('.question-type');
+                const selects = element.querySelectorAll('select');
+                
+                const questionData = {
+                    id: index + 1,
+                    text: textInput ? textInput.value || '' : '',
+                    type: typeSelect ? typeSelect.value : 'single-choice',
+                    required: selects.length > 1 ? selects[1].value === 'required' : true,
+                    evaluationLevel: getSelectedEvaluationLevel(element),
+                    options: []
+                };
+                
+                // Extract options
+                const optionTexts = element.querySelectorAll('.option-text');
+                const optionScores = element.querySelectorAll('.option-score');
+                
+                for (let i = 0; i < optionTexts.length; i++) {
+                    if (optionTexts[i] && optionTexts[i].value && optionTexts[i].value.trim()) {
+                        const score = optionScores[i] ? parseInt(optionScores[i].value) || 1 : 1;
+                        questionData.options.push({
+                            text: optionTexts[i].value,
+                            score: score
+                        });
+                    }
+                }
+                
+                questions.push(questionData);
+            } catch (error) {
+                console.error('Error extracting question data:', error, element);
+                // Skip this question if there's an error
+            }
+        });
+        
+        return {
+            questions: questions,
+            schema: "judgement_questions_v1",
+            metadata: {
+                createdAt: new Date().toISOString(),
+                totalQuestions: questions.length
+            }
+        };
+    }
+
+    // Load questions from JSON to UI
+    function loadQuestionsToUI(jsonData) {
+        // Clear existing questions
+        const container = document.getElementById('quizQuestions');
+        container.innerHTML = '';
+        questionCounter = 0;
+        originalQuestionValues = {};
+        
+        if (jsonData.questions && Array.isArray(jsonData.questions)) {
+            jsonData.questions.forEach(questionData => {
+                // Convert JSON format to internal format
+                const internalFormat = {
+                    text: questionData.text || '',
+                    type: questionData.type || 'single-choice',
+                    required: questionData.required !== false,
+                    evalLevel: questionData.evaluationLevel || null,
+                    options: questionData.options || []
+                };
+                
+                addDefaultQuestion(internalFormat);
+            });
+        }
+    }
+
+    // Format JSON in the editor
+    function formatJSON() {
+        const editor = document.getElementById('questionsJsonEditor');
+        try {
+            const parsed = JSON.parse(editor.value);
+            editor.value = JSON.stringify(parsed, null, 2);
+            showValidationMessage('JSON formatted successfully', 'success');
+        } catch (error) {
+            showValidationMessage('Invalid JSON format. Cannot format.', 'error');
+        }
+    }
+
+    // Validate JSON in the editor
+    function validateJSON() {
+        const editor = document.getElementById('questionsJsonEditor');
+        try {
+            const parsed = JSON.parse(editor.value);
+            
+            // Basic validation
+            if (!parsed.questions || !Array.isArray(parsed.questions)) {
+                throw new Error('JSON must contain a "questions" array');
+            }
+            
+            // Validate each question
+            parsed.questions.forEach((q, index) => {
+                if (!q.text || typeof q.text !== 'string') {
+                    throw new Error(`Question ${index + 1}: text is required and must be a string`);
+                }
+                if (!q.type || !['single-choice', 'multiple-choice', 'text', 'list', 'toggle'].includes(q.type)) {
+                    throw new Error(`Question ${index + 1}: invalid question type`);
+                }
+            });
+            
+            showValidationMessage('JSON is valid!', 'success');
+        } catch (error) {
+            showValidationMessage(`Validation error: ${error.message}`, 'error');
+        }
+    }
+
+    // Show validation message
+    function showValidationMessage(message, type) {
+        const messageElement = document.getElementById('jsonValidationMessage');
+        messageElement.textContent = message;
+        messageElement.className = `json-validation-message ${type}`;
+        messageElement.style.display = 'block';
+        
+        // Auto-hide success messages after 3 seconds
+        if (type === 'success') {
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    // Clear validation message
+    function clearValidationMessage() {
+        const messageElement = document.getElementById('jsonValidationMessage');
+        messageElement.style.display = 'none';
+    }
+</script>
+
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Contact Us for Additional Schema Support</h3>
+                <button type="button" class="modal-close" onclick="closeContactModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Need support for a different data schema? We'd love to help you set up your experiment!</p>
+                
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <strong>Email:</strong>
+                        <a href="mailto:support@sbs-platform.com">support@sbs-platform.com</a>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <strong>Teams:</strong>
+                        <a href="https://teams.microsoft.com/join-team" target="_blank">Join our support team</a>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <strong>GitHub:</strong>
+                        <a href="https://github.com/sbs-platform/support" target="_blank">Create an issue</a>
+                    </div>
+                </div>
+                
+                <div class="contact-note">
+                    <p><strong>What to include in your request:</strong></p>
+                    <ul>
+                        <li>Description of your data structure</li>
+                        <li>Example data format</li>
+                        <li>Specific requirements for your experiment</li>
+                        <li>Timeline for your project</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBS - Strategic Business Solutions</title>
+    <link rel="stylesheet" href="styles-new.css">
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="main-container">
+        
+        <!-- Header Carousel Card -->
+        <div class="header-carousel">
+            <div class="carousel-container">
+                <!-- Left Arrow -->
+                <button class="carousel-arrow carousel-arrow-left">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </button>
+                
+                <div class="carousel-wrapper">
+                    <div class="carousel-background-container active" id="banner-0">
+                        <div class="carousel-card">
+                            <div class="carousel-image">
+                                <div class="image-background">
+                                    <img src="banner01.png" alt="SBS Solutions" class="feature-image">
+                                </div>
+                            </div>
+                            <div class="carousel-content">
+                                <span class="new-badge">New</span>
+                                <h2 class="carousel-title">Chat Arena</h2>
+                                <p class="carousel-description">
+                                    Chat Arena elevates your chat comparison with streamlined side-by-side experience of M365 Copilot, ChatGPT, and Gemini, delivering comprehensive competitive and cross-flight analysis.
+                                </p>
+                                <div class="carousel-buttons">
+                                    <button class="btn btn-outline">Learn more</button>
+                                    <button class="btn btn-primary" id="try-it-now-btn">Try it now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="carousel-background-container" id="banner-1">
+                        <div class="carousel-card">
+                            <div class="carousel-image">
+                                <div class="image-background">
+                                    <img src="banner02.png" alt="SBS Solutions" class="feature-image">
+                                </div>
+                            </div>
+                            <div class="carousel-content">
+                                <span class="new-badge">New</span>
+                                <h2 class="carousel-title">Search Arena</h2>
+                                <p class="carousel-description">
+                                    Play with our new Search Arena SBS, to compare across the new Copilot Search and the typical workplace search.
+                                </p>
+                                <div class="carousel-buttons">
+                                    <button class="btn btn-outline">Learn more</button>
+                                    <button class="btn btn-primary" id="try-it-now-btn-2">Try it now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Arrow -->
+                <button class="carousel-arrow carousel-arrow-right">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Section Title -->
+        <div class="section-header">
+            <h1 class="main-title">
+                Smarter Comparisons, Faster Competition, Sharper Insights
+            </h1>
+            <p class="main-subtitle">
+                Discover the power of accelerated competitive analysis, rapid quality issue detection, smooth team collaboration, and large-scale human judgement experiment with our <b>Side-By-Side</b> solutions – ready to work alongside you.
+            </p>
+        </div>
+
+        <!-- Feature Cards Grid -->
+        <div class="cards-grid">
+            <div class="feature-card clickable">
+                <div class="card-content">
+                    <div class="card-placeholder">
+                        <!-- Competitive Comparison Icon -->
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="8" width="6" height="12" rx="1"></rect>
+                            <rect x="15" y="4" width="6" height="16" rx="1"></rect>
+                            <path d="M12 2v20"></path>
+                            <path d="M8 12h8"></path>
+                        </svg>
+                    </div>
+                    <h3 class="card-title">Competitive Study</h3>
+                    <p class="card-description">
+                        Benchmark against competitors with structured, multi-dimensional comparisons powered by SBS.
+                    </p>
+                    <div class="card-hover-content">
+                        <span class="hover-text">Chat Arena & Search Arena</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card clickable">
+                <div class="card-content">
+                    <div class="card-placeholder">
+                        <!-- Data Analytics Icon -->
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M3 3v18h18"></path>
+                            <path d="M18 20V10l-6 6-4-4-4 4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="card-title">Quality Gaps Analysis</h3>
+                    <p class="card-description">
+                        Capture diverse feedback signals to uncover quality trends and refine product experience.
+                    </p>
+                    <div class="card-hover-content">
+                        <span class="hover-text">Voting Insight & Scoreboard</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card clickable" onclick="window.location.href='create-experiment.html'">
+                <div class="card-content">
+                    <div class="card-placeholder">
+                        <!-- Human Evaluation Icon -->
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <h3 class="card-title">Human-in-loop Evaluation</h3>
+                    <p class="card-description">
+                        Integrate human judgment into new feature evaluation for more accurate, controllable outcomes.
+                    </p>
+                    <div class="card-hover-content">
+                        <span class="hover-text">Labeling experiment</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Us Section -->
+        <div class="contact-section">
+            <div class="contact-content">
+                <h3 class="contact-title">Contact Us</h3>
+                <p class="contact-description">
+                    Have questions or need support? We're here to help.
+                </p>
+                <a href="mailto:msaibravotooling@microsoft.com" class="contact-email">
+                    msaibravotooling@microsoft.com
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
