@@ -1,11 +1,32 @@
 // Experiment Detail Page JavaScript
 
-// User role and experiment configuration
-const currentUser = {
-    role: 'owner', // owner, co-owner, judge
-    id: 'current-user-id',
-    name: 'Current User'
+// User data
+const users = {
+    'john-smith': {
+        id: 'john-smith',
+        name: 'John Smith',
+        role: 'owner',
+        initials: 'JS',
+        email: 'john.smith@company.com'
+    },
+    'sarah-chen': {
+        id: 'sarah-chen',
+        name: 'Sarah Chen',
+        role: 'co-owner',
+        initials: 'SC',
+        email: 'sarah.chen@company.com'
+    },
+    'alice-miller': {
+        id: 'alice-miller',
+        name: 'Alice Miller',
+        role: 'judge',
+        initials: 'AM',
+        email: 'alice.miller@company.com'
+    }
 };
+
+// Current user (default to John Smith)
+let currentUser = users['john-smith'];
 
 const experimentConfig = {
     allowAnyoneToJudge: false, // This controls the "Assign Selected" button state
@@ -46,6 +67,214 @@ function switchTab(tabName) {
         loadMembers();
     } else if (tabName === 'results') {
         loadResults();
+    }
+}
+
+// User switching functions
+function toggleUserDropdown() {
+    const dropdown = document.getElementById('userDropdown');
+    const currentUserElement = document.querySelector('.current-user');
+    
+    if (dropdown && currentUserElement) {
+        if (dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
+        } else {
+            // Calculate position for fixed positioning
+            const rect = currentUserElement.getBoundingClientRect();
+            dropdown.style.top = (rect.bottom + 8) + 'px';
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.width = rect.width + 'px';
+            dropdown.classList.add('show');
+        }
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function closeDropdown(e) {
+        if (!e.target.closest('.user-switcher')) {
+            dropdown.classList.remove('show');
+            document.removeEventListener('click', closeDropdown);
+        }
+    });
+}
+
+function switchUser(userId) {
+    const user = users[userId];
+    if (!user) return;
+    
+    // Update current user
+    currentUser = user;
+    
+    // Update UI to reflect new user
+    updateUserDisplay();
+    updatePermissions();
+    
+    // Close dropdown
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('show');
+    }
+    
+    // Reload content to apply role-based filtering
+    const activeTab = document.querySelector('.tab-button.active');
+    if (activeTab) {
+        const tabName = activeTab.getAttribute('data-tab');
+        switchTab(tabName);
+    }
+}
+
+function updateUserDisplay() {
+    // Update current user display
+    const avatar = document.getElementById('currentUserAvatar');
+    const name = document.getElementById('currentUserName');
+    const role = document.getElementById('currentUserRole');
+    
+    if (avatar) avatar.textContent = currentUser.initials;
+    if (name) name.textContent = currentUser.name;
+    if (role) role.textContent = getRoleDisplayName(currentUser.role);
+}
+
+function getRoleDisplayName(role) {
+    const roleNames = {
+        'owner': 'Owner',
+        'co-owner': 'Co-Owner',
+        'judge': 'Judge'
+    };
+    return roleNames[role] || role;
+}
+
+function updatePermissions() {
+    updateHeaderButtons();
+    updateQueryPermissions();
+    updateMemberPermissions();
+    updateResultPermissions();
+    updateQueryListPermissions();
+}
+
+function updateHeaderButtons() {
+    const configBtn = document.getElementById('configBtn');
+    const cloneBtn = document.getElementById('cloneBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+    
+    // Configuration: All users can view
+    if (configBtn) {
+        configBtn.disabled = false;
+        configBtn.classList.remove('disabled');
+        configBtn.removeAttribute('title');
+    }
+    
+    // Clone: All users can clone
+    if (cloneBtn) {
+        cloneBtn.disabled = false;
+        cloneBtn.classList.remove('disabled');
+        cloneBtn.removeAttribute('title');
+    }
+    
+    // Delete: Only owner can delete
+    if (deleteBtn) {
+        if (currentUser.role === 'owner') {
+            deleteBtn.disabled = false;
+            deleteBtn.classList.remove('disabled');
+            deleteBtn.removeAttribute('title');
+        } else {
+            deleteBtn.disabled = true;
+            deleteBtn.classList.add('disabled');
+        }
+    }
+}
+
+function updateQueryPermissions() {
+    const assignBtn = document.getElementById('assignJudgesBtn');
+    const importBtn = document.querySelector('button[onclick="importQueries()"]');
+    
+    // Assign queries: Owner and Co-Owner only
+    if (assignBtn) {
+        if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
+            assignBtn.disabled = false;
+            assignBtn.classList.remove('disabled');
+            assignBtn.removeAttribute('title');
+        } else {
+            assignBtn.disabled = true;
+            assignBtn.classList.add('disabled');
+        }
+    }
+    
+    // Import queries: Owner and Co-Owner only
+    if (importBtn) {
+        if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
+            importBtn.disabled = false;
+            importBtn.classList.remove('disabled');
+            importBtn.removeAttribute('title');
+        } else {
+            importBtn.disabled = true;
+            importBtn.classList.add('disabled');
+        }
+    }
+}
+
+function updateMemberPermissions() {
+    const addMemberBtn = document.querySelector('button[onclick="addMember()"]');
+    const manageMembersBtn = document.querySelector('button[onclick="manageMembers()"]');
+    
+    // Add member: Owner and Co-Owner only
+    if (addMemberBtn) {
+        if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
+            addMemberBtn.disabled = false;
+            addMemberBtn.classList.remove('disabled');
+            addMemberBtn.removeAttribute('title');
+        } else {
+            addMemberBtn.disabled = true;
+            addMemberBtn.classList.add('disabled');
+        }
+    }
+    
+    // Manage members: Owner and Co-Owner only
+    if (manageMembersBtn) {
+        if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
+            manageMembersBtn.disabled = false;
+            manageMembersBtn.classList.remove('disabled');
+            manageMembersBtn.removeAttribute('title');
+        } else {
+            manageMembersBtn.disabled = true;
+            manageMembersBtn.classList.add('disabled');
+        }
+    }
+}
+
+function updateResultPermissions() {
+    const downloadBtn = document.querySelector('button[onclick="downloadReport()"]');
+    const exportBtn = document.querySelector('button[onclick="exportData()"]');
+    
+    // Download report: All users can view (read-only for judge)
+    if (downloadBtn) {
+        downloadBtn.disabled = false;
+        downloadBtn.classList.remove('disabled');
+        downloadBtn.removeAttribute('title');
+    }
+    
+    // Export data: Owner and Co-Owner only
+    if (exportBtn) {
+        if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
+            exportBtn.disabled = false;
+            exportBtn.classList.remove('disabled');
+            exportBtn.removeAttribute('title');
+        } else {
+            exportBtn.disabled = true;
+            exportBtn.classList.add('disabled');
+        }
+    }
+}
+
+function updateQueryListPermissions() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    
+    // Disable select all checkbox for Judge users
+    if (selectAllCheckbox) {
+        if (currentUser.role === 'judge') {
+            selectAllCheckbox.disabled = true;
+            selectAllCheckbox.checked = false;
+        } else {
+            selectAllCheckbox.disabled = false;
+        }
     }
 }
 
@@ -128,7 +357,7 @@ function createQueryRow(query) {
     
     row.innerHTML = `
         <div class="checkbox-column">
-            <input type="checkbox" value="${query.id}" onchange="updateSelectedQueries()">
+            <input type="checkbox" value="${query.id}" onchange="updateSelectedQueries()" ${currentUser.role === 'judge' ? 'disabled' : ''}>
         </div>
         <div class="query-column">
             <div class="query-text">${query.text}</div>
@@ -168,7 +397,7 @@ function loadQueries() {
     }
     
     // Sample query data with multiple assignments
-    const sampleQueries = [
+    const allQueries = [
         {
             id: 'Q001',
             text: 'How to implement machine learning algorithms in Python?',
@@ -182,7 +411,6 @@ function loadQueries() {
             id: 'Q002',
             text: 'Best practices for web application security',
             assignments: [
-                { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'completed', completedAt: '2024-03-14 11:45' },
                 { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'not-started', assignedAt: '2024-03-13 10:00' }
             ]
         },
@@ -215,17 +443,48 @@ function loadQueries() {
             id: 'Q006',
             text: 'Mobile app performance optimization strategies',
             assignments: []
+        },
+        {
+            id: 'Q007',
+            text: 'Frontend framework comparison and selection',
+            assignments: [
+                { judge: { name: 'Sarah Chen', initials: 'SC' }, status: 'in-progress', assignedAt: '2024-03-16 10:00' }
+            ]
+        },
+        {
+            id: 'Q008',
+            text: 'Microservices architecture design patterns',
+            assignments: []
         }
     ];
+    
+    // Filter queries based on user role
+    let queriesToShow = allQueries;
+    
+    if (currentUser.role === 'judge') {
+        // Judge can only see queries assigned to them
+        queriesToShow = allQueries.filter(query => {
+            return query.assignments.some(assignment =>
+                assignment.judge.name === currentUser.name
+            );
+        });
+    }
+    // Owner and Co-Owner can see all queries
     
     // Clear existing content
     queryListBody.innerHTML = '';
     
     // Add queries
-    sampleQueries.forEach(query => {
+    queriesToShow.forEach(query => {
         const row = createQueryRow(query);
         queryListBody.appendChild(row);
     });
+    
+    // Update query count in tab badge
+    const queriesTabBadge = document.querySelector('[data-tab="queries"] .tab-badge');
+    if (queriesTabBadge) {
+        queriesTabBadge.textContent = queriesToShow.length;
+    }
 }
 
 function loadMembers() {
@@ -328,14 +587,17 @@ function addQuery() {
 }
 
 function importQueries() {
+    // Check if user has permission to import queries (Owner or Co-Owner)
+    if (currentUser.role !== 'owner' && currentUser.role !== 'co-owner') {
+        return; // Silently return, tooltip will show "No permission"
+    }
     alert('Import Queries functionality - to be implemented');
 }
 
 function assignQueries() {
     // Check if user has permission to assign queries (Owner or Co-Owner)
     if (currentUser.role !== 'owner' && currentUser.role !== 'co-owner') {
-        alert('You do not have permission to assign queries. Only Owner and Co-Owner can assign queries.');
-        return;
+        return; // Silently return, tooltip will show "No permission"
     }
 
     // Check if "allow anyone to judge" is enabled
@@ -478,7 +740,6 @@ function getCurrentQueryData(queryId) {
             id: 'Q002',
             text: 'Best practices for web application security',
             assignments: [
-                { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'completed', completedAt: '2024-03-14 11:45' },
                 { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'in-progress', assignedAt: '2024-03-13 10:00' }
             ]
         },
@@ -538,8 +799,13 @@ function updateSelectedQueries() {
 }
 
 function toggleSelectAll() {
+    // Judge users cannot select queries
+    if (currentUser.role === 'judge') {
+        return;
+    }
+    
     const selectAllCheckbox = document.getElementById('selectAll');
-    const queryCheckboxes = document.querySelectorAll('.query-row input[type="checkbox"]');
+    const queryCheckboxes = document.querySelectorAll('.query-row input[type="checkbox"]:not([disabled])');
     
     queryCheckboxes.forEach(checkbox => {
         checkbox.checked = selectAllCheckbox.checked;
@@ -552,8 +818,7 @@ function toggleSelectAll() {
 function addMember() {
     // Owner can add Co-Owner/Judge, Co-Owner can add Judge
     if (currentUser.role !== 'owner' && currentUser.role !== 'co-owner') {
-        alert('You do not have permission to add members');
-        return;
+        return; // Silently return, tooltip will show "No permission"
     }
     
     const modal = document.getElementById('addMemberModal');
@@ -648,8 +913,7 @@ function removeMember(memberId) {
 function manageMembers() {
     // Owner can manage all members, Co-Owner can manage Judge members
     if (currentUser.role !== 'owner' && currentUser.role !== 'co-owner') {
-        alert('You do not have permission to manage members');
-        return;
+        return; // Silently return, tooltip will show "No permission"
     }
     alert('Manage Members functionality - to be implemented');
 }
@@ -665,19 +929,17 @@ function nextPage() {
 
 // Results functions
 function downloadReport() {
-    // Owner and Co-Owner can download reports
-    if (currentUser.role !== 'owner' && currentUser.role !== 'co-owner') {
-        alert('You do not have permission to download reports');
-        return;
+    if (currentUser.role === 'judge') {
+        alert('Viewing report (read-only mode) - to be implemented');
+    } else {
+        alert('Download Report functionality - to be implemented');
     }
-    alert('Download Report functionality - to be implemented');
 }
 
 function exportData() {
     // Owner and Co-Owner can export data
     if (currentUser.role !== 'owner' && currentUser.role !== 'co-owner') {
-        alert('You do not have permission to export data');
-        return;
+        return; // Silently return, tooltip will show "No permission"
     }
     alert('Export Data functionality - to be implemented');
 }
@@ -1149,8 +1411,7 @@ function updateUIBasedOnRole() {
 // Add delete experiment function for Owner only
 function deleteExperiment() {
     if (currentUser.role !== 'owner') {
-        alert('You do not have permission to delete this experiment. Only Owner can delete experiments.');
-        return;
+        return; // Silently return, tooltip will show "No permission"
     }
     
     if (confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) {
@@ -1358,6 +1619,10 @@ console.log('Script loaded at:', new Date().toISOString());
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded fired at:', new Date().toISOString());
     
+    // Initialize user display and permissions
+    updateUserDisplay();
+    updatePermissions();
+    
     // Load initial content for the default active tab (queries)
     console.log('Calling loadQueries from DOMContentLoaded...');
     loadQueries();
@@ -1423,4 +1688,35 @@ if (document.readyState === 'loading') {
     console.log('Document already ready, running immediate initialization');
     loadQueries();
 }
-    
+
+// Make function globally accessible
+window.switchTab = switchTab;
+window.toggleSelectAll = toggleSelectAll;
+window.updateSelectedQueries = updateSelectedQueries;
+window.assignQueries = assignQueries;
+window.importQueries = importQueries;
+window.toggleConfigurationPanel = toggleConfigurationPanel;
+window.closeAssignmentModal = closeAssignmentModal;
+window.toggleSelectAllJudges = toggleSelectAllJudges;
+window.toggleSelectAllTaskTypes = toggleSelectAllTaskTypes;
+window.executeQueryAssignment = executeQueryAssignment;
+window.executeTaskTypeAssignment = executeTaskTypeAssignment;
+window.deleteExperiment = deleteExperiment;
+window.cloneExperiment = cloneExperiment;
+window.viewQueryAssignments = viewQueryAssignments;
+window.closeAssignmentDetailsModal = closeAssignmentDetailsModal;
+window.addMoreAssignments = addMoreAssignments;
+window.reassignTask = reassignTask;
+window.viewSubmission = viewSubmission;
+window.removeAssignment = removeAssignment;
+window.toggleJudgeSelection = toggleJudgeSelection;
+window.updateSelectedJudgesCount = updateSelectedJudgesCount;
+window.switchJudgeTab = switchJudgeTab;
+window.addMember = addMember;
+window.closeAddMemberModal = closeAddMemberModal;
+window.addMemberSubmit = addMemberSubmit;
+window.manageMembers = manageMembers;
+window.toggleUserDropdown = toggleUserDropdown;
+window.switchUser = switchUser;
+window.downloadReport = downloadReport;
+window.exportData = exportData;

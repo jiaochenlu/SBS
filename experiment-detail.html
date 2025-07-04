@@ -19,10 +19,47 @@
                     <span>247 queries</span>
                 </div>
             </div>
-            <div class="header-actions">
-                <button class="btn-header" onclick="toggleConfigurationPanel()">📋 Configuration</button>
-                <button class="btn-header" onclick="cloneExperiment()">📋 Clone</button>
-                <button class="btn-header btn-danger-header" onclick="deleteExperiment()">🗑️ Delete</button>
+            <div class="header-right">
+                <!-- User Switcher -->
+                <div class="user-switcher">
+                    <div class="current-user" onclick="toggleUserDropdown()">
+                        <div class="user-avatar" id="currentUserAvatar">JS</div>
+                        <div class="user-info">
+                            <div class="user-name" id="currentUserName">John Smith</div>
+                            <div class="user-role" id="currentUserRole">Owner</div>
+                        </div>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-option" onclick="switchUser('john-smith')">
+                            <div class="user-avatar">JS</div>
+                            <div class="user-info">
+                                <div class="user-name">John Smith</div>
+                                <div class="user-role">Owner</div>
+                            </div>
+                        </div>
+                        <div class="user-option" onclick="switchUser('sarah-chen')">
+                            <div class="user-avatar">SC</div>
+                            <div class="user-info">
+                                <div class="user-name">Sarah Chen</div>
+                                <div class="user-role">Co-Owner</div>
+                            </div>
+                        </div>
+                        <div class="user-option" onclick="switchUser('alice-miller')">
+                            <div class="user-avatar">AM</div>
+                            <div class="user-info">
+                                <div class="user-name">Alice Miller</div>
+                                <div class="user-role">Judge</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="btn-header" onclick="toggleConfigurationPanel()" id="configBtn" title="View configuration">📋 Configuration</button>
+                    <button class="btn-header" onclick="cloneExperiment()" id="cloneBtn" title="Clone experiment">📋 Clone</button>
+                    <button class="btn-header btn-danger-header" onclick="deleteExperiment()" id="deleteBtn" title="Delete experiment">🗑️ Delete</button>
+                </div>
             </div>
         </div>
     </header>
