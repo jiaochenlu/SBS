@@ -1,16 +1,190 @@
-// Form logic
-    document.addEventListener('DOMContentLoaded', function() {
-        const experimentTypeSelect = document.getElementById('experimentType');
-        const dataSchemaInputs = document.querySelectorAll('input[name="dataSchema"]');
-        const dataSourceInputs = document.querySelectorAll('input[name="dataSource"]');
-        const querySetInputs = document.querySelectorAll('input[name="querySet"]');
+// Global variable to store experiment presets
+let experimentPresets = {};
+
+// Function to load experiment presets from config file
+async function loadExperimentPresets() {
+    console.log('🚀 Starting to load experiment presets...');
+    try {
+        console.log('📄 Fetching config file from:', './experiment-presets-config.json');
+        const response = await fetch('./experiment-presets-config.json');
+        console.log('📡 Fetch response status:', response.status, response.statusText);
         
-        // Handle experiment type selection
-        experimentTypeSelect.addEventListener('change', function() {
-            if (this.value) {
-                configureExperimentDefaults(this.value);
-            }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+        }
+        
+        const configData = await response.json();
+        console.log('✨ Config data loaded successfully:', configData);
+        console.log('📊 Found', configData.presets?.length || 0, 'presets in config');
+        
+        // Store presets data
+        experimentPresets = {};
+        configData.presets.forEach(preset => {
+            experimentPresets[preset.id] = preset;
+            console.log('💾 Stored preset:', preset.name);
         });
+        console.log('🗄️ All experiment presets stored:', Object.keys(experimentPresets));
+        
+        // Populate the experiment type dropdown
+        console.log('🔄 About to populate dropdown with config data...');
+        populateExperimentTypeDropdown(configData.presets);
+        console.log('✅ Successfully loaded presets from config file!');
+        
+    } catch (error) {
+        console.error('❌ Error loading experiment presets:', error);
+        console.log('🔄 Falling back to hard-coded presets...');
+        // Fallback to hard-coded options if config loading fails
+        loadFallbackPresets();
+    }
+}
+
+// Function to populate experiment type dropdown from config
+function populateExperimentTypeDropdown(presets) {
+    console.log('🎯 Starting to populate dropdown with', presets?.length || 0, 'presets');
+    const experimentTypeSelect = document.getElementById('experimentType');
+    
+    if (!experimentTypeSelect) {
+        console.error('❌ Could not find experimentType select element');
+        return;
+    }
+    
+    console.log('📝 Current dropdown has', experimentTypeSelect.children.length, 'options');
+    
+    // Clear existing options (except the first placeholder option)
+    while (experimentTypeSelect.children.length > 1) {
+        experimentTypeSelect.removeChild(experimentTypeSelect.lastChild);
+    }
+    
+    console.log('🧹 Cleared dropdown, now has', experimentTypeSelect.children.length, 'options');
+    
+    // Add options from config
+    presets.forEach((preset, index) => {
+        const option = document.createElement('option');
+        option.value = preset.id;
+        option.textContent = preset.name;
+        option.title = preset.description || ''; // Add description as tooltip
+        experimentTypeSelect.appendChild(option);
+        console.log(`➕ Added option ${index + 1}: "${preset.name}" (${preset.id})`);
+    });
+    
+    console.log('✅ Dropdown populated successfully! Total options:', experimentTypeSelect.children.length);
+}
+
+// Fallback function for hard-coded presets (in case config fails to load)
+function loadFallbackPresets() {
+    console.warn('⚠️ Using fallback presets due to config loading failure');
+    console.log('📋 This might happen when running locally due to CORS restrictions');
+    
+    experimentPresets = {
+        'search-ndcg': {
+            id: 'search-ndcg',
+            name: 'Search NDCG experiment [FALLBACK]',
+            configuration: {
+                dataSchema: 'search',
+                dataSource: 'real-time-scraping',
+                querySet: 'upload-query'
+            }
+        },
+        'search-quality': {
+            id: 'search-quality',
+            name: 'Search general quality experiment [FALLBACK]',
+            configuration: {
+                dataSchema: 'search',
+                dataSource: 'real-time-scraping',
+                querySet: 'ad-hoc'
+            }
+        },
+        'researcher': {
+            id: 'researcher',
+            name: 'Researcher experiment [FALLBACK]',
+            configuration: {
+                dataSchema: 'chat-multiturn',
+                dataSource: 'upload-local'
+            }
+        },
+        'meeting-copilot': {
+            id: 'meeting-copilot',
+            name: 'Meeting Copilot experiment [FALLBACK]',
+            configuration: {
+                dataSchema: 'chat-singleturn',
+                dataSource: 'import-scrape'
+            }
+        }
+    };
+    
+    console.log('💾 Fallback presets stored:', Object.keys(experimentPresets));
+    
+    // Also populate dropdown with fallback data
+    const fallbackPresets = [
+        { id: 'search-ndcg', name: 'Search NDCG experiment [FALLBACK]', description: 'Search experiment focused on NDCG metrics' },
+        { id: 'search-quality', name: 'Search general quality experiment [FALLBACK]', description: 'Search experiment for general quality evaluation' },
+        { id: 'researcher', name: 'Researcher experiment [FALLBACK]', description: 'Multi-turn chat experiment for researcher scenarios' },
+        { id: 'meeting-copilot', name: 'Meeting Copilot experiment [FALLBACK]', description: 'Single-turn chat experiment for meeting copilot scenarios' }
+    ];
+    console.log('🔄 Populating dropdown with fallback data...');
+    populateExperimentTypeDropdown(fallbackPresets);
+    console.log('✅ Fallback presets loaded successfully!');
+}
+
+// Function to configure default settings based on experiment type
+function configureExperimentDefaults(experimentType) {
+    const preset = experimentPresets[experimentType];
+    if (!preset || !preset.configuration) {
+        console.error('Experiment preset not found:', experimentType);
+        return;
+    }
+    
+    const config = preset.configuration;
+    
+    // Set Data Schema
+    if (config.dataSchema) {
+        const dataSchemaInput = document.querySelector(`input[name="dataSchema"][value="${config.dataSchema}"]`);
+        if (dataSchemaInput) {
+            dataSchemaInput.checked = true;
+            dataSchemaInput.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    // Wait for schema change to complete, then set other options
+    setTimeout(() => {
+        // Set Data Source
+        if (config.dataSource) {
+            const dataSourceInput = document.querySelector(`input[name="dataSource"][value="${config.dataSource}"]`);
+            if (dataSourceInput) {
+                dataSourceInput.checked = true;
+                dataSourceInput.dispatchEvent(new Event('change'));
+            }
+        }
+        
+        // Set Query Set (if specified)
+        if (config.querySet) {
+            setTimeout(() => {
+                const querySetInput = document.querySelector(`input[name="querySet"][value="${config.querySet}"]`);
+                if (querySetInput) {
+                    querySetInput.checked = true;
+                    querySetInput.dispatchEvent(new Event('change'));
+                }
+            }, 100);
+        }
+    }, 100);
+}
+
+// Form logic
+document.addEventListener('DOMContentLoaded', function() {
+    const experimentTypeSelect = document.getElementById('experimentType');
+    const dataSchemaInputs = document.querySelectorAll('input[name="dataSchema"]');
+    const dataSourceInputs = document.querySelectorAll('input[name="dataSource"]');
+    const querySetInputs = document.querySelectorAll('input[name="querySet"]');
+    
+    // Load experiment presets from config
+    loadExperimentPresets();
+    
+    // Handle experiment type selection
+    experimentTypeSelect.addEventListener('change', function() {
+        if (this.value) {
+            configureExperimentDefaults(this.value);
+        }
+    });
         
         // Show/hide sections based on data source selection
         dataSourceInputs.forEach(input => {
@@ -432,72 +606,6 @@
             e.preventDefault();
             alert('Experiment creation submitted! (This is a demo)');
         });
-        
-        // Function to configure default settings based on experiment type
-        function configureExperimentDefaults(experimentType) {
-            switch (experimentType) {
-                case 'search-ndcg':
-                    // Data Schema - Search
-                    document.querySelector('input[name="dataSchema"][value="search"]').checked = true;
-                    document.querySelector('input[name="dataSchema"][value="search"]').dispatchEvent(new Event('change'));
-                    
-                    // Wait for schema change to complete, then set other options
-                    setTimeout(() => {
-                        // Data Source - Real time scraping
-                        document.querySelector('input[name="dataSource"][value="real-time-scraping"]').checked = true;
-                        document.querySelector('input[name="dataSource"][value="real-time-scraping"]').dispatchEvent(new Event('change'));
-                        
-                        setTimeout(() => {
-                            // Query Set Selection - Upload query set
-                            document.querySelector('input[name="querySet"][value="upload-query"]').checked = true;
-                            document.querySelector('input[name="querySet"][value="upload-query"]').dispatchEvent(new Event('change'));
-                        }, 100);
-                    }, 100);
-                    break;
-                    
-                case 'search-quality':
-                    // Data Schema - Search
-                    document.querySelector('input[name="dataSchema"][value="search"]').checked = true;
-                    document.querySelector('input[name="dataSchema"][value="search"]').dispatchEvent(new Event('change'));
-                    
-                    setTimeout(() => {
-                        // Data Source - Real time scraping
-                        document.querySelector('input[name="dataSource"][value="real-time-scraping"]').checked = true;
-                        document.querySelector('input[name="dataSource"][value="real-time-scraping"]').dispatchEvent(new Event('change'));
-                        
-                        setTimeout(() => {
-                            // Query Set Selection - Ad-hoc query provided by judge
-                            document.querySelector('input[name="querySet"][value="ad-hoc"]').checked = true;
-                            document.querySelector('input[name="querySet"][value="ad-hoc"]').dispatchEvent(new Event('change'));
-                        }, 100);
-                    }, 100);
-                    break;
-                    
-                case 'researcher':
-                    // Data Schema - Chat-MultiTurn
-                    document.querySelector('input[name="dataSchema"][value="chat-multiturn"]').checked = true;
-                    document.querySelector('input[name="dataSchema"][value="chat-multiturn"]').dispatchEvent(new Event('change'));
-                    
-                    setTimeout(() => {
-                        // Data Source - Upload local scrape result
-                        document.querySelector('input[name="dataSource"][value="upload-local"]').checked = true;
-                        document.querySelector('input[name="dataSource"][value="upload-local"]').dispatchEvent(new Event('change'));
-                    }, 100);
-                    break;
-                    
-                case 'meeting-copilot':
-                    // Data Schema - Chat-SingleTurn
-                    document.querySelector('input[name="dataSchema"][value="chat-singleturn"]').checked = true;
-                    document.querySelector('input[name="dataSchema"][value="chat-singleturn"]').dispatchEvent(new Event('change'));
-                    
-                    setTimeout(() => {
-                        // Data Source - Import scrape result
-                        document.querySelector('input[name="dataSource"][value="import-scrape"]').checked = true;
-                        document.querySelector('input[name="dataSource"][value="import-scrape"]').dispatchEvent(new Event('change'));
-                    }, 100);
-                    break;
-            }
-        }
         
     });
 

@@ -1,0 +1,54 @@
+{
+  "version": "1.0",
+  "description": "Experiment preset configurations for SBS platform",
+  "presets": [
+    {
+      "id": "search-ndcg",
+      "name": "Search NDCG experiment [FROM CONFIG]",
+      "description": "Search experiment focused on NDCG metrics",
+      "configuration": {
+        "dataSchema": "search",
+        "dataSource": "real-time-scraping",
+        "querySet": "upload-query"
+      }
+    },
+    {
+      "id": "search-quality",
+      "name": "Search general quality experiment [FROM CONFIG]",
+      "description": "Search experiment for general quality evaluation",
+      "configuration": {
+        "dataSchema": "search",
+        "dataSource": "real-time-scraping",
+        "querySet": "ad-hoc"
+      }
+    },
+    {
+      "id": "researcher",
+      "name": "Researcher experiment [FROM CONFIG]",
+      "description": "Multi-turn chat experiment for researcher scenarios",
+      "configuration": {
+        "dataSchema": "chat-multiturn",
+        "dataSource": "upload-local"
+      }
+    },
+    {
+      "id": "meeting-copilot",
+      "name": "Meeting Copilot experiment [FROM CONFIG]",
+      "description": "Single-turn chat experiment for meeting copilot scenarios",
+      "configuration": {
+        "dataSchema": "chat-singleturn",
+        "dataSource": "import-scrape"
+      }
+    },
+    {
+      "id": "test-new-experiment",
+      "name": "NEW: Test Experiment Type [FROM CONFIG]",
+      "description": "This is a new experiment type added to demonstrate dynamic loading",
+      "configuration": {
+        "dataSchema": "chat-singleturn",
+        "dataSource": "real-time-scraping",
+        "querySet": "ad-hoc"
+      }
+    }
+  ]
+}
