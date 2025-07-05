@@ -221,85 +221,6 @@
             }
         }
         
-        // Function to generate question preview based on type and options
-        function generateQuestionPreview(questionData) {
-            const type = questionData.type;
-            const options = questionData.options || [];
-            
-            switch (type) {
-                case 'single-choice':
-                    if (options.length > 0) {
-                        return `
-                            <div class="preview-options-horizontal">
-                                ${options.map(option => `
-                                    <label class="preview-radio">
-                                        <input type="radio" name="preview_${Date.now()}" disabled>
-                                        <span>${option.text}</span>
-                                    </label>
-                                `).join('')}
-                            </div>
-                        `;
-                    }
-                    return '<div class="preview-placeholder">Single choice options will appear here</div>';
-                    
-                case 'multiple-choice':
-                    if (options.length > 0) {
-                        return `
-                            <div class="preview-options-horizontal">
-                                ${options.map(option => `
-                                    <label class="preview-checkbox">
-                                        <input type="checkbox" disabled>
-                                        <span>${option.text}</span>
-                                    </label>
-                                `).join('')}
-                            </div>
-                        `;
-                    }
-                    return '<div class="preview-placeholder">Multiple choice options will appear here</div>';
-                    
-                case 'toggle':
-                    if (options.length > 0) {
-                        const totalOptions = options.length;
-                        
-                        // Calculate width based on text length and number of options
-                        const avgTextLength = options.reduce((sum, opt) => sum + opt.text.length, 0) / options.length;
-                        const baseWidth = Math.max(avgTextLength * 8, 60); // Minimum 60px per option
-                        const trackWidth = Math.min(400, Math.max(150, baseWidth * totalOptions + 40)); // Add padding
-                        
-                        return `
-                            <div class="preview-toggle-slider" style="width: ${trackWidth}px;">
-                                <div class="toggle-track" style="width: ${trackWidth}px;">
-                                    ${options.map((option, index) => {
-                                        const position = totalOptions === 1 ? 50 : (index / (totalOptions - 1)) * 100;
-                                        return `<div class="toggle-dot" style="left: ${position}%" title="${option.text}"></div>`;
-                                    }).join('')}
-                                </div>
-                                <div class="toggle-labels" style="width: ${trackWidth}px;">
-                                    ${options.map((option, index) => {
-                                        const position = totalOptions === 1 ? 50 : (index / (totalOptions - 1)) * 100;
-                                        return `<span class="toggle-label" style="left: ${position}%;">${option.text}</span>`;
-                                    }).join('')}
-                                </div>
-                            </div>
-                        `;
-                    }
-                    return '<div class="preview-placeholder">Toggle options will appear here</div>';
-                    
-                case 'text':
-                    return '<input type="text" class="preview-text-input" placeholder="Input your answer here..." disabled>';
-                    
-                case 'list':
-                    return `
-                        <div class="preview-list">
-                            <div class="preview-list-item">Add your list item</div>
-                        </div>
-                    `;
-                    
-                default:
-                    return '<div class="preview-placeholder">Question preview will appear here</div>';
-            }
-        }
-        
         // Function to add default quiz questions based on schema
         function addDefaultQuizQuestions(schema) {
             const container = document.getElementById('quizQuestions');
@@ -582,6 +503,87 @@
 
     // Global variables for quiz questions
     let questionCounter = 0;
+    // Global object to store original question values
+    let originalQuestionValues = {};
+
+    // Function to generate question preview based on type and options
+    function generateQuestionPreview(questionData) {
+        const type = questionData.type;
+        const options = questionData.options || [];
+        
+        switch (type) {
+            case 'single-choice':
+                if (options.length > 0) {
+                    return `
+                        <div class="preview-options-horizontal">
+                            ${options.map(option => `
+                                <label class="preview-radio">
+                                    <input type="radio" name="preview_${Date.now()}" disabled>
+                                    <span>${option.text}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                return '<div class="preview-placeholder">Single choice options will appear here</div>';
+                
+            case 'multiple-choice':
+                if (options.length > 0) {
+                    return `
+                        <div class="preview-options-horizontal">
+                            ${options.map(option => `
+                                <label class="preview-checkbox">
+                                    <input type="checkbox" disabled>
+                                    <span>${option.text}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                return '<div class="preview-placeholder">Multiple choice options will appear here</div>';
+                
+            case 'toggle':
+                if (options.length > 0) {
+                    const totalOptions = options.length;
+                    
+                    // Calculate width based on text length and number of options
+                    const avgTextLength = options.reduce((sum, opt) => sum + opt.text.length, 0) / options.length;
+                    const baseWidth = Math.max(avgTextLength * 8, 60); // Minimum 60px per option
+                    const trackWidth = Math.min(400, Math.max(150, baseWidth * totalOptions + 40)); // Add padding
+                    
+                    return `
+                        <div class="preview-toggle-slider" style="width: ${trackWidth}px;">
+                            <div class="toggle-track" style="width: ${trackWidth}px;">
+                                ${options.map((option, index) => {
+                                    const position = totalOptions === 1 ? 50 : (index / (totalOptions - 1)) * 100;
+                                    return `<div class="toggle-dot" style="left: ${position}%" title="${option.text}"></div>`;
+                                }).join('')}
+                            </div>
+                            <div class="toggle-labels" style="width: ${trackWidth}px;">
+                                ${options.map((option, index) => {
+                                    const position = totalOptions === 1 ? 50 : (index / (totalOptions - 1)) * 100;
+                                    return `<span class="toggle-label" style="left: ${position}%;">${option.text}</span>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                return '<div class="preview-placeholder">Toggle options will appear here</div>';
+                
+            case 'text':
+                return '<input type="text" class="preview-text-input" placeholder="Input your answer here..." disabled>';
+                
+            case 'list':
+                return `
+                    <div class="preview-list">
+                        <div class="preview-list-item">Add your list item</div>
+                    </div>
+                `;
+                
+            default:
+                return '<div class="preview-placeholder">Question preview will appear here</div>';
+        }
+    }
 
     // Function to select additional fields from file
     function selectAdditionalFields() {
@@ -688,10 +690,47 @@
         
         container.appendChild(questionDiv);
         
-        // Auto-expand new questions and show action buttons
+        // Auto-expand new questions
         setTimeout(() => {
-            toggleQuestionDetails('question_' + questionCounter);
-        }, 100);
+            const questionId = 'question_' + questionCounter;
+            const questionNumber = questionCounter;
+            
+            // Store original empty values for new question
+            originalQuestionValues[questionNumber] = {
+                text: '',
+                type: 'single-choice',
+                required: 'required',
+                evalLevel: null,
+                options: [
+                    {text: '', score: '1'},
+                    {text: '', score: '2'}
+                ]
+            };
+            
+            // Force expand the question details
+            const details = document.getElementById('details_' + questionNumber);
+            const icon = document.getElementById('expand_' + questionNumber);
+            const actions = document.getElementById('actions_' + questionNumber);
+            
+            if (details && icon && actions) {
+                // Show the details
+                details.style.display = 'block';
+                details.classList.add('expanded');
+                icon.textContent = '▼';
+                icon.classList.add('expanded');
+                
+                // Show action buttons
+                actions.style.display = 'flex';
+                
+                // Add change listeners
+                addChangeListeners(questionId);
+                
+                // Set initial button state (Save disabled for new empty question)
+                setTimeout(() => {
+                    checkForChanges(questionNumber);
+                }, 100);
+            }
+        }, 50);
     }
 
     // Function to get evaluation level options based on schema and data source
@@ -754,6 +793,11 @@
         
         // Update preview
         updateQuestionPreview(questionNumber);
+        
+        // Trigger change detection
+        setTimeout(() => {
+            checkForChanges(questionNumber);
+        }, 10);
     }
 
     // Function to update question preview
@@ -808,19 +852,28 @@
         const questionNumber = containerId.split('_')[1];
         
         newInputs.forEach(input => {
-            input.addEventListener('input', () => {
-                checkForChanges(questionNumber);
-                updateQuestionPreview(questionNumber);
-            });
-            input.addEventListener('change', () => {
-                checkForChanges(questionNumber);
-                updateQuestionPreview(questionNumber);
-            });
+            // Define the change handler function
+            const handleInputChange = () => {
+                setTimeout(() => {
+                    checkForChanges(questionNumber);
+                    updateQuestionPreview(questionNumber);
+                }, 10);
+            };
+            
+            // Store reference to the handler
+            input._changeHandler = handleInputChange;
+            
+            // Add listeners
+            input.addEventListener('input', handleInputChange);
+            input.addEventListener('change', handleInputChange);
+            input.addEventListener('keyup', handleInputChange);
         });
         
         // Trigger change detection and preview update immediately
-        checkForChanges(questionNumber);
-        updateQuestionPreview(questionNumber);
+        setTimeout(() => {
+            checkForChanges(questionNumber);
+            updateQuestionPreview(questionNumber);
+        }, 10);
     }
 
     // Function to remove option from question
@@ -837,8 +890,10 @@
             optionItem.remove();
             
             // Trigger change detection and preview update after removal
-            checkForChanges(questionNumber);
-            updateQuestionPreview(questionNumber);
+            setTimeout(() => {
+                checkForChanges(questionNumber);
+                updateQuestionPreview(questionNumber);
+            }, 10);
         } else {
             alert('A question must have at least 2 options');
         }
@@ -868,23 +923,6 @@
         }
     }
 
-    // Function to toggle question details
-    function toggleQuestionDetails(questionId) {
-        const details = document.getElementById('details_' + questionId.split('_')[1]);
-        const icon = document.getElementById('expand_' + questionId.split('_')[1]);
-        
-        if (details.style.display === 'none' || details.style.display === '') {
-            details.style.display = 'block';
-            details.classList.add('expanded');
-            icon.textContent = '▼';
-            icon.classList.add('expanded');
-        } else {
-            details.style.display = 'none';
-            details.classList.remove('expanded');
-            icon.textContent = '▶';
-            icon.classList.remove('expanded');
-        }
-    }
 
     // Function to update question title in header
     function updateQuestionTitle(input, questionNumber) {
@@ -905,6 +943,11 @@
         
         // Update preview when question text changes
         updateQuestionPreview(questionNumber);
+        
+        // Trigger change detection
+        setTimeout(() => {
+            checkForChanges(questionNumber);
+        }, 10);
     }
 
     // Function to update question required status
@@ -920,6 +963,11 @@
         } else {
             titleElement.textContent = questionText;
         }
+        
+        // Trigger change detection
+        setTimeout(() => {
+            checkForChanges(questionNumber);
+        }, 10);
     }
 
     // Function to toggle experiment description
@@ -1044,39 +1092,69 @@
 
     // Auto-update preview when typing (debounced)
     let previewTimeout;
-    document.getElementById('judgementGuide').addEventListener('input', function() {
-        if (document.getElementById('markdownPreview').style.display !== 'none') {
-            clearTimeout(previewTimeout);
-            previewTimeout = setTimeout(updatePreview, 300);
-        }
-    });
-
-    // Global object to store original question values
-    let originalQuestionValues = {};
+    const judgementGuideElement = document.getElementById('judgementGuide');
+    if (judgementGuideElement) {
+        judgementGuideElement.addEventListener('input', function() {
+            if (document.getElementById('markdownPreview').style.display !== 'none') {
+                clearTimeout(previewTimeout);
+                previewTimeout = setTimeout(updatePreview, 300);
+            }
+        });
+    }
 
     // Enhanced toggle function with change tracking
     function toggleQuestionDetails(questionId) {
-        const details = document.getElementById('details_' + questionId.split('_')[1]);
-        const icon = document.getElementById('expand_' + questionId.split('_')[1]);
-        const actions = document.getElementById('actions_' + questionId.split('_')[1]);
+        const questionNumber = questionId.split('_')[1];
+        const details = document.getElementById('details_' + questionNumber);
+        const icon = document.getElementById('expand_' + questionNumber);
+        const actions = document.getElementById('actions_' + questionNumber);
         
-        if (details.style.display === 'none' || details.style.display === '') {
-            // Store original values when opening
-            storeOriginalValues(questionId);
-            
+        if (!details || !icon) {
+            console.error('Could not find question elements for', questionId);
+            return;
+        }
+        
+        // Check if currently collapsed
+        const isCollapsed = details.style.display === 'none' || details.style.display === '';
+        
+        if (isCollapsed) {
+            // Expand the question
             details.style.display = 'block';
             details.classList.add('expanded');
             icon.textContent = '▼';
             icon.classList.add('expanded');
             
+            // Store original values when opening (if not already stored)
+            if (!originalQuestionValues[questionNumber]) {
+                try {
+                    storeOriginalValues(questionId);
+                } catch (error) {
+                    console.error('Error storing original values:', error);
+                }
+            }
+            
             // Add change listeners
-            addChangeListeners(questionId);
+            try {
+                addChangeListeners(questionId);
+            } catch (error) {
+                console.error('Error adding change listeners:', error);
+            }
+            
+            // Show action buttons and check initial state
+            if (actions) {
+                actions.style.display = 'flex';
+                setTimeout(() => {
+                    checkForChanges(questionNumber);
+                }, 100);
+            }
+            
         } else {
+            // Collapse the question
             details.style.display = 'none';
             details.classList.remove('expanded');
             icon.textContent = '▶';
             icon.classList.remove('expanded');
-            actions.style.display = 'none';
+            if (actions) actions.style.display = 'none';
         }
     }
 
@@ -1085,10 +1163,19 @@
         const questionElement = document.getElementById(questionId);
         const questionNumber = questionId.split('_')[1];
         
+        if (!questionElement) {
+            console.error('Could not find question element:', questionId);
+            return;
+        }
+        
+        const textInput = questionElement.querySelector('input[type="text"]');
+        const typeSelect = questionElement.querySelector('.question-type');
+        const selects = questionElement.querySelectorAll('select');
+        
         const originalData = {
-            text: questionElement.querySelector('input[type="text"]').value,
-            type: questionElement.querySelector('.question-type').value,
-            required: questionElement.querySelectorAll('select')[1].value,
+            text: textInput ? textInput.value || '' : '',
+            type: typeSelect ? typeSelect.value || 'single-choice' : 'single-choice',
+            required: selects.length > 1 ? selects[1].value || 'required' : 'required',
             evalLevel: getSelectedEvaluationLevel(questionElement),
             options: []
         };
@@ -1099,8 +1186,8 @@
         
         for (let i = 0; i < optionTexts.length; i++) {
             originalData.options.push({
-                text: optionTexts[i].value,
-                score: optionScores[i].value
+                text: optionTexts[i] ? optionTexts[i].value || '' : '',
+                score: optionScores[i] ? optionScores[i].value || '1' : '1'
             });
         }
         
@@ -1111,53 +1198,155 @@
     function addChangeListeners(questionId) {
         const questionElement = document.getElementById(questionId);
         const questionNumber = questionId.split('_')[1];
-        const actions = document.getElementById('actions_' + questionNumber);
         
+        if (!questionElement) {
+            console.error('Could not find question element for adding listeners:', questionId);
+            return;
+        }
+        
+        // Remove existing listeners to avoid duplicates
         const inputs = questionElement.querySelectorAll('input, select, textarea');
         
         inputs.forEach(input => {
-            input.addEventListener('input', () => checkForChanges(questionNumber));
-            input.addEventListener('change', () => checkForChanges(questionNumber));
+            // Remove existing listeners if any
+            input.removeEventListener('input', input._changeHandler);
+            input.removeEventListener('change', input._changeHandler);
+            input.removeEventListener('keyup', input._changeHandler);
+            
+            // Define the change handler function
+            const handleInputChange = () => {
+                setTimeout(() => {
+                    checkForChanges(questionNumber);
+                    updateQuestionPreview(questionNumber);
+                }, 10);
+            };
+            
+            // Store reference to the handler for later removal
+            input._changeHandler = handleInputChange;
+            
+            // Add listeners
+            input.addEventListener('input', handleInputChange);
+            input.addEventListener('change', handleInputChange);
+            input.addEventListener('keyup', handleInputChange);
         });
+        
+        console.log('Added change listeners to question', questionNumber);
     }
 
-    // Check if question has been modified
+    // Check if question has been modified or has content (for new questions)
     function checkForChanges(questionNumber) {
         const questionElement = document.getElementById('question_' + questionNumber);
         const actions = document.getElementById('actions_' + questionNumber);
+        const saveButton = actions ? actions.querySelector('.btn-save-question') : null;
+        const cancelButton = actions ? actions.querySelector('.btn-cancel-question') : null;
         const original = originalQuestionValues[questionNumber];
         
-        if (!original) return;
-        
-        const current = {
-            text: questionElement.querySelector('input[type="text"]').value,
-            type: questionElement.querySelector('.question-type').value,
-            required: questionElement.querySelectorAll('select')[1].value,
-            evalLevel: getSelectedEvaluationLevel(questionElement),
-            options: []
-        };
-        
-        // Get current options
-        const optionTexts = questionElement.querySelectorAll('.option-text');
-        const optionScores = questionElement.querySelectorAll('.option-score');
-        
-        for (let i = 0; i < optionTexts.length; i++) {
-            current.options.push({
-                text: optionTexts[i].value,
-                score: optionScores[i].value
-            });
+        if (!questionElement || !actions) {
+            return;
         }
         
-        // Compare with original
-        const hasChanges = (
-            current.text !== original.text ||
-            current.type !== original.type ||
-            current.required !== original.required ||
-            current.evalLevel !== original.evalLevel ||
-            JSON.stringify(current.options) !== JSON.stringify(original.options)
-        );
+        if (!original) {
+            return;
+        }
         
-        actions.style.display = hasChanges ? 'flex' : 'none';
+        // Always show action buttons
+        actions.style.display = 'flex';
+        
+        // Always enable Cancel button
+        if (cancelButton) {
+            cancelButton.disabled = false;
+            cancelButton.style.opacity = '1';
+            cancelButton.style.cursor = 'pointer';
+        }
+        
+        // Get current values
+        const textInput = questionElement.querySelector('input[type="text"]');
+        const currentText = textInput ? textInput.value.trim() : '';
+        
+        const optionTexts = questionElement.querySelectorAll('.option-text');
+        let hasOptionContent = false;
+        optionTexts.forEach(input => {
+            if (input.value.trim() !== '' && input.value.trim() !== 'Option text') {
+                hasOptionContent = true;
+            }
+        });
+        
+        // Check if this is a new question (empty original values)
+        const isNewQuestion = (original.text === '' && original.options.every(opt => opt.text === '' || opt.text === 'Option text'));
+        
+        let shouldEnableSave = false;
+        
+        if (isNewQuestion) {
+            // New question: enable only if user has written meaningful content
+            // Check if question text is not empty
+            const hasQuestionText = currentText !== '';
+            
+            // Check if at least one option has meaningful content (not just placeholder)
+            let hasValidOptions = false;
+            optionTexts.forEach(input => {
+                const value = input.value.trim();
+                if (value !== '' && value !== 'Option text') {
+                    hasValidOptions = true;
+                }
+            });
+            
+            // For choice-type questions, require both question text and at least one valid option
+            const typeSelect = questionElement.querySelector('.question-type');
+            const questionType = typeSelect ? typeSelect.value : 'single-choice';
+            
+            if (questionType === 'text' || questionType === 'list') {
+                // For text/list questions, only require question text
+                shouldEnableSave = hasQuestionText;
+            } else {
+                // For choice questions, require both question text and valid options
+                shouldEnableSave = hasQuestionText && hasValidOptions;
+            }
+        } else {
+            // Existing question: enable if there are changes
+            const typeSelect = questionElement.querySelector('.question-type');
+            const selects = questionElement.querySelectorAll('select');
+            
+            const current = {
+                text: currentText,
+                type: typeSelect ? typeSelect.value : 'single-choice',
+                required: selects.length > 1 ? selects[1].value : 'required',
+                evalLevel: getSelectedEvaluationLevel(questionElement),
+                options: []
+            };
+            
+            // Get current options
+            const optionScores = questionElement.querySelectorAll('.option-score');
+            for (let i = 0; i < optionTexts.length; i++) {
+                current.options.push({
+                    text: optionTexts[i] ? optionTexts[i].value.trim() : '',
+                    score: optionScores[i] ? optionScores[i].value : '1'
+                });
+            }
+            
+            // Check for changes
+            shouldEnableSave = (
+                current.text !== original.text ||
+                current.type !== original.type ||
+                current.required !== original.required ||
+                current.evalLevel !== original.evalLevel ||
+                JSON.stringify(current.options) !== JSON.stringify(original.options)
+            );
+        }
+        
+        // Set Save button state
+        if (saveButton) {
+            if (shouldEnableSave) {
+                saveButton.disabled = false;
+                saveButton.style.opacity = '1';
+                saveButton.style.cursor = 'pointer';
+                saveButton.style.backgroundColor = '';
+            } else {
+                saveButton.disabled = true;
+                saveButton.style.opacity = '0.5';
+                saveButton.style.cursor = 'not-allowed';
+                saveButton.style.backgroundColor = '#e2e8f0';
+            }
+        }
     }
 
     // Save question changes

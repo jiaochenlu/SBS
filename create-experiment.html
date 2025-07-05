@@ -409,10 +409,9 @@
                         <h2 class="field-title"><span class="required">*</span> Judgement Questions</h2>
                         <p class="help-text">Add questions for judges to answer during labeling</p>
                     </div>
-                    <label class="mode-toggle" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                    <label class="mode-toggle" title="Raw JSON">
                         <input type="checkbox" id="rawCodeToggle" onchange="toggleRawCodeMode()">
                         <span class="toggle-slider"></span>
-                        <span class="toggle-label" style="font-weight: 600; color: #374151; font-size: 1.1rem; white-space: nowrap;">Raw JSON</span>
                     </label>
                 </div>
                 
@@ -693,6 +692,15 @@ A response that is vague, contains factual errors, or doesn't address the user's
             display: none;
         }
         
+        /* Ensure toggle label is visible */
+        .mode-toggle .toggle-label {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            font-weight: 600 !important;
+            color: #374151 !important;
+            font-size: 1.1rem !important;
+        }
     </style>
 
 </body>
