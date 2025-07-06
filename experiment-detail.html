@@ -11,12 +11,12 @@
     <header class="header">
         <div class="header-content">
             <div class="experiment-info">
-                <h1 class="experiment-title">Search NDCG Experiment</h1>
+                <h1 class="experiment-title" id="experimentTitle">Loading...</h1>
                 <div class="experiment-meta">
-                    <span class="status-badge status-active">Active</span>
-                    <span>Created: March 15, 2024</span>
-                    <span>Owner: John Smith</span>
-                    <span>247 queries</span>
+                    <span class="status-badge" id="experimentStatus">Loading...</span>
+                    <span id="experimentCreated">Created: Loading...</span>
+                    <span id="experimentOwner">Owner: Loading...</span>
+                    <span id="experimentQueryCount">Loading queries...</span>
                 </div>
             </div>
             <div class="header-right">
@@ -73,32 +73,32 @@
                 <div class="section-card progress-overview-card">
                     <div class="section-header progress-header">
                         <h3>Progress Overview</h3>
-                        <div class="progress-percentage">247 Total Queries</div>
+                        <div class="progress-percentage" id="totalQueriesDisplay">Loading Total Queries</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-bar-segmented">
-                            <div class="progress-segment completed" style="width: 76.5%" title="189 Completed (76.5%)"></div>
-                            <div class="progress-segment in-progress" style="width: 9.3%" title="23 In Progress (9.3%)"></div>
-                            <div class="progress-segment not-started" style="width: 14.2%" title="35 Not Started (14.2%)"></div>
+                            <div class="progress-segment completed" id="progressCompleted" style="width: 0%" title="Loading..."></div>
+                            <div class="progress-segment in-progress" id="progressInProgress" style="width: 0%" title="Loading..."></div>
+                            <div class="progress-segment not-started" id="progressNotStarted" style="width: 0%" title="Loading..."></div>
                         </div>
                         <div class="progress-stats-row">
                             <div class="progress-stats">
                                 <div class="progress-stat-item completed">
                                     <span class="stat-dot"></span>
-                                    <span class="stat-text">189 Completed (76.5%)</span>
+                                    <span class="stat-text" id="completedStat">Loading Completed</span>
                                 </div>
                                 <div class="progress-stat-item in-progress">
                                     <span class="stat-dot"></span>
-                                    <span class="stat-text">23 In Progress (9.3%)</span>
+                                    <span class="stat-text" id="inProgressStat">Loading In Progress</span>
                                 </div>
                                 <div class="progress-stat-item not-started">
                                     <span class="stat-dot"></span>
-                                    <span class="stat-text">35 Not Started (14.2%)</span>
+                                    <span class="stat-text" id="notStartedStat">Loading Not Started</span>
                                 </div>
                             </div>
                             <div class="judges-info">
                                 <span class="judges-icon">👥</span>
-                                <span class="stat-text">4 Judges</span>
+                                <span class="stat-text" id="judgesCount">Loading Judges</span>
                             </div>
                         </div>
                     </div>
@@ -111,14 +111,14 @@
             <div class="tab-container">
                 <button class="tab-button active" data-tab="queries" onclick="switchTab('queries')">
                     Queries
-                    <span class="tab-badge">247</span>
+                    <span class="tab-badge" id="queriesTabBadge">0</span>
                 </button>
                 <button class="tab-button" data-tab="results" onclick="switchTab('results')">
                     Results
                 </button>
                 <button class="tab-button" data-tab="members" onclick="switchTab('members')">
                     Members
-                    <span class="tab-badge">4</span>
+                    <span class="tab-badge" id="membersTabBadge">0</span>
                 </button>
             </div>
         </div>
@@ -169,7 +169,7 @@
                             <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
                         </div>
                         <div class="query-column">Query</div>
-                        <div class="assignments-column">Assignments</div>
+                        <div class="assignments-column">Judges</div>
                         <div class="status-column">Overall Status</div>
                         <div class="progress-column">Progress</div>
                         <div class="last-judged-column">Last Judged At</div>
@@ -285,7 +285,7 @@
                         <h4>Experiment Type</h4>
                         <div class="config-item">
                             <span class="config-label">Selected Type:</span>
-                            <span class="config-value">Search NDCG experiment</span>
+                            <span class="config-value" id="configExperimentType">Loading...</span>
                         </div>
                     </div>
 
@@ -293,11 +293,11 @@
                         <h4>Basic Information</h4>
                         <div class="config-item">
                             <span class="config-label">Experiment Name:</span>
-                            <span class="config-value">Search NDCG Experiment</span>
+                            <span class="config-value" id="configExperimentName">Loading...</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Experiment Description:</span>
-                            <span class="config-value">Evaluating search result quality using NDCG metrics for better ranking performance</span>
+                            <span class="config-value" id="configExperimentDescription">Loading...</span>
                         </div>
                     </div>
 
@@ -305,47 +305,41 @@
                         <h4>Labeling Data</h4>
                         <div class="config-item">
                             <span class="config-label">Data Schema:</span>
-                            <span class="config-value">Search</span>
+                            <span class="config-value" id="configDataSchema">Loading...</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Data Source:</span>
-                            <span class="config-value">Real-time scraping</span>
+                            <span class="config-value" id="configDataSource">Loading...</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Query Set Selection:</span>
-                            <span class="config-value">Upload query set</span>
+                            <span class="config-value" id="configQuerySetSelection">Loading...</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Query Set File:</span>
-                            <span class="config-value">search_queries_2024.csv (247 queries)</span>
+                            <span class="config-value" id="configQuerySetFile">Loading...</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Control Profile:</span>
-                            <span class="config-value">userp</span>
+                            <span class="config-value" id="configControlProfile">Loading...</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Treatment Profile:</span>
-                            <span class="config-value">copilot web</span>
+                            <span class="config-value" id="configTreatmentProfile">Loading...</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Data Fields Display:</span>
-                            <span class="config-value">Query, Response, LU Info Question</span>
+                            <span class="config-value" id="configDataFieldsDisplay">Loading...</span>
                         </div>
                     </div>
 
                     <div class="config-section">
                         <h4>Judgement Questions</h4>
-                        <div class="config-item">
-                            <span class="config-label">Question 1:</span>
-                            <span class="config-value">Item relevance (Toggle - Item Level Side-by-Side)</span>
-                        </div>
-                        <div class="config-item">
-                            <span class="config-label">Question 2:</span>
-                            <span class="config-value">Which side is better? (Single Choice - Query Level Side-by-Side)</span>
-                        </div>
-                        <div class="config-item">
-                            <span class="config-label">Question 3:</span>
-                            <span class="config-value">Comment (Text Box - Query Level Side-by-Side)</span>
+                        <div id="judgementQuestionsContainer">
+                            <div class="config-item">
+                                <span class="config-label">Loading...</span>
+                                <span class="config-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
 
@@ -353,15 +347,15 @@
                         <h4>Additional Settings</h4>
                         <div class="config-item">
                             <span class="config-label">Blind Test:</span>
-                            <span class="config-value">Enabled</span>
+                            <span class="config-value" id="configBlindTest">Loading...</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Allow Any to Judge:</span>
-                            <span class="config-value">Enabled</span>
+                            <span class="config-value" id="configAllowAnyToJudge">Loading...</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Judgement Guide:</span>
-                            <span class="config-value">Configured (Markdown format)</span>
+                            <span class="config-value" id="configJudgementGuide">Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -371,5 +365,205 @@
     </div>
 
     <script src="experiment-detail.js"></script>
+    <script>
+        // Immediate config loading and UI update
+        (async function() {
+            console.log('🚀 Immediate config loader starting...');
+            
+            try {
+                // Fetch config immediately
+                const response = await fetch('./experiment-detail-config.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const config = await response.json();
+                console.log('✅ Config loaded immediately:', config);
+                
+                const exp = config.experiment;
+                
+                // Update all hardcoded "Loading..." immediately
+                const updates = [
+                    { id: 'experimentTitle', value: exp.name },
+                    { id: 'experimentStatus', value: exp.status.charAt(0).toUpperCase() + exp.status.slice(1) },
+                    { id: 'experimentCreated', value: `Created: ${exp.createdAt}` },
+                    { id: 'experimentOwner', value: `Owner: ${exp.owner.name}` },
+                    { id: 'experimentQueryCount', value: `${exp.progress.totalQueries} queries` },
+                    { id: 'totalQueriesDisplay', value: `${exp.progress.totalQueries} Total Queries` },
+                    { id: 'completedStat', value: `${exp.progress.completed} Completed (${exp.progress.completedPercentage}%)` },
+                    { id: 'inProgressStat', value: `${exp.progress.inProgress} In Progress (${exp.progress.inProgressPercentage}%)` },
+                    { id: 'notStartedStat', value: `${exp.progress.notStarted} Not Started (${exp.progress.notStartedPercentage}%)` },
+                    { id: 'judgesCount', value: `${exp.members.length} Judges` },
+                    { id: 'configExperimentType', value: exp.configuration.experimentType },
+                    { id: 'configExperimentName', value: exp.name },
+                    { id: 'configExperimentDescription', value: exp.description },
+                    { id: 'configDataSchema', value: exp.configuration.dataSchema },
+                    { id: 'configDataSource', value: exp.configuration.dataSource },
+                    { id: 'configQuerySetSelection', value: exp.configuration.querySetSelection },
+                    { id: 'configQuerySetFile', value: `${exp.configuration.querySetFile.name} (${exp.configuration.querySetFile.queryCount} queries)` },
+                    { id: 'configControlProfile', value: exp.configuration.controlProfile },
+                    { id: 'configTreatmentProfile', value: exp.configuration.treatmentProfile },
+                    { id: 'configDataFieldsDisplay', value: exp.configuration.dataFieldsDisplay },
+                    { id: 'configBlindTest', value: exp.configuration.additionalSettings.blindTest ? 'Enabled' : 'Disabled' },
+                    { id: 'configAllowAnyToJudge', value: exp.configuration.additionalSettings.allowAnyToJudge ? 'Enabled' : 'Disabled' },
+                    { id: 'configJudgementGuide', value: exp.configuration.additionalSettings.judgementGuide },
+                    { id: 'queriesTabBadge', value: exp.queries.length },
+                    { id: 'membersTabBadge', value: exp.members.length }
+                ];
+                
+                // Apply all updates
+                updates.forEach(update => {
+                    const element = document.getElementById(update.id);
+                    if (element) {
+                        element.textContent = update.value;
+                        console.log(`✅ Updated ${update.id} to: ${update.value}`);
+                    } else {
+                        console.warn(`❌ Element ${update.id} not found`);
+                    }
+                });
+                
+                // Update progress bars
+                const progressCompleted = document.getElementById('progressCompleted');
+                if (progressCompleted) {
+                    progressCompleted.style.width = `${exp.progress.completedPercentage}%`;
+                    progressCompleted.title = `${exp.progress.completed} Completed (${exp.progress.completedPercentage}%)`;
+                }
+                
+                const progressInProgress = document.getElementById('progressInProgress');
+                if (progressInProgress) {
+                    progressInProgress.style.width = `${exp.progress.inProgressPercentage}%`;
+                    progressInProgress.title = `${exp.progress.inProgress} In Progress (${exp.progress.inProgressPercentage}%)`;
+                }
+                
+                const progressNotStarted = document.getElementById('progressNotStarted');
+                if (progressNotStarted) {
+                    progressNotStarted.style.width = `${exp.progress.notStartedPercentage}%`;
+                    progressNotStarted.title = `${exp.progress.notStarted} Not Started (${exp.progress.notStartedPercentage}%)`;
+                }
+                
+                // Update experiment status badge class
+                const statusElement = document.getElementById('experimentStatus');
+                if (statusElement) {
+                    statusElement.className = `status-badge status-${exp.status}`;
+                }
+                
+                console.log('🎉 All UI elements updated successfully!');
+                
+                // Load queries into the query list
+                console.log('📋 Loading queries...');
+                const queryListBody = document.getElementById('queryListBody');
+                if (queryListBody && exp.queries) {
+                    queryListBody.innerHTML = ''; // Clear existing content
+                    
+                    exp.queries.forEach(query => {
+                        const row = document.createElement('div');
+                        row.className = 'query-row';
+                        
+                        // Calculate progress for this query
+                        const assignments = query.assignments || [];
+                        const completedAssignments = assignments.filter(a => a.status === 'completed').length;
+                        const totalAssignments = assignments.length;
+                        
+                        let overallStatus = 'not-started';
+                        if (completedAssignments === totalAssignments && totalAssignments > 0) {
+                            overallStatus = 'completed';
+                        } else if (completedAssignments > 0) {
+                            overallStatus = 'in-progress';
+                        }
+                        
+                        const overallProgress = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
+                        
+                        // Create assignees display
+                        const assigneesHtml = assignments.length > 0 ?
+                            assignments.map(assignment => `
+                                <div class="assignment-item" title="${assignment.judge.name} - ${assignment.status}">
+                                    <div class="assignee-avatar ${assignment.status}">${assignment.judge.initials}</div>
+                                    <div class="assignment-status-dot ${assignment.status}"></div>
+                                </div>
+                            `).join('') :
+                            '<div class="no-assignments">Not assigned</div>';
+                        
+                        // Calculate last judged time
+                        const completedAssignmentsForTime = assignments.filter(a => a.status === 'completed');
+                        let lastJudgedAt = '--';
+                        if (completedAssignmentsForTime.length > 0) {
+                            const latestCompletion = completedAssignmentsForTime.reduce((latest, current) => {
+                                const currentTime = new Date(current.completedAt).getTime();
+                                const latestTime = new Date(latest.completedAt).getTime();
+                                return currentTime > latestTime ? current : latest;
+                            });
+                            
+                            const date = new Date(latestCompletion.completedAt);
+                            lastJudgedAt = date.getFullYear() + '-' +
+                                          String(date.getMonth() + 1).padStart(2, '0') + '-' +
+                                          String(date.getDate()).padStart(2, '0') + ' ' +
+                                          String(date.getHours()).padStart(2, '0') + ':' +
+                                          String(date.getMinutes()).padStart(2, '0') + ':' +
+                                          String(date.getSeconds()).padStart(2, '0');
+                        }
+                        
+                        row.innerHTML = `
+                            <div class="checkbox-column">
+                                <input type="checkbox" value="${query.id}" onchange="updateSelectedQueries()">
+                            </div>
+                            <div class="query-column">
+                                <div class="query-text">${query.text}</div>
+                                <div class="query-meta">#${query.id}</div>
+                            </div>
+                            <div class="assignments-column">
+                                <div class="assignments-container">
+                                    ${assigneesHtml}
+                                </div>
+                                <div class="assignment-summary">
+                                    ${totalAssignments} assigned | ${completedAssignments} completed
+                                </div>
+                            </div>
+                            <div class="status-column">
+                                <span class="status-badge status-${overallStatus}">${overallStatus}</span>
+                            </div>
+                            <div class="progress-column">
+                                <div class="progress-bar-small">
+                                    <div class="progress-fill-small" style="width: ${overallProgress}%"></div>
+                                </div>
+                                <span class="progress-text">${overallProgress}%</span>
+                                <div class="progress-detail">${completedAssignments}/${totalAssignments}</div>
+                            </div>
+                            <div class="last-judged-column">
+                                ${lastJudgedAt}
+                            </div>
+                        `;
+                        
+                        queryListBody.appendChild(row);
+                    });
+                    
+                    console.log(`✅ Loaded ${exp.queries.length} queries`);
+                } else {
+                    console.warn('❌ queryListBody element not found or no queries in config');
+                }
+                
+            } catch (error) {
+                console.error('❌ Immediate config loading failed:', error);
+                // Set fallback values if config loading fails
+                const fallbackUpdates = [
+                    { id: 'experimentTitle', value: 'Search NDCG Experiment (Fallback)' },
+                    { id: 'experimentStatus', value: 'Active' },
+                    { id: 'experimentCreated', value: 'Created: March 15, 2024' },
+                    { id: 'experimentOwner', value: 'Owner: John Smith' },
+                    { id: 'experimentQueryCount', value: '50 queries' },
+                    { id: 'totalQueriesDisplay', value: '50 Total Queries' },
+                    { id: 'completedStat', value: '30 Completed (60%)' },
+                    { id: 'inProgressStat', value: '10 In Progress (20%)' },
+                    { id: 'notStartedStat', value: '10 Not Started (20%)' },
+                    { id: 'judgesCount', value: '3 Judges' }
+                ];
+                
+                fallbackUpdates.forEach(update => {
+                    const element = document.getElementById(update.id);
+                    if (element) {
+                        element.textContent = update.value;
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

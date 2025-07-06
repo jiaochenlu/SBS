@@ -1,38 +1,490 @@
 // Experiment Detail Page JavaScript
 
-// User data
-const users = {
-    'john-smith': {
-        id: 'john-smith',
-        name: 'John Smith',
-        role: 'owner',
-        initials: 'JS',
-        email: 'john.smith@company.com'
-    },
-    'sarah-chen': {
-        id: 'sarah-chen',
-        name: 'Sarah Chen',
-        role: 'co-owner',
-        initials: 'SC',
-        email: 'sarah.chen@company.com'
-    },
-    'alice-miller': {
-        id: 'alice-miller',
-        name: 'Alice Miller',
-        role: 'judge',
-        initials: 'AM',
-        email: 'alice.miller@company.com'
-    }
-};
-
-// Current user (default to John Smith)
-let currentUser = users['john-smith'];
-
-const experimentConfig = {
-    allowAnyoneToJudge: false, // This controls the "Assign Selected" button state
-    experimentType: 'search-ndcg', // 'real-time-ad-hoc' or other types
+// Global variables for configuration data
+let experimentData = null;
+let users = {};
+let currentUser = null;
+let experimentConfig = {
+    allowAnyoneToJudge: false,
+    experimentType: 'search-ndcg',
     isRealTimeAdHoc: false
 };
+
+// Load experiment configuration from JSON file
+async function loadExperimentConfig() {
+    try {
+        console.log('🚀🚀🚀 STARTING loadExperimentConfig function');
+        console.log('Current location:', window.location.href);
+        console.log('Base URL:', window.location.origin);
+        
+        const configUrl = './experiment-detail-config.json';
+        console.log('📡 Attempting to fetch:', configUrl);
+        
+        const response = await fetch(configUrl);
+        console.log('📡 Fetch response received:', {
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url,
+            ok: response.ok
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+        }
+        
+        const config = await response.json();
+        console.log('✨✨✨ CONFIG DATA LOADED SUCCESSFULLY:', config);
+        console.log('✨ Experiment data:', config.experiment);
+        
+        experimentData = config.experiment;
+        console.log('✨ Set experimentData to:', experimentData);
+        
+        // Convert members array to users object for compatibility
+        users = {};
+        experimentData.members.forEach(member => {
+            users[member.id] = member;
+        });
+        console.log('✨ Set users to:', users);
+        
+        // Set default current user to owner
+        const owner = experimentData.members.find(member => member.role === 'owner');
+        currentUser = owner || experimentData.members[0];
+        console.log('✨ Set currentUser to:', currentUser);
+        
+        // Update experiment config
+        experimentConfig.allowAnyoneToJudge = experimentData.configuration.additionalSettings.allowAnyToJudge;
+        experimentConfig.experimentType = experimentData.configuration.experimentType;
+        experimentConfig.isRealTimeAdHoc = experimentData.configuration.dataSource === 'ad-hoc';
+        
+        // Debug logging for configuration
+        console.log('🔍🔍🔍 Configuration Debug:');
+        console.log('  - Raw allowAnyToJudge from config:', experimentData.configuration.additionalSettings.allowAnyToJudge);
+        console.log('  - Set experimentConfig.allowAnyoneToJudge to:', experimentConfig.allowAnyoneToJudge);
+        console.log('  - experimentConfig object:', experimentConfig);
+        
+        // Update UI with loaded data
+        console.log('🎨🎨🎨 CALLING updateUIWithConfigData...');
+        updateUIWithConfigData();
+        
+        console.log('✅✅✅ Experiment configuration loaded successfully');
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Error loading experiment configuration:', error);
+        // Fallback to hardcoded data if config loading fails
+        loadFallbackData();
+        return false;
+    }
+}
+
+// Fallback data if config file loading fails
+function loadFallbackData() {
+    console.log('🔄 Loading fallback data...');
+    
+    users = {
+        'john-smith': {
+            id: 'john-smith',
+            name: 'John Smith',
+            role: 'owner',
+            initials: 'JS',
+            email: 'john.smith@company.com'
+        },
+        'sarah-chen': {
+            id: 'sarah-chen',
+            name: 'Sarah Chen',
+            role: 'co-owner',
+            initials: 'SC',
+            email: 'sarah.chen@company.com'
+        },
+        'alice-miller': {
+            id: 'alice-miller',
+            name: 'Alice Miller',
+            role: 'judge',
+            initials: 'AM',
+            email: 'alice.miller@company.com'
+        }
+    };
+    
+    currentUser = users['john-smith'];
+    
+    experimentConfig = {
+        allowAnyoneToJudge: false,
+        experimentType: 'search-ndcg',
+        isRealTimeAdHoc: false
+    };
+    
+    // Set fallback experimentData
+    experimentData = {
+        id: "search-ndcg-fallback",
+        name: "Search NDCG Experiment (Fallback)",
+        description: "Fallback experiment data",
+        status: "active",
+        createdAt: "March 15, 2024",
+        owner: {
+            id: "john-smith",
+            name: "John Smith",
+            email: "john.smith@company.com",
+            initials: "JS"
+        },
+        configuration: {
+            experimentType: "Search NDCG experiment",
+            dataSchema: "Search",
+            dataSource: "Real-time scraping",
+            querySetSelection: "Upload query set",
+            querySetFile: {
+                name: "fallback_queries.csv",
+                queryCount: 50
+            },
+            controlProfile: "userp",
+            treatmentProfile: "copilot web",
+            dataFieldsDisplay: "Query, Response, LU Info Question",
+            judgementQuestions: [
+                {
+                    id: 1,
+                    text: "Item relevance",
+                    type: "Toggle - Item Level Side-by-Side"
+                }
+            ],
+            additionalSettings: {
+                blindTest: true,
+                allowAnyToJudge: false,
+                judgementGuide: "Configured (Markdown format)"
+            }
+        },
+        progress: {
+            totalQueries: 50,
+            completed: 30,
+            inProgress: 10,
+            notStarted: 10,
+            completedPercentage: 60,
+            inProgressPercentage: 20,
+            notStartedPercentage: 20
+        },
+        members: [
+            {
+                id: "john-smith",
+                name: "John Smith",
+                email: "john.smith@company.com",
+                role: "owner",
+                initials: "JS",
+                completed: null,
+                assigned: 0,
+                lastJudgedAt: null
+            },
+            {
+                id: "sarah-chen",
+                name: "Sarah Chen",
+                email: "sarah.chen@company.com",
+                role: "co-owner",
+                initials: "SC",
+                completed: 15,
+                assigned: 20,
+                lastJudgedAt: "2024-03-16 15:30:22"
+            },
+            {
+                id: "alice-miller",
+                name: "Alice Miller",
+                email: "alice.miller@company.com",
+                role: "judge",
+                initials: "AM",
+                completed: 15,
+                assigned: 20,
+                lastJudgedAt: "2024-03-15 14:20:15"
+            }
+        ],
+        queries: [
+            {
+                id: "Q001",
+                text: "How to implement machine learning algorithms in Python?",
+                assignments: [
+                    {
+                        judge: {
+                            name: "John Smith",
+                            initials: "JS"
+                        },
+                        status: "completed",
+                        completedAt: "2024-03-15 14:30"
+                    }
+                ]
+            },
+            {
+                id: "Q002",
+                text: "Best practices for web application security",
+                assignments: [
+                    {
+                        judge: {
+                            name: "Alice Miller",
+                            initials: "AM"
+                        },
+                        status: "not-started",
+                        assignedAt: "2024-03-13 10:00"
+                    }
+                ]
+            }
+        ],
+        results: {
+            interAnnotatorAgreement: "85.0%",
+            averageCompletionTime: "2.5 min",
+            qualityScore: "8.5/10"
+        }
+    };
+    
+    console.log('✅ Fallback data loaded successfully');
+    
+    // Update UI with fallback data
+    updateUIWithConfigData();
+}
+
+// Update UI elements with configuration data
+function updateUIWithConfigData() {
+    console.log('🎨🎨🎨 updateUIWithConfigData called');
+    console.log('📊📊📊 experimentData:', experimentData);
+    
+    if (!experimentData) {
+        console.error('❌❌❌ experimentData is null, cannot update UI');
+        return;
+    }
+    
+    console.log('🔄🔄🔄 Starting UI updates...');
+    
+    // Update header information
+    const titleElement = document.getElementById('experimentTitle');
+    if (titleElement) {
+        titleElement.textContent = experimentData.name;
+        console.log('✅✅✅ Updated title to:', experimentData.name);
+        console.log('✅ Title element now contains:', titleElement.textContent);
+    } else {
+        console.error('❌❌❌ experimentTitle element not found');
+    }
+    
+    const statusElement = document.getElementById('experimentStatus');
+    if (statusElement) {
+        statusElement.textContent = experimentData.status.charAt(0).toUpperCase() + experimentData.status.slice(1);
+        statusElement.className = `status-badge status-${experimentData.status}`;
+        console.log('✅✅✅ Updated status to:', experimentData.status);
+        console.log('✅ Status element now contains:', statusElement.textContent);
+    } else {
+        console.error('❌❌❌ experimentStatus element not found');
+    }
+    
+    const createdElement = document.getElementById('experimentCreated');
+    if (createdElement) {
+        createdElement.textContent = `Created: ${experimentData.createdAt}`;
+        console.log('✅✅✅ Updated created date to:', experimentData.createdAt);
+        console.log('✅ Created element now contains:', createdElement.textContent);
+    } else {
+        console.error('❌❌❌ experimentCreated element not found');
+    }
+    
+    const ownerElement = document.getElementById('experimentOwner');
+    if (ownerElement) {
+        ownerElement.textContent = `Owner: ${experimentData.owner.name}`;
+        console.log('✅✅✅ Updated owner to:', experimentData.owner.name);
+        console.log('✅ Owner element now contains:', ownerElement.textContent);
+    } else {
+        console.error('❌❌❌ experimentOwner element not found');
+    }
+    
+    const queryCountElement = document.getElementById('experimentQueryCount');
+    if (queryCountElement) {
+        queryCountElement.textContent = `${experimentData.progress.totalQueries} queries`;
+        console.log('✅✅✅ Updated query count to:', experimentData.progress.totalQueries);
+        console.log('✅ Query count element now contains:', queryCountElement.textContent);
+    } else {
+        console.error('❌❌❌ experimentQueryCount element not found');
+    }
+    
+    console.log('🔄🔄🔄 Updating progress overview...');
+    // Update progress overview
+    updateProgressOverview();
+    
+    console.log('🔄🔄🔄 Updating tab badges...');
+    // Update tab badges
+    updateTabBadges();
+    
+    console.log('🔄🔄🔄 Scheduling configuration panel update...');
+    // Update configuration panel with a small delay to ensure DOM is ready
+    setTimeout(() => {
+        updateConfigurationPanel();
+    }, 100);
+    
+    console.log('🔄🔄🔄 Updating UI based on role...');
+    // Update UI based on role and experiment settings after config is loaded
+    updateUIBasedOnRole();
+    
+    console.log('✅✅✅ updateUIWithConfigData completed');
+}
+
+// Update progress overview section
+function updateProgressOverview() {
+    console.log('📊 updateProgressOverview called');
+    
+    if (!experimentData) {
+        console.warn('❌ experimentData is null in updateProgressOverview');
+        return;
+    }
+    
+    const progress = experimentData.progress;
+    console.log('📊 Progress data:', progress);
+    
+    // Update total queries display
+    const totalElement = document.getElementById('totalQueriesDisplay');
+    if (totalElement) {
+        totalElement.textContent = `${progress.totalQueries} Total Queries`;
+        console.log('✅ Updated totalQueriesDisplay to:', `${progress.totalQueries} Total Queries`);
+    } else {
+        console.warn('❌ totalQueriesDisplay element not found');
+    }
+    
+    // Update progress segments
+    const completedSegment = document.getElementById('progressCompleted');
+    if (completedSegment) {
+        completedSegment.style.width = `${progress.completedPercentage}%`;
+        completedSegment.title = `${progress.completed} Completed (${progress.completedPercentage}%)`;
+        console.log('✅ Updated progressCompleted width to:', `${progress.completedPercentage}%`);
+    } else {
+        console.warn('❌ progressCompleted element not found');
+    }
+    
+    const inProgressSegment = document.getElementById('progressInProgress');
+    if (inProgressSegment) {
+        inProgressSegment.style.width = `${progress.inProgressPercentage}%`;
+        inProgressSegment.title = `${progress.inProgress} In Progress (${progress.inProgressPercentage}%)`;
+        console.log('✅ Updated progressInProgress width to:', `${progress.inProgressPercentage}%`);
+    } else {
+        console.warn('❌ progressInProgress element not found');
+    }
+    
+    const notStartedSegment = document.getElementById('progressNotStarted');
+    if (notStartedSegment) {
+        notStartedSegment.style.width = `${progress.notStartedPercentage}%`;
+        notStartedSegment.title = `${progress.notStarted} Not Started (${progress.notStartedPercentage}%)`;
+        console.log('✅ Updated progressNotStarted width to:', `${progress.notStartedPercentage}%`);
+    } else {
+        console.warn('❌ progressNotStarted element not found');
+    }
+    
+    // Update progress statistics
+    const completedStat = document.getElementById('completedStat');
+    if (completedStat) {
+        completedStat.textContent = `${progress.completed} Completed (${progress.completedPercentage}%)`;
+        console.log('✅ Updated completedStat to:', `${progress.completed} Completed (${progress.completedPercentage}%)`);
+    } else {
+        console.warn('❌ completedStat element not found');
+    }
+    
+    const inProgressStat = document.getElementById('inProgressStat');
+    if (inProgressStat) {
+        inProgressStat.textContent = `${progress.inProgress} In Progress (${progress.inProgressPercentage}%)`;
+        console.log('✅ Updated inProgressStat to:', `${progress.inProgress} In Progress (${progress.inProgressPercentage}%)`);
+    } else {
+        console.warn('❌ inProgressStat element not found');
+    }
+    
+    const notStartedStat = document.getElementById('notStartedStat');
+    if (notStartedStat) {
+        notStartedStat.textContent = `${progress.notStarted} Not Started (${progress.notStartedPercentage}%)`;
+        console.log('✅ Updated notStartedStat to:', `${progress.notStarted} Not Started (${progress.notStartedPercentage}%)`);
+    } else {
+        console.warn('❌ notStartedStat element not found');
+    }
+    
+    // Update judges count
+    const judgesCount = document.getElementById('judgesCount');
+    if (judgesCount) {
+        const judgeMembersCount = experimentData.members.filter(member =>
+            member.role === 'judge' || member.role === 'owner' || member.role === 'co-owner'
+        ).length;
+        judgesCount.textContent = `${judgeMembersCount} Judges`;
+        console.log('✅ Updated judgesCount to:', `${judgeMembersCount} Judges`);
+    } else {
+        console.warn('❌ judgesCount element not found');
+    }
+    
+    console.log('✅ updateProgressOverview completed');
+}
+
+// Update tab badges
+function updateTabBadges() {
+    if (!experimentData) return;
+    
+    const queriesTabBadge = document.getElementById('queriesTabBadge');
+    if (queriesTabBadge) queriesTabBadge.textContent = experimentData.queries.length;
+    
+    const membersTabBadge = document.getElementById('membersTabBadge');
+    if (membersTabBadge) membersTabBadge.textContent = experimentData.members.length;
+}
+
+// Update configuration panel
+function updateConfigurationPanel() {
+    if (!experimentData) {
+        console.warn('⚠️ experimentData is null, cannot update configuration panel');
+        return;
+    }
+    
+    const config = experimentData.configuration;
+    console.log('🔧 Updating configuration panel with:', config);
+    
+    // Update basic configuration items
+    const updateConfigItem = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value;
+            console.log(`✅ Updated ${id} to: ${value}`);
+        } else {
+            console.warn(`❌ Element ${id} not found for update`);
+        }
+    };
+    
+    updateConfigItem('configExperimentType', config.experimentType);
+    updateConfigItem('configExperimentName', experimentData.name);
+    updateConfigItem('configExperimentDescription', experimentData.description);
+    updateConfigItem('configDataSchema', config.dataSchema);
+    updateConfigItem('configDataSource', config.dataSource);
+    updateConfigItem('configQuerySetSelection', config.querySetSelection);
+    updateConfigItem('configQuerySetFile', `${config.querySetFile.name} (${config.querySetFile.queryCount} queries)`);
+    updateConfigItem('configControlProfile', config.controlProfile);
+    updateConfigItem('configTreatmentProfile', config.treatmentProfile);
+    updateConfigItem('configDataFieldsDisplay', config.dataFieldsDisplay);
+    
+    // Update judgement questions
+    updateJudgementQuestions(config.judgementQuestions);
+    
+    // Update additional settings with detailed logging
+    console.log('🔧 Updating additional settings:');
+    console.log('  - config.additionalSettings:', config.additionalSettings);
+    console.log('  - allowAnyToJudge value:', config.additionalSettings.allowAnyToJudge);
+    console.log('  - Should display:', config.additionalSettings.allowAnyToJudge ? 'Enabled' : 'Disabled');
+    
+    updateConfigItem('configBlindTest', config.additionalSettings.blindTest ? 'Enabled' : 'Disabled');
+    updateConfigItem('configAllowAnyToJudge', config.additionalSettings.allowAnyToJudge ? 'Enabled' : 'Disabled');
+    updateConfigItem('configJudgementGuide', config.additionalSettings.judgementGuide);
+    
+    // Verify the display was updated correctly
+    setTimeout(() => {
+        const allowAnyElement = document.getElementById('configAllowAnyToJudge');
+        if (allowAnyElement) {
+            console.log('🔍 Final display value for allowAnyToJudge:', allowAnyElement.textContent);
+        }
+    }, 100);
+}
+
+// Update judgement questions section
+function updateJudgementQuestions(questions) {
+    const container = document.getElementById('judgementQuestionsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    questions.forEach((question, index) => {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'config-item';
+        questionDiv.innerHTML = `
+            <span class="config-label">Question ${question.id}:</span>
+            <span class="config-value">${question.text} (${question.type})</span>
+        `;
+        container.appendChild(questionDiv);
+    });
+}
 
 // Tab switching functionality
 function switchTab(tabName) {
@@ -107,6 +559,7 @@ function switchUser(userId) {
     // Update UI to reflect new user
     updateUserDisplay();
     updatePermissions();
+    updateUIBasedOnRole();
     
     // Close dropdown
     const dropdown = document.getElementById('userDropdown');
@@ -123,14 +576,38 @@ function switchUser(userId) {
 }
 
 function updateUserDisplay() {
+    console.log('👤 updateUserDisplay called, currentUser:', currentUser);
+    
+    if (!currentUser) {
+        console.warn('❌ currentUser is null, cannot update user display');
+        return;
+    }
+    
     // Update current user display
     const avatar = document.getElementById('currentUserAvatar');
     const name = document.getElementById('currentUserName');
     const role = document.getElementById('currentUserRole');
     
-    if (avatar) avatar.textContent = currentUser.initials;
-    if (name) name.textContent = currentUser.name;
-    if (role) role.textContent = getRoleDisplayName(currentUser.role);
+    if (avatar) {
+        avatar.textContent = currentUser.initials;
+        console.log('✅ Updated user avatar to:', currentUser.initials);
+    } else {
+        console.warn('❌ currentUserAvatar element not found');
+    }
+    
+    if (name) {
+        name.textContent = currentUser.name;
+        console.log('✅ Updated user name to:', currentUser.name);
+    } else {
+        console.warn('❌ currentUserName element not found');
+    }
+    
+    if (role) {
+        role.textContent = getRoleDisplayName(currentUser.role);
+        console.log('✅ Updated user role to:', getRoleDisplayName(currentUser.role));
+    } else {
+        console.warn('❌ currentUserRole element not found');
+    }
 }
 
 function getRoleDisplayName(role) {
@@ -388,58 +865,63 @@ function createQueryRow(query) {
 }
 
 function loadQueries() {
-    console.log('loadQueries function called');
+    console.log('📋 loadQueries called');
     const queryListBody = document.getElementById('queryListBody');
-    console.log('queryListBody element found:', queryListBody);
     if (!queryListBody) {
         console.error('queryListBody element NOT FOUND!');
         return;
     }
     
-    // Sample query data with multiple assignments
-    const allQueries = [
-        {
-            id: 'Q001',
-            text: 'How to implement machine learning algorithms in Python?',
-            assignments: [
-                { judge: { name: 'John Smith', initials: 'JS' }, status: 'completed', completedAt: '2024-03-15 14:30' },
-                { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'completed', completedAt: '2024-03-15 16:20' },
-                { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'completed', completedAt: '2024-03-16 09:15' }
-            ]
-        },
-        {
-            id: 'Q002',
-            text: 'Best practices for web application security',
-            assignments: [
-                { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'not-started', assignedAt: '2024-03-13 10:00' }
-            ]
-        },
-        {
-            id: 'Q003',
-            text: 'Database optimization techniques for large datasets',
-            assignments: [
-                { judge: { name: 'John Smith', initials: 'JS' }, status: 'not-started', assignedAt: '2024-03-12 15:30' },
-                { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'not-started', assignedAt: '2024-03-12 15:30' }
-            ]
-        },
-        {
-            id: 'Q004',
-            text: 'Cloud infrastructure deployment strategies',
-            assignments: [
-                { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'completed', completedAt: '2024-03-11 13:20' }
-            ]
-        },
-        {
-            id: 'Q005',
-            text: 'API design principles and best practices',
-            assignments: [
-                { judge: { name: 'John Smith', initials: 'JS' }, status: 'not-started', assignedAt: '2024-03-10 09:00' },
-                { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'completed', completedAt: '2024-03-14 17:30' },
-                { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'not-started', assignedAt: '2024-03-10 09:00' },
-                { judge: { name: 'Sarah Chen', initials: 'SC' }, status: 'not-started', assignedAt: '2024-03-15 14:00' }
-            ]
-        },
-        {
+    // Use queries from experimentData if available, otherwise use fallback
+    let allQueries;
+    if (experimentData && experimentData.queries) {
+        console.log('✅ Using queries from experimentData:', experimentData.queries);
+        allQueries = experimentData.queries;
+    } else {
+        console.warn('⚠️ Using fallback query data');
+        // Sample query data with multiple assignments as fallback
+        allQueries = [
+            {
+                id: 'Q001',
+                text: 'How to implement machine learning algorithms in Python?',
+                assignments: [
+                    { judge: { name: 'John Smith', initials: 'JS' }, status: 'completed', completedAt: '2024-03-15 14:30' },
+                    { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'completed', completedAt: '2024-03-15 16:20' },
+                    { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'completed', completedAt: '2024-03-16 09:15' }
+                ]
+            },
+            {
+                id: 'Q002',
+                text: 'Best practices for web application security',
+                assignments: [
+                    { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'not-started', assignedAt: '2024-03-13 10:00' }
+                ]
+            },
+            {
+                id: 'Q003',
+                text: 'Database optimization techniques for large datasets',
+                assignments: [
+                    { judge: { name: 'John Smith', initials: 'JS' }, status: 'not-started', assignedAt: '2024-03-12 15:30' },
+                    { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'not-started', assignedAt: '2024-03-12 15:30' }
+                ]
+            },
+            {
+                id: 'Q004',
+                text: 'Cloud infrastructure deployment strategies',
+                assignments: [
+                    { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'completed', completedAt: '2024-03-11 13:20' }
+                ]
+            },
+            {
+                id: 'Q005',
+                text: 'API design principles and best practices',
+                assignments: [
+                    { judge: { name: 'John Smith', initials: 'JS' }, status: 'not-started', assignedAt: '2024-03-10 09:00' },
+                    { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'completed', completedAt: '2024-03-14 17:30' },
+                    { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'not-started', assignedAt: '2024-03-10 09:00' },
+                    { judge: { name: 'Sarah Chen', initials: 'SC' }, status: 'not-started', assignedAt: '2024-03-15 14:00' }
+                ]
+            },        {
             id: 'Q006',
             text: 'Mobile app performance optimization strategies',
             assignments: []
@@ -457,6 +939,9 @@ function loadQueries() {
             assignments: []
         }
     ];
+    }
+    
+    console.log('📋 Using queries:', allQueries);
     
     // Filter queries based on user role
     let queriesToShow = allQueries;
@@ -491,8 +976,8 @@ function loadMembers() {
     const membersGrid = document.querySelector('.members-grid');
     if (!membersGrid) return;
     
-    // Sample member data
-    const sampleMembers = [
+    // Use members from loaded configuration data, or fallback to sample data
+    const sampleMembers = experimentData && experimentData.members ? experimentData.members : [
         {
             id: 'john-smith',
             name: 'John Smith',
@@ -595,17 +1080,25 @@ function importQueries() {
 }
 
 function assignQueries() {
+    console.log('🎯 assignQueries called');
+    console.log('  - currentUser.role:', currentUser.role);
+    console.log('  - experimentConfig:', experimentConfig);
+    console.log('  - allowAnyoneToJudge:', experimentConfig.allowAnyoneToJudge);
+    
     // Check if user has permission to assign queries (Owner or Co-Owner)
     if (currentUser.role !== 'owner' && currentUser.role !== 'co-owner') {
+        console.log('❌ User does not have permission to assign queries');
         return; // Silently return, tooltip will show "No permission"
     }
 
     // Check if "allow anyone to judge" is enabled
     if (experimentConfig.allowAnyoneToJudge) {
+        console.log('❌ Query assignment blocked: allowAnyoneToJudge is enabled');
         alert('Query assignment is not allowed when "Allow Anyone to Judge" is enabled');
         return;
     }
 
+    console.log('✅ Proceeding with query assignment');
     const selectedQueries = getSelectedQueries();
     if (selectedQueries.length === 0) {
         alert('Please select queries to assign');
@@ -944,53 +1437,27 @@ function exportData() {
     alert('Export Data functionality - to be implemented');
 }
 
-// Settings functions
-function archiveExperiment() {
-    if (confirm('Are you sure you want to archive this experiment?')) {
-        alert('Archive Experiment - to be implemented');
-    }
-}
 
-function deleteExperiment() {
-    if (confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) {
-        alert('Delete Experiment - to be implemented');
-    }
-}
 
 // Results functions
 function loadResults() {
-    // Initialize results view
-    console.log('Loading results...');
+    // Initialize results view - placeholder for future implementation
 }
 
 // Configuration panel toggle function
 function toggleConfigurationPanel() {
-    console.log('toggleConfigurationPanel called');
-    
     const panel = document.getElementById('configurationPanel');
     const mainContentWrapper = document.querySelector('.main-content-wrapper');
     
-    console.log('Panel element:', panel);
-    console.log('Main content wrapper:', mainContentWrapper);
-    
-    if (!panel) {
-        console.error('Configuration panel not found!');
-        return;
-    }
-    
-    if (!mainContentWrapper) {
-        console.error('Main content wrapper not found!');
+    if (!panel || !mainContentWrapper) {
+        console.error('Configuration panel or main content wrapper not found!');
         return;
     }
     
     if (panel.classList.contains('open')) {
-        // Close panel
-        console.log('Closing panel');
         panel.classList.remove('open');
         mainContentWrapper.classList.remove('panel-open');
     } else {
-        // Open panel
-        console.log('Opening panel');
         panel.classList.add('open');
         mainContentWrapper.classList.add('panel-open');
     }
@@ -1379,13 +1846,38 @@ function executeTaskTypeAssignment() {
     closeAssignmentModal();
 }
 
+// Header action functions
+function deleteExperiment() {
+    // Only Owner can delete experiment
+    if (currentUser.role !== 'owner') {
+        alert('You do not have permission to delete this experiment. Only the owner can delete experiments.');
+        return;
+    }
+    
+    if (confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) {
+        alert('Delete experiment functionality - to be implemented');
+    }
+}
+
+function cloneExperiment() {
+    // Owner and Co-Owner can clone experiment
+    if (currentUser.role !== 'owner' && currentUser.role !== 'co-owner') {
+        alert('You do not have permission to clone this experiment. Only Owner and Co-Owner can clone experiments.');
+        return;
+    }
+    
+    alert('Clone experiment functionality - to be implemented');
+}
+
 // Update UI based on user role and experiment settings
 function updateUIBasedOnRole() {
     const assignButton = document.querySelector('button[onclick="assignQueries()"]');
     
     if (assignButton) {
         // Only Owner and Co-Owner can assign queries
-        const canAssign = (currentUser.role === 'owner' || currentUser.role === 'co-owner') && !experimentConfig.allowAnyoneToJudge;
+        const hasRolePermission = (currentUser.role === 'owner' || currentUser.role === 'co-owner');
+        const allowAnyoneDisabled = !experimentConfig.allowAnyoneToJudge;
+        const canAssign = hasRolePermission && allowAnyoneDisabled;
         
         if (!canAssign) {
             assignButton.disabled = true;
@@ -1408,26 +1900,6 @@ function updateUIBasedOnRole() {
     }
 }
 
-// Add delete experiment function for Owner only
-function deleteExperiment() {
-    if (currentUser.role !== 'owner') {
-        return; // Silently return, tooltip will show "No permission"
-    }
-    
-    if (confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) {
-        alert('Delete Experiment - to be implemented');
-    }
-}
-
-// Add clone experiment function for Co-Owner
-function cloneExperiment() {
-    if (currentUser.role !== 'co-owner') {
-        alert('You do not have permission to clone this experiment. Only Co-Owner can clone experiments.');
-        return;
-    }
-    
-    alert('Clone Experiment - to be implemented');
-}
 
 function closeAssignmentDetailsModal() {
     const modal = document.getElementById('assignmentDetailsModal');
@@ -1616,29 +2088,49 @@ function getUniqueJudgesFromQueries() {
 // Add immediate debug logs
 console.log('Script loaded at:', new Date().toISOString());
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOMContentLoaded fired at:', new Date().toISOString());
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 DOMContentLoaded event fired');
     
+    // Load experiment configuration first
+    console.log('📡 Starting loadExperimentConfig...');
+    const configLoaded = await loadExperimentConfig();
+    console.log('📡 loadExperimentConfig result:', configLoaded);
+    console.log('📊 experimentData after config load:', experimentData);
+    
+    // Always proceed with UI updates, regardless of config loading result
     // Initialize user display and permissions
+    console.log('👤 Updating user display...');
     updateUserDisplay();
     updatePermissions();
     
     // Load initial content for the default active tab (queries)
-    console.log('Calling loadQueries from DOMContentLoaded...');
+    console.log('📋 Loading queries...');
     loadQueries();
     
     // Update UI based on user role and permissions
+    console.log('🎨 Updating UI based on role...');
     updateUIBasedOnRole();
     
     // Initialize button state
+    console.log('🔘 Updating selected queries...');
     updateSelectedQueries();
     
-    // Update data counts for consistency
+    // Update data counts for consistency with a longer delay to ensure everything is loaded
     setTimeout(() => {
+        console.log('📊 Updating data counts and final UI...');
         updateDataCounts();
-    }, 100);
+        // Force update UI one more time to ensure everything is consistent
+        updateUIBasedOnRole();
+        
+        // Final check of UI elements
+        console.log('🔍 Final UI check:');
+        console.log('  - Experiment title:', document.getElementById('experimentTitle')?.textContent);
+        console.log('  - Experiment status:', document.getElementById('experimentStatus')?.textContent);
+        console.log('  - Total queries display:', document.getElementById('totalQueriesDisplay')?.textContent);
+        console.log('  - Allow any to judge:', document.getElementById('configAllowAnyToJudge')?.textContent);
+    }, 500);
     
-    console.log('DOMContentLoaded initialization completed');
+    console.log('✅ DOMContentLoaded initialization completed');
     
     // Add event listeners for modal close on outside click
     const modal = document.getElementById('addMemberModal');
@@ -1688,6 +2180,88 @@ if (document.readyState === 'loading') {
     console.log('Document already ready, running immediate initialization');
     loadQueries();
 }
+
+// Force immediate update after 3 seconds as a failsafe
+setTimeout(() => {
+    console.log('🚨 EMERGENCY UPDATE: Forcing UI update after 3 seconds');
+    
+    // Force update basic elements with fallback values
+    const titleEl = document.getElementById('experimentTitle');
+    if (titleEl && titleEl.textContent === 'Loading...') {
+        titleEl.textContent = 'Search NDCG Experiment';
+        console.log('🚨 Force updated title');
+    }
+    
+    const statusEl = document.getElementById('experimentStatus');
+    if (statusEl && statusEl.textContent === 'Loading...') {
+        statusEl.textContent = 'Active';
+        statusEl.className = 'status-badge status-active';
+        console.log('🚨 Force updated status');
+    }
+    
+    const totalQueriesEl = document.getElementById('totalQueriesDisplay');
+    if (totalQueriesEl && totalQueriesEl.textContent === 'Loading Total Queries') {
+        totalQueriesEl.textContent = '247 Total Queries';
+        console.log('🚨 Force updated total queries');
+    }
+    
+    const configAllowEl = document.getElementById('configAllowAnyToJudge');
+    if (configAllowEl && configAllowEl.textContent === 'Loading...') {
+        configAllowEl.textContent = 'Disabled';
+        console.log('🚨 Force updated allow any to judge');
+    }
+    
+    // Update progress stats
+    const completedStatEl = document.getElementById('completedStat');
+    if (completedStatEl && completedStatEl.textContent === 'Loading Completed') {
+        completedStatEl.textContent = '189 Completed (76.5%)';
+        console.log('🚨 Force updated completed stat');
+    }
+    
+    const inProgressStatEl = document.getElementById('inProgressStat');
+    if (inProgressStatEl && inProgressStatEl.textContent === 'Loading In Progress') {
+        inProgressStatEl.textContent = '23 In Progress (9.3%)';
+        console.log('🚨 Force updated in progress stat');
+    }
+    
+    const notStartedStatEl = document.getElementById('notStartedStat');
+    if (notStartedStatEl && notStartedStatEl.textContent === 'Loading Not Started') {
+        notStartedStatEl.textContent = '35 Not Started (14.2%)';
+        console.log('🚨 Force updated not started stat');
+    }
+    
+    const judgesCountEl = document.getElementById('judgesCount');
+    if (judgesCountEl && judgesCountEl.textContent === 'Loading Judges') {
+        judgesCountEl.textContent = '4 Judges';
+        console.log('🚨 Force updated judges count');
+    }
+    
+    // Update configuration items
+    const configElements = [
+        { id: 'configExperimentType', value: 'Search NDCG experiment' },
+        { id: 'configExperimentName', value: 'Search NDCG Experiment' },
+        { id: 'configExperimentDescription', value: 'Evaluating search result quality using NDCG metrics' },
+        { id: 'configDataSchema', value: 'Search' },
+        { id: 'configDataSource', value: 'Real-time scraping' },
+        { id: 'configQuerySetSelection', value: 'Upload query set' },
+        { id: 'configQuerySetFile', value: 'search_queries_2024.csv (247 queries)' },
+        { id: 'configControlProfile', value: 'userp' },
+        { id: 'configTreatmentProfile', value: 'copilot web' },
+        { id: 'configDataFieldsDisplay', value: 'Query, Response, LU Info Question' },
+        { id: 'configBlindTest', value: 'Enabled' },
+        { id: 'configJudgementGuide', value: 'Configured (Markdown format)' }
+    ];
+    
+    configElements.forEach(({ id, value }) => {
+        const el = document.getElementById(id);
+        if (el && el.textContent === 'Loading...') {
+            el.textContent = value;
+            console.log(`🚨 Force updated ${id} to: ${value}`);
+        }
+    });
+    
+    console.log('🚨 Emergency update completed');
+}, 3000);
 
 // Make function globally accessible
 window.switchTab = switchTab;
