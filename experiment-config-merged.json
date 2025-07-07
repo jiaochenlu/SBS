@@ -49,15 +49,6 @@
           "judgementGuide": "Configured (Markdown format)"
         }
       },
-      "progress": {
-        "totalQueries": 247,
-        "completed": 189,
-        "inProgress": 23,
-        "notStarted": 35,
-        "completedPercentage": 76.5,
-        "inProgressPercentage": 9.3,
-        "notStartedPercentage": 14.2
-      },
       "members": [
         {
           "id": "john-smith",
@@ -144,6 +135,114 @@
               "assignedAt": "2024-03-13 10:00"
             }
           ]
+        },
+        {
+          "id": "Q003",
+          "text": "Database optimization techniques for large datasets",
+          "assignments": [
+            {
+              "judge": {
+                "name": "John Smith",
+                "initials": "JS"
+              },
+              "status": "not-started",
+              "assignedAt": "2024-03-12 15:30"
+            },
+            {
+              "judge": {
+                "name": "Alice Miller",
+                "initials": "AM"
+              },
+              "status": "not-started",
+              "assignedAt": "2024-03-13 11:45"
+            }
+          ]
+        },
+        {
+          "id": "Q004",
+          "text": "Cloud infrastructure deployment strategies",
+          "assignments": [
+            {
+              "judge": {
+                "name": "Robert Johnson",
+                "initials": "RJ"
+              },
+              "status": "completed",
+              "completedAt": "2024-03-16 10:00"
+            }
+          ]
+        },
+        {
+          "id": "Q005",
+          "text": "API design principles and best practices",
+          "assignments": [
+            {
+              "judge": {
+                "name": "John Smith",
+                "initials": "JS"
+              },
+              "status": "not-started",
+              "assignedAt": "2024-03-10 09:00"
+            },
+            {
+              "judge": {
+                "name": "Alice Miller",
+                "initials": "AM"
+              },
+              "status": "completed",
+              "completedAt": "2024-03-14 17:30"
+            },
+            {
+              "judge": {
+                "name": "Robert Johnson",
+                "initials": "RJ"
+              },
+              "status": "not-started",
+              "assignedAt": "2024-03-10 09:00"
+            },
+            {
+              "judge": {
+                "name": "Sarah Chen",
+                "initials": "SC"
+              },
+              "status": "not-started",
+              "assignedAt": "2024-03-15 14:00"
+            }
+          ]
+        },
+        {
+          "id": "Q006",
+          "text": "Mobile app performance optimization strategies",
+          "assignments": []
+        },
+        {
+          "id": "Q007",
+          "text": "Frontend framework comparison and selection",
+          "assignments": [
+            {
+              "judge": {
+                "name": "Sarah Chen",
+                "initials": "SC"
+              },
+              "status": "not-started",
+              "assignedAt": "2024-03-16 11:00"
+            }
+          ]
+        },
+        {
+          "id": "Q008",
+          "text": "Data visualization techniques for business intelligence",
+          "assignments": []
+        },
+        {
+          "id": "Q009",
+          "text": "Microservices architecture design patterns",
+          "assignments": []
+        },
+        {
+          "id": "Q010",
+          "text": "DevOps practices for continuous integration and deployment",
+          "assignments": []
         }
       ]
     },
@@ -166,7 +265,7 @@
         "querySetSelection": "Upload query set",
         "querySetFile": {
           "name": "search_queries_2024.csv",
-          "queryCount": 247
+          "queryCount": 2
         },
         "controlProfile": "userp",
         "treatmentProfile": "copilot web",
@@ -193,15 +292,6 @@
           "allowAnyToJudge": true,
           "judgementGuide": "Configured (Markdown format)"
         }
-      },
-      "progress": {
-        "totalQueries": 247,
-        "completed": 0,
-        "inProgress": 0,
-        "notStarted": 247,
-        "completedPercentage": 0,
-        "inProgressPercentage": 0,
-        "notStartedPercentage": 100
       },
       "members": [
         {

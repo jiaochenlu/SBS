@@ -291,10 +291,44 @@ function updateUIWithConfigData() {
     
     const statusElement = document.getElementById('experimentStatus');
     if (statusElement) {
-        statusElement.textContent = experimentData.status.charAt(0).toUpperCase() + experimentData.status.slice(1);
-        statusElement.className = `status-badge status-${experimentData.status}`;
-        console.log('✅✅✅ Updated status to:', experimentData.status);
-        console.log('✅ Status element now contains:', statusElement.textContent);
+        // Update query count element (no longer use experimentData.progress)
+        const queryCountElement = document.getElementById('experimentQueryCount');
+        if (queryCountElement) {
+            queryCountElement.textContent = `${experimentData.queries.length} queries`;
+            console.log('✅✅✅ Updated query count to:', experimentData.queries.length);
+            console.log('✅ Query count element now contains:', queryCountElement.textContent);
+        } else {
+            console.error('❌❌❌ experimentQueryCount element not found');
+        }
+
+        // 动态计算 derivedStatus
+        let completedCount = 0, inProgressCount = 0, notStartedCount = 0;
+        experimentData.queries.forEach(query => {
+            const assignments = query.assignments || [];
+            const completedAssignments = assignments.filter(a => a.status === 'completed').length;
+            const totalAssignments = assignments.length;
+            if (completedAssignments === totalAssignments && totalAssignments > 0) {
+                completedCount++;
+            } else if (completedAssignments > 0) {
+                inProgressCount++;
+            } else {
+                notStartedCount++;
+            }
+        });
+        let derivedStatus = "Not started";
+        if (completedCount === experimentData.queries.length && experimentData.queries.length > 0) {
+            derivedStatus = "Completed";
+        } else if (inProgressCount > 0) {
+            derivedStatus = "In progress";
+        }
+        if (statusElement) {
+            statusElement.textContent = derivedStatus;
+            statusElement.className = `status-badge status-${experimentData.status}`;
+            console.log('✅✅✅ Updated status to:', derivedStatus);
+            console.log('✅ Status element now contains:', statusElement.textContent);
+        } else {
+            console.error('❌❌❌ experimentStatus element not found');
+        }
     } else {
         console.error('❌❌❌ experimentStatus element not found');
     }
@@ -319,8 +353,8 @@ function updateUIWithConfigData() {
     
     const queryCountElement = document.getElementById('experimentQueryCount');
     if (queryCountElement) {
-        queryCountElement.textContent = `${experimentData.progress.totalQueries} queries`;
-        console.log('✅✅✅ Updated query count to:', experimentData.progress.totalQueries);
+        queryCountElement.textContent = `${experimentData.queries.length} queries`;
+        console.log('✅✅✅ Updated query count to:', experimentData.queries.length);
         console.log('✅ Query count element now contains:', queryCountElement.textContent);
     } else {
         console.error('❌❌❌ experimentQueryCount element not found');
@@ -356,83 +390,109 @@ function updateProgressOverview() {
         return;
     }
     
-    const progress = experimentData.progress;
-    console.log('📊 Progress data:', progress);
+    const queries = experimentData.queries || [];
+    console.log('📊 Queries data:', queries);
+
+    // Calculate total queries
+    const totalQueries = queries.length;
+
+    // Calculate unique judges
+    const uniqueJudges = new Set();
+    queries.forEach(query => {
+        if (query.assignments) {
+            query.assignments.forEach(assignment => {
+                uniqueJudges.add(assignment.judge.name);
+            });
+        }
+    });
+
+    // Calculate query statuses
+    let completedCount = 0;
+    let inProgressCount = 0;
+    let notStartedCount = 0;
+
+    queries.forEach(query => {
+        const assignments = query.assignments || [];
+        const completedAssignments = assignments.filter(a => a.status === 'completed').length;
+        const totalAssignments = assignments.length;
+
+        if (completedAssignments === totalAssignments && totalAssignments > 0) {
+            completedCount++;
+        } else if (completedAssignments > 0) {
+            inProgressCount++;
+        } else {
+            notStartedCount++;
+        }
+    });
+
+    // Calculate percentages
+    const completedPercentage = totalQueries > 0 ? Math.round((completedCount / totalQueries) * 100) : 0;
+    const inProgressPercentage = totalQueries > 0 ? Math.round((inProgressCount / totalQueries) * 100) : 0;
+    const notStartedPercentage = totalQueries > 0 ? Math.round((notStartedCount / totalQueries) * 100) : 0;
     
     // Update total queries display
     const totalElement = document.getElementById('totalQueriesDisplay');
     if (totalElement) {
-        totalElement.textContent = `${progress.totalQueries} Total Queries`;
-        console.log('✅ Updated totalQueriesDisplay to:', `${progress.totalQueries} Total Queries`);
+        totalElement.textContent = `${totalQueries} Total Queries`;
+        console.log('✅ Updated totalQueriesDisplay to:', `${totalQueries} Total Queries`);
     } else {
         console.warn('❌ totalQueriesDisplay element not found');
     }
-    
     // Update progress segments
     const completedSegment = document.getElementById('progressCompleted');
     if (completedSegment) {
-        completedSegment.style.width = `${progress.completedPercentage}%`;
-        completedSegment.title = `${progress.completed} Completed (${progress.completedPercentage}%)`;
-        console.log('✅ Updated progressCompleted width to:', `${progress.completedPercentage}%`);
+        completedSegment.style.width = `${completedPercentage}%`;
+        completedSegment.title = `${completedCount} Completed (${completedPercentage}%)`;
+        console.log('✅ Updated progressCompleted width to:', `${completedPercentage}%`);
     } else {
         console.warn('❌ progressCompleted element not found');
     }
-    
     const inProgressSegment = document.getElementById('progressInProgress');
     if (inProgressSegment) {
-        inProgressSegment.style.width = `${progress.inProgressPercentage}%`;
-        inProgressSegment.title = `${progress.inProgress} In Progress (${progress.inProgressPercentage}%)`;
-        console.log('✅ Updated progressInProgress width to:', `${progress.inProgressPercentage}%`);
+        inProgressSegment.style.width = `${inProgressPercentage}%`;
+        inProgressSegment.title = `${inProgressCount} In Progress (${inProgressPercentage}%)`;
+        console.log('✅ Updated progressInProgress width to:', `${inProgressPercentage}%`);
     } else {
         console.warn('❌ progressInProgress element not found');
     }
-    
     const notStartedSegment = document.getElementById('progressNotStarted');
     if (notStartedSegment) {
-        notStartedSegment.style.width = `${progress.notStartedPercentage}%`;
-        notStartedSegment.title = `${progress.notStarted} Not Started (${progress.notStartedPercentage}%)`;
-        console.log('✅ Updated progressNotStarted width to:', `${progress.notStartedPercentage}%`);
+        notStartedSegment.style.width = `${notStartedPercentage}%`;
+        notStartedSegment.title = `${notStartedCount} Not Started (${notStartedPercentage}%)`;
+        console.log('✅ Updated progressNotStarted width to:', `${notStartedPercentage}%`);
     } else {
         console.warn('❌ progressNotStarted element not found');
     }
-    
     // Update progress statistics
     const completedStat = document.getElementById('completedStat');
     if (completedStat) {
-        completedStat.textContent = `${progress.completed} Completed (${progress.completedPercentage}%)`;
-        console.log('✅ Updated completedStat to:', `${progress.completed} Completed (${progress.completedPercentage}%)`);
+        completedStat.textContent = `${completedCount} Completed (${completedPercentage}%)`;
+        console.log('✅ Updated completedStat to:', `${completedCount} Completed (${completedPercentage}%)`);
     } else {
         console.warn('❌ completedStat element not found');
     }
-    
     const inProgressStat = document.getElementById('inProgressStat');
     if (inProgressStat) {
-        inProgressStat.textContent = `${progress.inProgress} In Progress (${progress.inProgressPercentage}%)`;
-        console.log('✅ Updated inProgressStat to:', `${progress.inProgress} In Progress (${progress.inProgressPercentage}%)`);
+        inProgressStat.textContent = `${inProgressCount} In Progress (${inProgressPercentage}%)`;
+        console.log('✅ Updated inProgressStat to:', `${inProgressCount} In Progress (${inProgressPercentage}%)`);
     } else {
         console.warn('❌ inProgressStat element not found');
     }
-    
     const notStartedStat = document.getElementById('notStartedStat');
     if (notStartedStat) {
-        notStartedStat.textContent = `${progress.notStarted} Not Started (${progress.notStartedPercentage}%)`;
-        console.log('✅ Updated notStartedStat to:', `${progress.notStarted} Not Started (${progress.notStartedPercentage}%)`);
+        notStartedStat.textContent = `${notStartedCount} Not Started (${notStartedPercentage}%)`;
+        console.log('✅ Updated notStartedStat to:', `${notStartedCount} Not Started (${notStartedPercentage}%)`);
     } else {
         console.warn('❌ notStartedStat element not found');
     }
-    
     // Update judges count
     const judgesCount = document.getElementById('judgesCount');
     if (judgesCount) {
-        const judgeMembersCount = experimentData.members.filter(member =>
-            member.role === 'judge' || member.role === 'owner' || member.role === 'co-owner'
-        ).length;
-        judgesCount.textContent = `${judgeMembersCount} Judges`;
-        console.log('✅ Updated judgesCount to:', `${judgeMembersCount} Judges`);
+        judgesCount.textContent = `${uniqueJudges.size} Judges`;
+        console.log('✅ Updated judgesCount to:', `${uniqueJudges.size} Judges`);
     } else {
         console.warn('❌ judgesCount element not found');
     }
-    
     console.log('✅ updateProgressOverview completed');
 }
 
@@ -1908,6 +1968,7 @@ function deleteExperiment() {
 function cloneExperiment() {
     // Owner and Co-Owner can clone experiment
     if (currentUser.role !== 'owner' && currentUser.role !== 'co-owner') {
+
         alert('You do not have permission to clone this experiment. Only Owner and Co-Owner can clone experiments.');
         return;
     }
@@ -2176,7 +2237,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('  - Allow any to judge:', document.getElementById('configAllowAnyToJudge')?.textContent);
     }, 500);
     
-    console.log('✅ DOMContentLoaded initialization completed');
+    console.log('✅✅✅ DOMContentLoaded initialization completed');
     
     // Add event listeners for modal close on outside click
     const modal = document.getElementById('addMemberModal');

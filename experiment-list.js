@@ -27,7 +27,29 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.error(`❌ Invalid experiment at index ${index}:`, experiment);
                     return;
                 }
-            
+
+                // 动态计算实验状态
+                const queries = experiment.queries || [];
+                let completedCount = 0, inProgressCount = 0, notStartedCount = 0;
+                queries.forEach(query => {
+                    const assignments = query.assignments || [];
+                    const completedAssignments = assignments.filter(a => a.status === 'completed').length;
+                    const totalAssignments = assignments.length;
+                    if (completedAssignments === totalAssignments && totalAssignments > 0) {
+                        completedCount++;
+                    } else if (completedAssignments > 0) {
+                        inProgressCount++;
+                    } else {
+                        notStartedCount++;
+                    }
+                });
+                let derivedStatus = "Not started";
+                if (completedCount === queries.length && queries.length > 0) {
+                    derivedStatus = "Completed";
+                } else if (inProgressCount > 0) {
+                    derivedStatus = "In progress";
+                }
+
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td><a href="experiment-detail.html?id=${experiment.id}">${experiment.name}</a></td>
@@ -36,13 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td>${experiment.configuration.querySetSelection}</td>
                     <td>${experiment.members && Array.isArray(experiment.members) ? experiment.members.length : 0} Members</td>
                     <td>${experiment.createdAt}</td>
-                    <td>${
-                        experiment.progress.completedPercentage === 100
-                            ? "Completed"
-                            : experiment.progress.inProgress > 0
-                            ? "In progress"
-                            : "Not started"
-                    }</td>
+                    <td>${derivedStatus}</td>
                 `;
                 experimentList.appendChild(row);
                 console.log(`✅ Successfully added experiment: ${experiment.id}`);
