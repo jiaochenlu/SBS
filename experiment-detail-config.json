@@ -3,7 +3,7 @@
   "description": "Experiment detail configuration for SBS platform",
   "experiment": {
     "id": "search-ndcg-001",
-    "name": "Search NDCG - queryset assignment",
+    "name": "Search NDCG - queryset judge assignment",
     "description": "Evaluating search result quality using NDCG metrics for better ranking performance",
     "status": "active",
     "createdAt": "March 15, 2024",

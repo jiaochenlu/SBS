@@ -1,0 +1,242 @@
+{
+  "version": "1.0",
+  "description": "Merged experiment configurations",
+  "experiments": [
+    {
+      "id": "search-ndcg-001",
+      "name": "Search NDCG - queryset judge assignment",
+      "description": "Evaluating search result quality using NDCG metrics for better ranking performance",
+      "status": "active",
+      "createdAt": "March 15, 2024",
+      "owner": {
+        "id": "john-smith",
+        "name": "John Smith",
+        "email": "john.smith@company.com",
+        "initials": "JS"
+      },
+      "configuration": {
+        "experimentType": "Search NDCG experiment",
+        "dataSchema": "Search",
+        "dataSource": "Real-time scraping",
+        "querySetSelection": "Upload query set",
+        "querySetFile": {
+          "name": "search_queries_2024.csv",
+          "queryCount": 247
+        },
+        "controlProfile": "userp",
+        "treatmentProfile": "copilot web",
+        "dataFieldsDisplay": "Query, Response, LU Info Question",
+        "judgementQuestions": [
+          {
+            "id": 1,
+            "text": "Item relevance",
+            "type": "Toggle - Item Level Side-by-Side"
+          },
+          {
+            "id": 2,
+            "text": "Which side is better?",
+            "type": "Single Choice - Query Level Side-by-Side"
+          },
+          {
+            "id": 3,
+            "text": "Comment",
+            "type": "Text Box - Query Level Side-by-Side"
+          }
+        ],
+        "additionalSettings": {
+          "blindTest": true,
+          "allowAnyToJudge": false,
+          "judgementGuide": "Configured (Markdown format)"
+        }
+      },
+      "progress": {
+        "totalQueries": 247,
+        "completed": 189,
+        "inProgress": 23,
+        "notStarted": 35,
+        "completedPercentage": 76.5,
+        "inProgressPercentage": 9.3,
+        "notStartedPercentage": 14.2
+      },
+      "members": [
+        {
+          "id": "john-smith",
+          "name": "John Smith",
+          "email": "john.smith@company.com",
+          "role": "owner",
+          "initials": "JS",
+          "completed": null,
+          "assigned": 0,
+          "lastJudgedAt": null
+        },
+        {
+          "id": "sarah-chen",
+          "name": "Sarah Chen",
+          "email": "sarah.chen@company.com",
+          "role": "co-owner",
+          "initials": "SC",
+          "completed": 38,
+          "assigned": 45,
+          "lastJudgedAt": "2024-03-16 15:30:22"
+        },
+        {
+          "id": "alice-miller",
+          "name": "Alice Miller",
+          "email": "alice.miller@company.com",
+          "role": "judge",
+          "initials": "AM",
+          "completed": 32,
+          "assigned": 40,
+          "lastJudgedAt": "2024-03-15 14:20:15"
+        },
+        {
+          "id": "robert-johnson",
+          "name": "Robert Johnson",
+          "email": "robert.johnson@company.com",
+          "role": "judge",
+          "initials": "RJ",
+          "completed": 28,
+          "assigned": 35,
+          "lastJudgedAt": "2024-03-14 09:45:33"
+        }
+      ],
+      "queries": [
+        {
+          "id": "Q001",
+          "text": "How to implement machine learning algorithms in Python?",
+          "assignments": [
+            {
+              "judge": {
+                "name": "John Smith",
+                "initials": "JS"
+              },
+              "status": "completed",
+              "completedAt": "2024-03-15 14:30"
+            },
+            {
+              "judge": {
+                "name": "Alice Miller",
+                "initials": "AM"
+              },
+              "status": "completed",
+              "completedAt": "2024-03-15 16:20"
+            },
+            {
+              "judge": {
+                "name": "Robert Johnson",
+                "initials": "RJ"
+              },
+              "status": "completed",
+              "completedAt": "2024-03-16 09:15"
+            }
+          ]
+        },
+        {
+          "id": "Q002",
+          "text": "Best practices for web application security",
+          "assignments": [
+            {
+              "judge": {
+                "name": "Robert Johnson",
+                "initials": "RJ"
+              },
+              "status": "not-started",
+              "assignedAt": "2024-03-13 10:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "search-ndcg-002",
+      "name": "Search NDCG - allow anyone to judge",
+      "description": "Evaluating search result quality using NDCG metrics with open judgment contributions",
+      "status": "active",
+      "createdAt": "July 7, 2025",
+      "owner": {
+        "id": "john-smith",
+        "name": "John Smith",
+        "email": "john.smith@company.com",
+        "initials": "JS"
+      },
+      "configuration": {
+        "experimentType": "Search NDCG experiment",
+        "dataSchema": "Search",
+        "dataSource": "Real-time scraping",
+        "querySetSelection": "Upload query set",
+        "querySetFile": {
+          "name": "search_queries_2024.csv",
+          "queryCount": 247
+        },
+        "controlProfile": "userp",
+        "treatmentProfile": "copilot web",
+        "dataFieldsDisplay": "Query, Response, LU Info Question",
+        "judgementQuestions": [
+          {
+            "id": 1,
+            "text": "Item relevance",
+            "type": "Toggle - Item Level Side-by-Side"
+          },
+          {
+            "id": 2,
+            "text": "Which side is better?",
+            "type": "Single Choice - Query Level Side-by-Side"
+          },
+          {
+            "id": 3,
+            "text": "Comment",
+            "type": "Text Box - Query Level Side-by-Side"
+          }
+        ],
+        "additionalSettings": {
+          "blindTest": true,
+          "allowAnyToJudge": true,
+          "judgementGuide": "Configured (Markdown format)"
+        }
+      },
+      "progress": {
+        "totalQueries": 247,
+        "completed": 0,
+        "inProgress": 0,
+        "notStarted": 247,
+        "completedPercentage": 0,
+        "inProgressPercentage": 0,
+        "notStartedPercentage": 100
+      },
+      "members": [
+        {
+          "id": "john-smith",
+          "name": "John Smith",
+          "email": "john.smith@company.com",
+          "role": "owner",
+          "initials": "JS",
+          "completed": null,
+          "assigned": 0,
+          "lastJudgedAt": null
+        },
+        {
+          "id": "sarah-chen",
+          "name": "Sarah Chen",
+          "email": "sarah.chen@company.com",
+          "role": "co-owner",
+          "initials": "SC",
+          "completed": null,
+          "assigned": 0,
+          "lastJudgedAt": null
+        }
+      ],
+      "queries": [
+        {
+          "id": "Q001",
+          "text": "How to implement machine learning algorithms in Python?",
+          "judges": []
+        },
+        {
+          "id": "Q002",
+          "text": "Best practices for web application security",
+          "judges": []
+        }
+      ]
+    }
+  ]
+}

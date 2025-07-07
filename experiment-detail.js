@@ -17,10 +17,11 @@ async function loadExperimentConfig() {
         console.log('Current location:', window.location.href);
         console.log('Base URL:', window.location.origin);
         
-        const configUrl = './experiment-detail-config.json';
+        const configUrl = './experiment-config-merged.json';
         console.log('📡 Attempting to fetch:', configUrl);
         
         const response = await fetch(configUrl);
+        console.log('📡 Fetching merged configuration from:', configUrl);
         console.log('📡 Fetch response received:', {
             status: response.status,
             statusText: response.statusText,
@@ -36,7 +37,20 @@ async function loadExperimentConfig() {
         console.log('✨✨✨ CONFIG DATA LOADED SUCCESSFULLY:', config);
         console.log('✨ Experiment data:', config.experiment);
         
-        experimentData = config.experiment;
+        const urlParams = new URLSearchParams(window.location.search);
+        const experimentId = urlParams.get('id');
+        console.log('🔍 URL Parameters:', urlParams.toString());
+        console.log('🔍 Experiment ID from URL:', experimentId);
+        
+        experimentData = config.experiments.find(exp => exp.id === experimentId);
+        console.log('🔍 Matched Experiment Data:', experimentData);
+        
+        if (!experimentData) {
+            console.error(`Experiment with ID "${experimentId}" not found.`);
+            alert('Experiment not found. Please check the URL.');
+            console.error('❌ Experiment not found. Available experiments:', config.experiments.map(exp => exp.id));
+            return;
+        }
         console.log('✨ Set experimentData to:', experimentData);
         
         // Convert members array to users object for compatibility
@@ -53,6 +67,24 @@ async function loadExperimentConfig() {
         
         // Update experiment config
         experimentConfig.allowAnyoneToJudge = experimentData.configuration.additionalSettings.allowAnyToJudge;
+        
+        // Dynamically hide "Assign Judges" button if allowAnyoneToJudge is true
+        const assignJudgesBtn = document.getElementById('assignJudgesBtn');
+        if (assignJudgesBtn) {
+            assignJudgesBtn.style.display = experimentConfig.allowAnyoneToJudge ? 'none' : 'block';
+        }
+        
+        // Adjust members list to show only owner, co-owner, and voluntary judges
+        if (experimentConfig.allowAnyoneToJudge) {
+            experimentData.members = experimentData.members.filter(member =>
+                ['owner', 'co-owner', 'judge'].includes(member.role)
+            );
+        }
+        
+        // Update query management list to reflect voluntary judgments
+        experimentData.queries.forEach(query => {
+            query.judges = query.assignments ? query.assignments.map(a => a.judge) : [];
+        });
         experimentConfig.experimentType = experimentData.configuration.experimentType;
         experimentConfig.isRealTimeAdHoc = experimentData.configuration.dataSource === 'ad-hoc';
         
@@ -661,6 +693,20 @@ function updateHeaderButtons() {
 
 function updateQueryPermissions() {
     const assignBtn = document.getElementById('assignJudgesBtn');
+    
+    // Always display the button, but dynamically enable or disable it
+    if (assignBtn) {
+        assignBtn.style.display = "block"; // Ensure the button is always visible
+        const canAssign = currentUser.role === 'owner' || currentUser.role === 'co-owner';
+        const allowAnyToJudge = experimentConfig.allowAnyoneToJudge;
+    
+        assignBtn.disabled = !(canAssign && !allowAnyToJudge);
+        assignBtn.title = allowAnyToJudge
+            ? 'Judgment is open to everyone for this experiment. Assigning judges is disabled.'
+            : canAssign
+            ? 'Assign queries to judges'
+            : 'You do not have permission to assign queries';
+    }
     const importBtn = document.querySelector('button[onclick="importQueries()"]');
     
     // Assign queries: Owner and Co-Owner only
@@ -1885,7 +1931,7 @@ function updateUIBasedOnRole() {
             assignButton.style.cursor = 'not-allowed';
             
             if (experimentConfig.allowAnyoneToJudge) {
-                assignButton.title = 'Assignment not allowed when "Allow Anyone to Judge" is enabled';
+                assignButton.title = 'Judgment is open to everyone for this experiment. Assigning judges is disabled.';
             } else if (currentUser.role === 'judge') {
                 assignButton.title = 'You do not have permission to assign queries. Only Owner and Co-Owner can assign queries.';
             } else {
