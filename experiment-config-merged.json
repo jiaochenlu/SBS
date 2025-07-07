@@ -361,68 +361,6 @@
           "assignments": []
         }
       ]
-    },
-    {
-      "id": "search-ndcg-003",
-      "name": "Search NDCG - ad hoc real time",
-      "description": "Evaluating search result quality using NDCG metrics with ad hoc queries provided by judges in real time.",
-      "status": "active",
-      "createdAt": "July 7, 2025",
-      "owner": {
-        "id": "john-smith",
-        "name": "John Smith",
-        "email": "john.smith@company.com",
-        "initials": "JS"
-      },
-      "configuration": {
-        "experimentType": "Search NDCG experiment",
-        "dataSchema": "Search",
-        "dataSource": "Real-time scraping",
-        "querySetSelection": "Ad hoc queries",
-        "taskSet": [
-          { "id": "01", "name": "Meeting", "minQueryCount": 5 },
-          { "id": "02", "name": "Excel", "minQueryCount": 5 },
-          { "id": "03", "name": "web", "minQueryCount": 5 }
-        ],
-        "controlProfile": "userp",
-        "treatmentProfile": "copilot web",
-        "dataFieldsDisplay": "Query, Response, LU Info Question",
-        "judgementQuestions": [
-          {
-            "id": 1,
-            "text": "Item relevance",
-            "type": "Toggle - Item Level Side-by-Side"
-          },
-          {
-            "id": 2,
-            "text": "Which side is better?",
-            "type": "Single Choice - Query Level Side-by-Side"
-          },
-          {
-            "id": 3,
-            "text": "Comment",
-            "type": "Text Box - Query Level Side-by-Side"
-          }
-        ],
-        "additionalSettings": {
-          "blindTest": true,
-          "allowAnyToJudge": false,
-          "judgementGuide": "Configured (Markdown format)"
-        }
-      },
-      "members": [
-        {
-          "id": "john-smith",
-          "name": "John Smith",
-          "email": "john.smith@company.com",
-          "role": "owner",
-          "initials": "JS",
-          "completed": 0,
-          "assigned": 0,
-          "lastJudgedAt": null
-        }
-      ],
-      "queries": []
     }
   ]
 }
