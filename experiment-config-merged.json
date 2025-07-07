@@ -300,8 +300,8 @@
           "email": "john.smith@company.com",
           "role": "owner",
           "initials": "JS",
-          "completed": null,
-          "assigned": 0,
+          "completed": 0,
+          "assigned": 5,
           "lastJudgedAt": null
         },
         {
@@ -310,9 +310,19 @@
           "email": "sarah.chen@company.com",
           "role": "co-owner",
           "initials": "SC",
-          "completed": null,
-          "assigned": 0,
+          "completed": 0,
+          "assigned": 5,
           "lastJudgedAt": null
+        },
+        {
+          "id": "mike-johnson",
+          "name": "Mike Johnson",
+          "email": "mike.john@company.com",
+          "role": "judge",
+          "initials": "MJ",
+          "completed": 1,
+          "assigned": 5,
+          "lastJudgedAt": "2025-07-07 10:30"
         }
       ],
       "queries": [
@@ -324,6 +334,30 @@
         {
           "id": "Q002",
           "text": "Best practices for web application security",
+          "assignments": [
+            {
+              "judge": {
+                "name": "Mike Johnson",
+                "initials": "MJ"
+              },
+              "status": "completed",
+              "completedAt": "2025-07-07 10:30"
+            }
+          ]
+        },
+        {
+          "id": "Q003",
+          "text": "Database optimization techniques for large datasets",
+          "judges": []
+        },
+        {
+          "id": "Q004",
+          "text": "Cloud infrastructure deployment strategies",
+          "judges": []
+        },
+        {
+          "id": "Q005",
+          "text": "API design principles and best practices",
           "judges": []
         }
       ]
