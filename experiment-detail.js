@@ -318,7 +318,7 @@ function updateUIWithConfigData() {
         let derivedStatus = "Not started";
         if (completedCount === experimentData.queries.length && experimentData.queries.length > 0) {
             derivedStatus = "Completed";
-        } else if (inProgressCount > 0) {
+        } else if (inProgressCount > 0 || completedCount > 0) {
             derivedStatus = "In progress";
         }
         if (statusElement) {
@@ -798,18 +798,23 @@ function updateMemberPermissions() {
     const addMemberBtn = document.querySelector('button[onclick="addMember()"]');
     const manageMembersBtn = document.querySelector('button[onclick="manageMembers()"]');
     
-    // Add member: Owner and Co-Owner only
+    // Add member: Owner and Co-Owner only, but disabled if allowAnyoneToJudge is true
     if (addMemberBtn) {
-        if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
+        if (experimentConfig.allowAnyoneToJudge) {
+            addMemberBtn.disabled = true;
+            addMemberBtn.classList.add('disabled');
+            addMemberBtn.title = 'Judgement is open to everyone for this experiment. Add member is disabled.';
+        } else if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
             addMemberBtn.disabled = false;
             addMemberBtn.classList.remove('disabled');
             addMemberBtn.removeAttribute('title');
         } else {
             addMemberBtn.disabled = true;
             addMemberBtn.classList.add('disabled');
+            addMemberBtn.removeAttribute('title');
         }
     }
-    
+
     // Manage members: Owner and Co-Owner only
     if (manageMembersBtn) {
         if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
@@ -1255,8 +1260,8 @@ function viewQueryAssignments(queryId) {
                     <div class="judge-details">
                         <div class="judge-name">${assignment.judge.name}</div>
                         <div class="assignment-meta">
-                            ${assignment.status === 'completed' ?
-                                `完成时间: ${assignment.completedAt}` :
+                            ${assignment.status === 'completed' ? 
+                                `完成时间: ${assignment.completedAt}` : 
                                 `分配时间: ${assignment.assignedAt}`
                             }
                         </div>
@@ -1653,6 +1658,7 @@ function showQueryAssignmentModal(selectedQueries) {
                                         </div>
                                     `;
                                 }).join('')}
+
                             </div>
                         ` : '<div class="empty-state">No judges available for assignment</div>'}
                     </div>
@@ -1958,6 +1964,7 @@ function deleteExperiment() {
     if (currentUser.role !== 'owner') {
         alert('You do not have permission to delete this experiment. Only the owner can delete experiments.');
         return;
+   
     }
     
     if (confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) {

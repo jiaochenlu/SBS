@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 let derivedStatus = "Not started";
                 if (completedCount === queries.length && queries.length > 0) {
                     derivedStatus = "Completed";
-                } else if (inProgressCount > 0) {
+                } else if (inProgressCount > 0 || completedCount > 0) {
                     derivedStatus = "In progress";
                 }
 
