@@ -372,7 +372,7 @@
             
             try {
                 // Fetch config immediately
-                const response = await fetch('./experiment-detail-config.json');
+                const response = await fetch('./experiment-config-merged.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
