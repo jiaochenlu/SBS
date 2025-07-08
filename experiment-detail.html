@@ -171,7 +171,6 @@
                         <div class="query-column">Query</div>
                         <div class="assignments-column">Judges</div>
                         <div class="status-column">Overall Status</div>
-                        <div class="progress-column">Progress</div>
                         <div class="last-judged-column">Last Judged At</div>
                     </div>
                     
@@ -519,13 +518,6 @@
                             </div>
                             <div class="status-column">
                                 <span class="status-badge status-${overallStatus}">${overallStatus}</span>
-                            </div>
-                            <div class="progress-column">
-                                <div class="progress-bar-small">
-                                    <div class="progress-fill-small" style="width: ${overallProgress}%"></div>
-                                </div>
-                                <span class="progress-text">${overallProgress}%</span>
-                                <div class="progress-detail">${completedAssignments}/${totalAssignments}</div>
                             </div>
                             <div class="last-judged-column">
                                 ${lastJudgedAt}

@@ -898,8 +898,6 @@ function createQueryRow(query) {
         overallStatus = 'in-progress';
     }
     
-    const overallProgress = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
-    
     // Create assignees display - limit to 5 avatars
     const maxAvatars = 5;
     const visibleAssignments = assignments.slice(0, maxAvatars);
@@ -959,13 +957,6 @@ function createQueryRow(query) {
         </div>
         <div class="status-column">
             <span class="status-badge status-${overallStatus}">${overallStatus}</span>
-        </div>
-        <div class="progress-column">
-            <div class="progress-bar-small">
-                <div class="progress-fill-small" style="width: ${overallProgress}%"></div>
-            </div>
-            <span class="progress-text">${overallProgress}%</span>
-            <div class="progress-detail">${completedAssignments}/${totalAssignments}</div>
         </div>
         <div class="last-judged-column">
             ${lastJudgedAt}
