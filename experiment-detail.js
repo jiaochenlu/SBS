@@ -381,6 +381,22 @@ function updateUIWithConfigData() {
     console.log('✅✅✅ updateUIWithConfigData completed');
 }
 
+// 动态渲染 Query Management 区域的表头
+function renderQueryListHeader() {
+    const queryListHeader = document.getElementById('queryListHeader');
+    if (!queryListHeader) return;
+    // 判断是否为 ad hoc query
+    const showTaskType = experimentData && experimentData.configuration && experimentData.configuration.querySetSelection === 'Ad hoc query';
+    queryListHeader.innerHTML = `
+        <div class="checkbox-column"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></div>
+        <div class="query-column">Query</div>
+        ${showTaskType ? '<div class="task-type-column">Task Type</div>' : ''}
+        <div class="assignments-column">Assignments</div>
+        <div class="status-column">Status</div>
+        <div class="last-judged-column">Last Judged At</div>
+    `;
+}
+
 // Update progress overview section
 function updateProgressOverview() {
     console.log('📊 updateProgressOverview called');
@@ -933,6 +949,15 @@ function createQueryRow(query) {
                       String(date.getSeconds()).padStart(2, '0');
     }
     
+    // 获取 task type 字段
+    let taskType = '--';
+    if (query.taskType) {
+        taskType = query.taskType.name;
+    } else if (experimentConfig.isRealTimeAdHoc && query.task_type) {
+        // 兼容部分后端字段命名
+        taskType = query.taskType.name;
+    }
+    
     // Create row content
     const assignmentsContainer = document.createElement('div');
     assignmentsContainer.className = 'assignments-container';
@@ -949,6 +974,7 @@ function createQueryRow(query) {
             <div class="query-text">${query.text}</div>
             <div class="query-meta">#${query.id}</div>
         </div>
+        ${(taskType !== '--') ? `<div class="task-type-column">${taskType}</div>` : ''}
         <div class="assignments-column">
             ${assignmentsContainer.outerHTML}
             <div class="assignment-summary">
@@ -968,6 +994,8 @@ function createQueryRow(query) {
 
 function loadQueries() {
     console.log('📋 loadQueries called');
+    // 先渲染 header
+    renderQueryListHeader();
     const queryListBody = document.getElementById('queryListBody');
     if (!queryListBody) {
         console.error('queryListBody element NOT FOUND!');
@@ -1957,7 +1985,7 @@ function deleteExperiment() {
         return;
    
     }
-    
+
     if (confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) {
         alert('Delete experiment functionality - to be implemented');
     }

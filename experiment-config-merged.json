@@ -361,6 +361,210 @@
           "assignments": []
         }
       ]
+    },
+    {
+      "id": "search-ndcg-003",
+      "name": "Search NDCG - ad hoc query",
+      "description": "Evaluating search result quality using NDCG metrics for ad hoc queries with task type assignments.",
+      "status": "active",
+      "createdAt": "July 8, 2025",
+      "owner": {
+        "id": "john-smith",
+        "name": "John Smith",
+        "email": "john.smith@company.com",
+        "initials": "JS"
+      },
+      "configuration": {
+        "experimentType": "Search NDCG experiment",
+        "dataSchema": "Search",
+        "dataSource": "Real-time scrape",
+        "querySetSelection": "Ad hoc query",
+        "querySetFile": {
+          "name": "task_set.csv",
+          "taskTypes": [
+            { "id": "01", "name": "Meeting", "minQueries": 5 },
+            { "id": "02", "name": "Email", "minQueries": 5 },
+            { "id": "03", "name": "People", "minQueries": 5 }
+          ]
+        },
+        "controlProfile": "userp",
+        "treatmentProfile": "copilot web",
+        "dataFieldsDisplay": "Query, Response, LU Info Question",
+        "judgementQuestions": [
+          { "id": 1, "text": "Item relevance", "type": "Toggle - Item Level Side-by-Side" },
+          { "id": 2, "text": "Which side is better?", "type": "Single Choice - Query Level Side-by-Side" },
+          { "id": 3, "text": "Comment", "type": "Text Box - Query Level Side-by-Side" }
+        ],
+        "additionalSettings": {
+          "blindTest": true,
+          "allowAnyToJudge": false,
+          "judgementGuide": "Configured (Markdown format)"
+        }
+      },
+      "members": [
+        {
+          "id": "john-smith",
+          "name": "John Smith",
+          "email": "john.smith@company.com",
+          "role": "owner",
+          "initials": "JS",
+          "completed": 2,
+          "assigned": 5,
+          "lastJudgedAt": "2025-07-08 10:00"
+        },
+        {
+          "id": "mike-johnson",
+          "name": "Mike Johnson",
+          "email": "mike.john@company.com",
+          "role": "judge",
+          "initials": "MJ",
+          "completed": 0,
+          "assigned": 5,
+          "lastJudgedAt": null
+        },
+        {
+          "id": "alex-matos",
+          "name": "Alex Matos",
+          "email": "alex.matos@company.com",
+          "role": "judge",
+          "initials": "AM",
+          "completed": 1,
+          "assigned": 10,
+          "lastJudgedAt": "2025-07-08 09:30"
+        },
+        {
+          "id": "jennie-chen",
+          "name": "Jennie Chen",
+          "email": "jennie.chen@company.com",
+          "role": "judge",
+          "initials": "JC",
+          "completed": 0,
+          "assigned": 0,
+          "lastJudgedAt": null
+        }
+      ],
+      "queries": [
+        {
+          "id": "T01-Q001",
+          "taskType": {"id": "01", "name": "Meeting"},
+          "text": "Meeting query 1",
+          "assignments": [
+            {
+              "judge": { "name": "Mike Johnson", "initials": "MJ" },
+              "status": "not-started",
+              "assignedAt": "2025-07-08 08:00"
+            }
+          ]
+        },
+        {
+          "id": "T01-Q002",
+          "taskType": {"id": "01", "name": "Meeting"},
+          "text": "Meeting query 2",
+          "assignments": [
+            {
+              "judge": { "name": "Mike Johnson", "initials": "MJ" },
+              "status": "not-started",
+              "assignedAt": "2025-07-08 08:00"
+            }
+          ]
+        },
+        {
+          "id": "T01-Q003",
+          "taskType": {"id": "01", "name": "Meeting"},
+          "text": "Meeting query 3",
+          "assignments": [
+            {
+              "judge": { "name": "Mike Johnson", "initials": "MJ" },
+              "status": "not-started",
+              "assignedAt": "2025-07-08 08:00"
+            }
+          ]
+        },
+        {
+          "id": "T01-Q004",
+          "taskType": {"id": "01", "name": "Meeting"},
+          "text": "Meeting query 4",
+          "assignments": [
+            {
+              "judge": { "name": "Mike Johnson", "initials": "MJ" },
+              "status": "not-started",
+              "assignedAt": "2025-07-08 08:00"
+            }
+          ]
+        },
+        {
+          "id": "T01-Q005",
+          "taskType": {"id": "01", "name": "Meeting"},
+          "text": "Meeting query 5",
+          "assignments": [
+            {
+              "judge": { "name": "Mike Johnson", "initials": "MJ" },
+              "status": "not-started",
+              "assignedAt": "2025-07-08 08:00"
+            }
+          ]
+        },
+        {
+          "id": "T02-Q001",
+          "taskType": {"id": "02", "name": "Email"},
+          "text": "Email query 1",
+          "assignments": [
+            {
+              "judge": { "name": "Alex Matos", "initials": "AM" },
+              "status": "completed",
+              "completedAt": "2025-07-08 09:30"
+            }
+          ]
+        },
+        {
+          "id": "T02-Q002",
+          "taskType": {"id": "02", "name": "Email"},
+          "text": "Email query 2",
+          "assignments": [
+            {
+              "judge": { "name": "Alex Matos", "initials": "AM" },
+              "status": "not-started",
+              "assignedAt": "2025-07-08 08:30"
+            }
+          ]
+        },
+        {
+          "id": "T02-Q003",
+          "taskType": {"id": "02", "name": "Email"},
+          "text": "Email query 3",
+          "assignments": [
+            {
+              "judge": { "name": "Alex Matos", "initials": "AM" },
+              "status": "not-started",
+              "assignedAt": "2025-07-08 08:30"
+            }
+          ]
+        },
+        {
+          "id": "T02-Q004",
+          "taskType": {"id": "02", "name": "Email"},
+          "text": "Email query 4",
+          "assignments": [
+            {
+              "judge": { "name": "Alex Matos", "initials": "AM" },
+              "status": "not-started",
+              "assignedAt": "2025-07-08 08:30"
+            }
+          ]
+        },
+        {
+          "id": "T02-Q005",
+          "taskType": {"id": "02", "name": "Email"},
+          "text": "Email query 5",
+          "assignments": [
+            {
+              "judge": { "name": "Alex Matos", "initials": "AM" },
+              "status": "not-started",
+              "assignedAt": "2025-07-08 08:30"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

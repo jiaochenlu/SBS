@@ -164,14 +164,8 @@
 
                 <!-- Query List -->
                 <div class="query-list-container">
-                    <div class="query-list-header">
-                        <div class="checkbox-column">
-                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                        </div>
-                        <div class="query-column">Query</div>
-                        <div class="assignments-column">Judges</div>
-                        <div class="status-column">Overall Status</div>
-                        <div class="last-judged-column">Last Judged At</div>
+                    <div class="query-list-header" id="queryListHeader">
+                        <!-- Header will be rendered by JS -->
                     </div>
                     
                     <div class="query-list-body" id="queryListBody">
@@ -377,8 +371,8 @@
                 }
                 const config = await response.json();
                 console.log('✅ Config loaded immediately:', config);
-                
                 const exp = config.experiment;
+                window.exp = exp; // 让后续脚本可直接访问
                 
                 // Update all hardcoded "Loading..." immediately
                 const updates = [
@@ -508,6 +502,9 @@
                                 <div class="query-text">${query.text}</div>
                                 <div class="query-meta">#${query.id}</div>
                             </div>
+                            <div class="task-type-column">
+                                <div class="task-type-text">${query.taskType || 'N/A'}</div>
+                            </div>
                             <div class="assignments-column">
                                 <div class="assignments-container">
                                     ${assigneesHtml}
@@ -531,6 +528,7 @@
                 } else {
                     console.warn('❌ queryListBody element not found or no queries in config');
                 }
+            
                 
             } catch (error) {
                 console.error('❌ Immediate config loading failed:', error);
