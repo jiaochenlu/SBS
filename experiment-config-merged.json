@@ -447,7 +447,7 @@
         {
           "id": "T01-Q001",
           "taskType": {"id": "01", "name": "Meeting"},
-          "text": "Meeting query 1",
+          "text": "Customer meetings I've joined this week",
           "assignments": [
             {
               "judge": { "name": "Mike Johnson", "initials": "MJ" },
@@ -459,7 +459,7 @@
         {
           "id": "T01-Q002",
           "taskType": {"id": "01", "name": "Meeting"},
-          "text": "Meeting query 2",
+          "text": "meeting about the new product launch",
           "assignments": [
             {
               "judge": { "name": "Mike Johnson", "initials": "MJ" },
@@ -471,31 +471,7 @@
         {
           "id": "T01-Q003",
           "taskType": {"id": "01", "name": "Meeting"},
-          "text": "Meeting query 3",
-          "assignments": [
-            {
-              "judge": { "name": "Mike Johnson", "initials": "MJ" },
-              "status": "not-started",
-              "assignedAt": "2025-07-08 08:00"
-            }
-          ]
-        },
-        {
-          "id": "T01-Q004",
-          "taskType": {"id": "01", "name": "Meeting"},
-          "text": "Meeting query 4",
-          "assignments": [
-            {
-              "judge": { "name": "Mike Johnson", "initials": "MJ" },
-              "status": "not-started",
-              "assignedAt": "2025-07-08 08:00"
-            }
-          ]
-        },
-        {
-          "id": "T01-Q005",
-          "taskType": {"id": "01", "name": "Meeting"},
-          "text": "Meeting query 5",
+          "text": "Planing the next sprint",
           "assignments": [
             {
               "judge": { "name": "Mike Johnson", "initials": "MJ" },
@@ -507,7 +483,7 @@
         {
           "id": "T02-Q001",
           "taskType": {"id": "02", "name": "Email"},
-          "text": "Email query 1",
+          "text": "Search the latest email regarding the project status",
           "assignments": [
             {
               "judge": { "name": "Alex Matos", "initials": "AM" },
@@ -518,44 +494,8 @@
         },
         {
           "id": "T02-Q002",
-          "taskType": {"id": "02", "name": "Email"},
-          "text": "Email query 2",
-          "assignments": [
-            {
-              "judge": { "name": "Alex Matos", "initials": "AM" },
-              "status": "not-started",
-              "assignedAt": "2025-07-08 08:30"
-            }
-          ]
-        },
-        {
-          "id": "T02-Q003",
-          "taskType": {"id": "02", "name": "Email"},
-          "text": "Email query 3",
-          "assignments": [
-            {
-              "judge": { "name": "Alex Matos", "initials": "AM" },
-              "status": "not-started",
-              "assignedAt": "2025-07-08 08:30"
-            }
-          ]
-        },
-        {
-          "id": "T02-Q004",
-          "taskType": {"id": "02", "name": "Email"},
-          "text": "Email query 4",
-          "assignments": [
-            {
-              "judge": { "name": "Alex Matos", "initials": "AM" },
-              "status": "not-started",
-              "assignedAt": "2025-07-08 08:30"
-            }
-          ]
-        },
-        {
-          "id": "T02-Q005",
-          "taskType": {"id": "02", "name": "Email"},
-          "text": "Email query 5",
+          "taskType": {"id": "03", "name": "People"},
+          "text": "Who is the CEO of the company?",
           "assignments": [
             {
               "judge": { "name": "Alex Matos", "initials": "AM" },
