@@ -10,6 +10,10 @@ let experimentConfig = {
     isRealTimeAdHoc: false
 };
 
+// Task type filtering variables
+let currentTaskTypeFilter = null;
+let originalQueries = [];
+
 // Load experiment configuration from JSON file
 async function loadExperimentConfig() {
     try {
@@ -1017,6 +1021,7 @@ function loadQueries() {
             {
                 id: 'Q001',
                 text: 'How to implement machine learning algorithms in Python?',
+                taskType: { name: 'Web Search' },
                 assignments: [
                     { judge: { name: 'John Smith', initials: 'JS' }, status: 'completed', completedAt: '2024-03-15 14:30' },
                     { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'completed', completedAt: '2024-03-15 16:20' },
@@ -1026,6 +1031,7 @@ function loadQueries() {
             {
                 id: 'Q002',
                 text: 'Best practices for web application security',
+                taskType: { name: 'News Search' },
                 assignments: [
                     { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'not-started', assignedAt: '2024-03-13 10:00' }
                 ]
@@ -1033,6 +1039,7 @@ function loadQueries() {
             {
                 id: 'Q003',
                 text: 'Database optimization techniques for large datasets',
+                taskType: { name: 'Web Search' },
                 assignments: [
                     { judge: { name: 'John Smith', initials: 'JS' }, status: 'not-started', assignedAt: '2024-03-12 15:30' },
                     { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'not-started', assignedAt: '2024-03-12 15:30' }
@@ -1041,6 +1048,7 @@ function loadQueries() {
             {
                 id: 'Q004',
                 text: 'Cloud infrastructure deployment strategies',
+                taskType: { name: 'Shopping Search' },
                 assignments: [
                     { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'completed', completedAt: '2024-03-11 13:20' }
                 ]
@@ -1048,33 +1056,52 @@ function loadQueries() {
             {
                 id: 'Q005',
                 text: 'API design principles and best practices',
+                taskType: { name: 'Image Search' },
                 assignments: [
                     { judge: { name: 'John Smith', initials: 'JS' }, status: 'not-started', assignedAt: '2024-03-10 09:00' },
                     { judge: { name: 'Alice Miller', initials: 'AM' }, status: 'completed', completedAt: '2024-03-14 17:30' },
                     { judge: { name: 'Robert Johnson', initials: 'RJ' }, status: 'not-started', assignedAt: '2024-03-10 09:00' },
                     { judge: { name: 'Sarah Chen', initials: 'SC' }, status: 'not-started', assignedAt: '2024-03-15 14:00' }
                 ]
-            },        {
-            id: 'Q006',
-            text: 'Mobile app performance optimization strategies',
-            assignments: []
-        },
-        {
-            id: 'Q007',
-            text: 'Frontend framework comparison and selection',
-            assignments: [
-                { judge: { name: 'Sarah Chen', initials: 'SC' }, status: 'in-progress', assignedAt: '2024-03-16 10:00' }
-            ]
-        },
-        {
-            id: 'Q008',
-            text: 'Microservices architecture design patterns',
-            assignments: []
-        }
-    ];
+            },
+            {
+                id: 'Q006',
+                text: 'Mobile app performance optimization strategies',
+                taskType: { name: 'News Search' },
+                assignments: []
+            },
+            {
+                id: 'Q007',
+                text: 'Frontend framework comparison and selection',
+                taskType: { name: 'Web Search' },
+                assignments: [
+                    { judge: { name: 'Sarah Chen', initials: 'SC' }, status: 'in-progress', assignedAt: '2024-03-16 10:00' }
+                ]
+            },
+            {
+                id: 'Q008',
+                text: 'Microservices architecture design patterns',
+                taskType: { name: 'Shopping Search' },
+                assignments: []
+            }
+        ];
+    }
+    
+    // Save original queries for filtering
+    if (originalQueries.length === 0) {
+        originalQueries = [...allQueries];
     }
     
     console.log('📋 Using queries:', allQueries);
+    
+    // Apply task type filter first
+    if (currentTaskTypeFilter) {
+        allQueries = allQueries.filter(query => {
+            const taskType = query.taskType?.name || 'Unknown';
+            return taskType === currentTaskTypeFilter;
+        });
+        console.log('📋 Filtered by task type:', currentTaskTypeFilter, 'Result:', allQueries.length);
+    }
     
     // Filter queries based on user role
     let queriesToShow = allQueries;
@@ -2239,6 +2266,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     updateUserDisplay();
     updatePermissions();
     
+    // Initialize Task Type Sidebar (must be done after experimentData is loaded)
+    console.log('📋 Initializing Task Type Sidebar...');
+    initializeTaskTypeSidebar();
+    
     // Load initial content for the default active tab (queries)
     console.log('📋 Loading queries...');
     loadQueries();
@@ -2258,12 +2289,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Force update UI one more time to ensure everything is consistent
         updateUIBasedOnRole();
         
+        // Re-initialize task type sidebar to ensure it's properly set up
+        initializeTaskTypeSidebar();
+        
         // Final check of UI elements
         console.log('🔍 Final UI check:');
         console.log('  - Experiment title:', document.getElementById('experimentTitle')?.textContent);
         console.log('  - Experiment status:', document.getElementById('experimentStatus')?.textContent);
         console.log('  - Total queries display:', document.getElementById('totalQueriesDisplay')?.textContent);
         console.log('  - Allow any to judge:', document.getElementById('configAllowAnyToJudge')?.textContent);
+        console.log('  - Task type sidebar visible:', document.getElementById('taskTypeSidebar')?.style.display !== 'none');
     }, 500);
     
     console.log('✅✅✅ DOMContentLoaded initialization completed');
@@ -2399,6 +2434,106 @@ setTimeout(() => {
     console.log('🚨 Emergency update completed');
 }, 3000);
 
+// Task Type Sidebar Functions
+function isAdHocExperiment() {
+    // Check multiple possible indicators for ad hoc experiments
+    if (!experimentData || !experimentData.configuration) {
+        return false;
+    }
+    
+    const config = experimentData.configuration;
+    
+    // Check various possible indicators for ad hoc experiments
+    return config.querySetSelection === 'Ad hoc query' ||
+           config.querySetSelection === 'ad-hoc' ||
+           config.dataSource === 'ad-hoc' ||
+           config.isRealTimeAdHoc === true;
+}
+
+function initializeTaskTypeSidebar() {
+    const sidebar = document.getElementById('taskTypeSidebar');
+    if (!sidebar) return;
+    
+    console.log('🔍 Checking if ad hoc experiment...');
+    console.log('  - experimentData:', experimentData);
+    console.log('  - configuration:', experimentData?.configuration);
+    console.log('  - querySetSelection:', experimentData?.configuration?.querySetSelection);
+    
+    if (isAdHocExperiment()) {
+        console.log('✅ Ad hoc experiment detected, showing task type sidebar');
+        sidebar.style.display = 'block';
+        loadTaskTypes();
+    } else {
+        console.log('❌ Not ad hoc experiment, hiding task type sidebar');
+        sidebar.style.display = 'none';
+    }
+}
+
+function loadTaskTypes() {
+    if (!experimentData || !experimentData.queries) return;
+    
+    // Count queries for each task type
+    const taskTypeCounts = {};
+    
+    experimentData.queries.forEach(query => {
+        const taskType = query.taskType?.name || 'Unknown';
+        taskTypeCounts[taskType] = (taskTypeCounts[taskType] || 0) + 1;
+    });
+    
+    // Render task type list
+    const taskTypeList = document.getElementById('taskTypeList');
+    if (!taskTypeList) return;
+    
+    if (Object.keys(taskTypeCounts).length === 0) {
+        taskTypeList.innerHTML = '<div class="task-type-empty">No task types found</div>';
+        return;
+    }
+    
+    taskTypeList.innerHTML = '';
+    
+    Object.entries(taskTypeCounts).forEach(([taskType, count]) => {
+        const item = document.createElement('div');
+        item.className = 'task-type-item';
+        item.setAttribute('data-task-type', taskType);
+        item.onclick = () => filterByTaskType(taskType, item);
+        
+        item.innerHTML = `
+            <span class="task-type-name">${taskType}</span>
+            <span class="task-type-count">${count}</span>
+        `;
+        
+        taskTypeList.appendChild(item);
+    });
+}
+
+function filterByTaskType(taskType, itemElement) {
+    currentTaskTypeFilter = taskType;
+    
+    // Update active state
+    document.querySelectorAll('.task-type-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    if (itemElement) {
+        itemElement.classList.add('active');
+    }
+    
+    // Reload queries with filter
+    loadQueries();
+}
+
+function clearTaskTypeFilter() {
+    currentTaskTypeFilter = null;
+    
+    // Remove all active states
+    document.querySelectorAll('.task-type-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Reload all queries
+    loadQueries();
+}
+
 // Make function globally accessible
 window.switchTab = switchTab;
 window.toggleSelectAll = toggleSelectAll;
@@ -2430,3 +2565,5 @@ window.toggleUserDropdown = toggleUserDropdown;
 window.switchUser = switchUser;
 window.downloadReport = downloadReport;
 window.exportData = exportData;
+window.filterByTaskType = filterByTaskType;
+window.clearTaskTypeFilter = clearTaskTypeFilter;

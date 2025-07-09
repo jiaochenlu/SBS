@@ -2301,3 +2301,222 @@ body {
         font-size: 0.7rem;
     }
 }
+
+/* Task Type Sidebar Styles */
+.query-management-layout {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.task-type-sidebar {
+    width: 280px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.sidebar-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.clear-filter-btn {
+    background: none;
+    border: 1px solid #667eea;
+    color: #667eea;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.clear-filter-btn:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.task-type-list {
+    padding: 0.75rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.task-type-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    background: white;
+}
+
+.task-type-item:last-child {
+    margin-bottom: 0;
+}
+
+.task-type-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateX(2px);
+}
+
+.task-type-item.active {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: #667eea;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+}
+
+.task-type-name {
+    font-weight: 500;
+    color: #1e293b;
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+.task-type-item.active .task-type-name {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.task-type-count {
+    background: #e2e8f0;
+    color: #64748b;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+}
+
+.task-type-item.active .task-type-count {
+    background: #667eea;
+    color: white;
+}
+
+.query-content-area {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Empty state for task type list */
+.task-type-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #64748b;
+    font-style: italic;
+}
+
+.task-type-empty::before {
+    content: "📋";
+    display: block;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Loading state for task type list */
+.task-type-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.task-type-loading::before {
+    content: "⏳";
+    margin-right: 0.5rem;
+}
+
+/* Responsive Design for Task Type Sidebar */
+@media (max-width: 1024px) {
+    .query-management-layout {
+        flex-direction: column;
+    }
+    
+    .task-type-sidebar {
+        width: 100%;
+        order: -1;
+    }
+    
+    .task-type-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        max-height: none;
+        overflow-y: visible;
+    }
+    
+    .task-type-item {
+        flex: 0 0 auto;
+        margin-bottom: 0;
+        min-width: 120px;
+    }
+    
+    .sidebar-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .clear-filter-btn {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .query-management-layout {
+        gap: 1rem;
+    }
+    
+    .task-type-item {
+        padding: 0.5rem 0.75rem;
+        min-width: 100px;
+    }
+    
+    .task-type-name {
+        font-size: 0.8rem;
+    }
+    
+    .task-type-count {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.4rem;
+    }
+}
+
+/* Smooth transitions for showing/hiding sidebar */
+.task-type-sidebar {
+    transition: all 0.3s ease;
+}
+
+.task-type-sidebar[style*="display: none"] {
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.task-type-sidebar[style*="display: block"] {
+    opacity: 1;
+    transform: translateX(0);
+}
