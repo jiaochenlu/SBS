@@ -140,44 +140,63 @@
                     </div>
                 </div>
 
-                <!-- Filters and Search -->
-                <div class="filters-section">
-                    <div class="search-box">
-                        <input type="text" placeholder="Search queries..." class="search-input">
-                        <button class="search-btn">🔍</button>
+                <!-- Task Type Sidebar and Query Content Layout -->
+                <div class="query-management-layout">
+                    <!-- Task Type Sidebar (only for ad hoc experiments) -->
+                    <div class="task-type-sidebar" id="taskTypeSidebar" style="display: none;">
+                        <div class="sidebar-header">
+                            <h4>Task Types</h4>
+                            <button class="clear-filter-btn" onclick="clearTaskTypeFilter()" title="Show all queries">
+                                Clear Filter
+                            </button>
+                        </div>
+                        <div class="task-type-list" id="taskTypeList">
+                            <!-- Task types will be dynamically loaded here -->
+                        </div>
                     </div>
-                    <div class="filter-buttons">
-                        <select class="filter-select">
-                            <option value="">All Status</option>
-                            <option value="completed">Completed</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="not-started">Not Started</option>
-                        </select>
-                        <select class="filter-select">
-                            <option value="">All Judges</option>
-                            <option value="john-smith">John Smith</option>
-                            <option value="alice-miller">Alice Miller</option>
-                            <option value="robert-johnson">Robert Johnson</option>
-                        </select>
-                    </div>
-                </div>
 
-                <!-- Query List -->
-                <div class="query-list-container">
-                    <div class="query-list-header" id="queryListHeader">
-                        <!-- Header will be rendered by JS -->
-                    </div>
-                    
-                    <div class="query-list-body" id="queryListBody">
-                        <!-- Query items will be dynamically loaded here -->
-                    </div>
-                </div>
+                    <!-- Main Query Content -->
+                    <div class="query-content-area">
+                        <!-- Filters and Search -->
+                        <div class="filters-section">
+                            <div class="search-box">
+                                <input type="text" placeholder="Search queries..." class="search-input">
+                                <button class="search-btn">🔍</button>
+                            </div>
+                            <div class="filter-buttons">
+                                <select class="filter-select">
+                                    <option value="">All Status</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="in-progress">In Progress</option>
+                                    <option value="not-started">Not Started</option>
+                                </select>
+                                <select class="filter-select">
+                                    <option value="">All Judges</option>
+                                    <option value="john-smith">John Smith</option>
+                                    <option value="alice-miller">Alice Miller</option>
+                                    <option value="robert-johnson">Robert Johnson</option>
+                                </select>
+                            </div>
+                        </div>
 
-                <!-- Pagination -->
-                <div class="pagination">
-                    <button class="pagination-btn" onclick="previousPage()">← Previous</button>
-                    <span class="pagination-info">Page 1 of 10</span>
-                    <button class="pagination-btn" onclick="nextPage()">Next →</button>
+                        <!-- Query List -->
+                        <div class="query-list-container">
+                            <div class="query-list-header" id="queryListHeader">
+                                <!-- Header will be rendered by JS -->
+                            </div>
+                            
+                            <div class="query-list-body" id="queryListBody">
+                                <!-- Query items will be dynamically loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="pagination">
+                            <button class="pagination-btn" onclick="previousPage()">← Previous</button>
+                            <span class="pagination-info">Page 1 of 10</span>
+                            <button class="pagination-btn" onclick="nextPage()">Next →</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

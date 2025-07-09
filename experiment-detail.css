@@ -607,7 +607,7 @@ body {
 
 .query-list-header {
     display: grid;
-    grid-template-columns: 4fr 35fr 14fr 10fr 25fr 12fr;
+    grid-template-columns: 4fr 8fr 25fr 14fr 10fr 25fr 12fr;
     gap: 1rem;
     padding: 1rem 1.5rem;
     background: #f8fafc;
@@ -624,7 +624,7 @@ body {
 
 .query-row {
     display: grid;
-    grid-template-columns: 4fr 35fr 14fr 10fr 25fr 12fr;
+    grid-template-columns: 4fr 8fr 25fr 14fr 10fr 25fr 12fr;
     gap: 1rem;
     padding: 1.5rem 2rem;
     border-bottom: 1px solid #e2e8f0;
@@ -671,6 +671,8 @@ body {
 /* Ensure all column content is left-aligned */
 .checkbox-column,
 .query-column,
+.id-column,
+.task-type-column,
 .assignments-column,
 .status-column,
 .progress-column,
@@ -681,6 +683,34 @@ body {
 
 .last-judged-column {
     color: #64748b;
+}
+
+/* ID Column Styles */
+.id-column {
+    text-align: center;
+    justify-self: center;
+}
+
+.query-id-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.query-id-link:hover {
+    color: #4c51bf;
+    background: rgba(102, 126, 234, 0.1);
+    text-decoration: underline;
+    transform: translateY(-1px);
+}
+
+.query-id-link:active {
+    transform: translateY(0);
 }
 
 /* Checkbox optimization */
@@ -1315,7 +1345,7 @@ body {
 @media (max-width: 1200px) {
     .query-list-header,
     .query-row {
-        grid-template-columns: 4fr 35fr 14fr 10fr 25fr 12fr;
+        grid-template-columns: 4fr 8fr 25fr 14fr 10fr 25fr 12fr;
         padding: 1rem 1.5rem;
     }
 }

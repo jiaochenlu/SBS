@@ -389,9 +389,10 @@ function renderQueryListHeader() {
     const showTaskType = experimentData && experimentData.configuration && experimentData.configuration.querySetSelection === 'Ad hoc query';
     queryListHeader.innerHTML = `
         <div class="checkbox-column"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></div>
+        <div class="id-column">ID</div>
         <div class="query-column">Query</div>
         ${showTaskType ? '<div class="task-type-column">Task Type</div>' : ''}
-        <div class="assignments-column">Assignments</div>
+        <div class="assignments-column">Judges</div>
         <div class="status-column">Status</div>
         <div class="last-judged-column">Last Judged At</div>
     `;
@@ -970,9 +971,11 @@ function createQueryRow(query) {
         <div class="checkbox-column">
             <input type="checkbox" value="${query.id}" onchange="updateSelectedQueries()" ${currentUser.role === 'judge' ? 'disabled' : ''}>
         </div>
+        <div class="id-column">
+            <a href="/query/${query.id}" class="query-id-link">${query.id}</a>
+        </div>
         <div class="query-column">
             <div class="query-text">${query.text}</div>
-            <div class="query-meta">#${query.id}</div>
         </div>
         ${(taskType !== '--') ? `<div class="task-type-column">${taskType}</div>` : ''}
         <div class="assignments-column">
