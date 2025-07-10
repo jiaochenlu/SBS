@@ -14,6 +14,20 @@ let experimentConfig = {
 let currentTaskTypeFilter = null;
 let originalQueries = [];
 
+// Task type assignment variables
+let selectedTaskTypes = [];
+let taskTypeAssignments = {};
+
+// Assignment mode state management
+let assignmentMode = 'default'; // 'default' | 'query-selection' | 'tasktype-selection'
+let isHighlightingSelections = false;
+
+const AssignmentStates = {
+    DEFAULT: 'default',
+    QUERY_SELECTION: 'query-selection',
+    TASKTYPE_SELECTION: 'tasktype-selection'
+};
+
 // Load experiment configuration from JSON file
 async function loadExperimentConfig() {
     try {
@@ -971,9 +985,12 @@ function createQueryRow(query) {
         assignmentsContainer.setAttribute('data-overflow', `+${overflowCount} more`);
     }
     
+    // Determine if checkbox should be disabled
+    const isCheckboxDisabled = currentUser.role === 'judge' || isAdHocExperiment();
+    
     row.innerHTML = `
         <div class="checkbox-column">
-            <input type="checkbox" value="${query.id}" onchange="updateSelectedQueries()" ${currentUser.role === 'judge' ? 'disabled' : ''}>
+            <input type="checkbox" value="${query.id}" onchange="updateSelectedQueries()" ${isCheckboxDisabled ? 'disabled' : ''}>
         </div>
         <div class="id-column">
             <a href="/query/${query.id}" class="query-id-link">${query.id}</a>
@@ -1244,6 +1261,8 @@ function assignQueries() {
     console.log('  - currentUser.role:', currentUser.role);
     console.log('  - experimentConfig:', experimentConfig);
     console.log('  - allowAnyoneToJudge:', experimentConfig.allowAnyoneToJudge);
+    console.log('  - isAdHocExperiment():', isAdHocExperiment());
+    console.log('  - assignmentMode:', assignmentMode);
     
     // Check if user has permission to assign queries (Owner or Co-Owner)
     if (currentUser.role !== 'owner' && currentUser.role !== 'co-owner') {
@@ -1258,19 +1277,81 @@ function assignQueries() {
         return;
     }
 
-    console.log('✅ Proceeding with query assignment');
-    const selectedQueries = getSelectedQueries();
-    if (selectedQueries.length === 0) {
-        alert('Please select queries to assign');
-        return;
-    }
-
-    // Show assignment modal based on experiment type
-    if (experimentConfig.isRealTimeAdHoc) {
-        showTaskTypeAssignmentModal(selectedQueries);
+    console.log('✅ Proceeding with assignment');
+    
+    if (isAdHocExperiment()) {
+        handleAdHocAssignment();
     } else {
-        showQueryAssignmentModal(selectedQueries);
+        handleQuerySetAssignment();
     }
+}
+
+function handleQuerySetAssignment() {
+    const selectedQueries = getSelectedQueries();
+    
+    switch (assignmentMode) {
+        case AssignmentStates.DEFAULT:
+            // 第一次点击：切换到query选择模式
+            console.log('🔄 Switching to query selection mode');
+            assignmentMode = AssignmentStates.QUERY_SELECTION;
+            highlightQueryCheckboxes();
+            updateAssignButtonState();
+            break;
+            
+        case AssignmentStates.QUERY_SELECTION:
+            if (selectedQueries.length > 0) {
+                // 有选中：执行分配
+                console.log('📋 Executing query assignment for:', selectedQueries);
+                executeQueryAssignment(selectedQueries);
+            } else {
+                // 没选中：保持当前状态，可以提示用户
+                console.log('⚠️ No queries selected, staying in selection mode');
+            }
+            break;
+    }
+}
+
+function handleAdHocAssignment() {
+    const selectedTaskTypes = getSelectedTaskTypes();
+    
+    switch (assignmentMode) {
+        case AssignmentStates.DEFAULT:
+            // 第一次点击：切换到task type选择模式
+            console.log('🔄 Switching to task type selection mode');
+            assignmentMode = AssignmentStates.TASKTYPE_SELECTION;
+            highlightTaskTypeCheckboxes();
+            updateAssignButtonState();
+            break;
+            
+        case AssignmentStates.TASKTYPE_SELECTION:
+            if (selectedTaskTypes.length > 0) {
+                // 有选中：执行分配
+                console.log('📋 Executing task type assignment for:', selectedTaskTypes);
+                executeTaskTypeAssignment(selectedTaskTypes);
+            } else {
+                // 没选中：保持当前状态，可以提示用户
+                console.log('⚠️ No task types selected, staying in selection mode');
+            }
+            break;
+    }
+}
+
+function executeQueryAssignment(selectedQueries) {
+    console.log('🎯 executeQueryAssignment called with:', selectedQueries);
+    
+    // 显示assignment modal
+    showQueryAssignmentModal(selectedQueries);
+    
+    // 注意：不在这里重置状态，而是在modal关闭时重置
+}
+
+function executeTaskTypeAssignment(selectedTaskTypes) {
+    console.log('🎯 executeTaskTypeAssignment called with:', selectedTaskTypes);
+    
+    // 显示assignment modal
+    showTaskTypeAssignmentModal(selectedTaskTypes);
+    
+    // 注意：不在这里重置状态，而是在modal关闭时重置
 }
 
 function editQuery(queryId) {
@@ -1431,22 +1512,32 @@ function getCurrentQueryData(queryId) {
     return sampleQueries.find(q => q.id === queryId);
 }
 
-function getSelectedQueries() {
-    const checkboxes = document.querySelectorAll('.query-row input[type="checkbox"]:checked');
-    return Array.from(checkboxes).map(cb => cb.value);
-}
 
 function updateSelectedQueries() {
-    const selectedCount = getSelectedQueries().length;
-    const assignBtn = document.getElementById('assignJudgesBtn');
+    console.log('👆 updateSelectedQueries called');
     
-    if (assignBtn) {
-        if (selectedCount === 0) {
-            // No queries selected - make button secondary style (not highlighted)
-            assignBtn.className = 'btn-secondary';
+    const selectedQueries = getSelectedQueries();
+    console.log('📋 Selected queries:', selectedQueries);
+    
+    // Update assign button state (unified function)
+    updateAssignButtonState();
+    
+    // Update select all checkbox state
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const allCheckboxes = document.querySelectorAll('.query-row input[type="checkbox"]');
+    const checkedCount = selectedQueries.length;
+    const totalCount = allCheckboxes.length;
+    
+    if (selectAllCheckbox) {
+        if (checkedCount === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === totalCount) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
         } else {
-            // Queries selected - make button primary style (highlighted)
-            assignBtn.className = 'btn-primary';
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
         }
     }
 }
@@ -1842,62 +1933,244 @@ function updateSelectedJudgesCount() {
     }
 }
 
-function showTaskTypeAssignmentModal(selectedQueries) {
-    // Create assignment modal for real-time ad hoc queries (task types)
+function showTaskTypeAssignmentModal(selectedTaskTypes) {
+    console.log('🎯 showTaskTypeAssignmentModal called with:', selectedTaskTypes);
+    
+    // Get judge assignment status for selected task types
+    const judgeAssignmentStatus = getTaskTypeAssignmentStatus(selectedTaskTypes);
+    
+    // Create assignment modal for task types
     const modal = document.createElement('div');
     modal.id = 'assignmentModal';
     modal.className = 'modal';
     modal.style.display = 'flex';
 
     const availableJudges = getAvailableJudges();
-    const taskTypes = ['Web Search', 'Image Search', 'News Search', 'Shopping Search'];
+    
+    // Calculate available judges and conflicts
+    const fullyConflictedJudges = [];
+    const availableJudgesForAssignment = [];
+    
+    availableJudges.forEach(judge => {
+        const status = judgeAssignmentStatus.get(judge.name);
+        if (status && status.conflictCount === selectedTaskTypes.length) {
+            // Fully conflicted - cannot be assigned
+            fullyConflictedJudges.push({...judge, status});
+        } else {
+            // Available (including partially conflicted)
+            availableJudgesForAssignment.push({...judge, status});
+        }
+    });
     
     modal.innerHTML = `
-        <div class="modal-content">
+        <div class="modal-content assignment-modal">
             <div class="modal-header">
-                <h3>Assign Task Types</h3>
+                <div class="modal-header-content">
+                    <div class="modal-icon">🏷️</div>
+                    <div class="modal-title-section">
+                        <h3>Assign Judges to Task Types</h3>
+                        <p class="modal-subtitle">${selectedTaskTypes.length} ${selectedTaskTypes.length === 1 ? 'task type' : 'task types'} selected</p>
+                    </div>
+                </div>
                 <button class="modal-close" onclick="closeAssignmentModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Select Task Types:</label>
-                    <div class="task-types-selection">
-                        <label class="checkbox-option">
-                            <input type="checkbox" id="selectAllTaskTypes" onchange="toggleSelectAllTaskTypes()">
-                            <span class="checkbox-text">Select All</span>
-                        </label>
-                        ${taskTypes.map(taskType => `
-                            <label class="checkbox-option">
-                                <input type="checkbox" value="${taskType}" name="selectedTaskTypes">
-                                <span class="checkbox-text">${taskType}</span>
-                            </label>
-                        `).join('')}
+                <div class="assignment-info">
+                    <div class="info-card">
+                        <div class="info-icon">📋</div>
+                        <div class="info-text">
+                            <strong>Task Type Assignment:</strong> Selected task types and their queries will be assigned to chosen judges. Conflicted assignments are prevented.
+                        </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Select Judges:</label>
-                    <div class="judges-selection">
-                        <label class="checkbox-option">
-                            <input type="checkbox" id="selectAllJudges" onchange="toggleSelectAllJudges()">
-                            <span class="checkbox-text">Select All</span>
-                        </label>
-                        ${availableJudges.map(judge => `
-                            <label class="checkbox-option">
-                                <input type="checkbox" value="${judge.id}" name="selectedJudges">
-                                <span class="checkbox-text">${judge.name} (${judge.email})</span>
-                            </label>
-                        `).join('')}
+                
+                <div class="selected-task-types-summary">
+                    <h4>Selected Task Types:</h4>
+                    <div class="task-type-chips">
+                        ${selectedTaskTypes.map(taskType => {
+                            const queryCount = getQueryCountForTaskType(taskType);
+                            return `<div class="task-type-chip">${taskType} (${queryCount} queries)</div>`;
+                        }).join('')}
                     </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="judges-tabs">
+                        <button class="judge-tab active" data-tab="available" onclick="switchJudgeTab('available')">
+                            ✅ Can be Assigned <span class="tab-count">${availableJudgesForAssignment.length}</span>
+                        </button>
+                        ${fullyConflictedJudges.length > 0 ? `
+                            <button class="judge-tab" data-tab="assigned" onclick="switchJudgeTab('assigned')">
+                                🚫 Already Assigned <span class="tab-count">${fullyConflictedJudges.length}</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="judges-tab-content active" id="available-tab">
+                        ${availableJudgesForAssignment.length > 0 ? `
+                            <div class="judges-list">
+                                ${availableJudgesForAssignment.map(judge => {
+                                    const isPartiallyConflicted = judge.status && judge.status.conflictCount > 0;
+                                    return `
+                                        <div class="judge-item available" onclick="toggleJudgeSelection('${judge.id}')">
+                                            <div class="judge-item-content">
+                                                <div class="judge-avatar available">${judge.initials}</div>
+                                                <div class="judge-info">
+                                                    <div class="judge-name">${judge.name}</div>
+                                                    <div class="judge-role">${judge.role}</div>
+                                                    ${isPartiallyConflicted ?
+                                                        `<div class="judge-warning">⚠️ Already assigned to ${judge.status.conflictCount} of ${selectedTaskTypes.length} task types</div>` :
+                                                        ''
+                                                    }
+                                                </div>
+                                                <input type="checkbox" class="judge-checkbox" value="${judge.id}" name="selectedJudges" id="judge-${judge.id}">
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : '<div class="empty-state">No judges available for assignment</div>'}
+                    </div>
+                    
+                    ${fullyConflictedJudges.length > 0 ? `
+                        <div class="judges-tab-content" id="assigned-tab">
+                            <div class="assignment-notice">
+                                <span class="notice-icon">🚫</span>
+                                <span class="notice-text">These judges are already assigned to all selected task types and cannot be assigned again to prevent duplicates.</span>
+                            </div>
+                            
+                            <div class="judges-list">
+                                ${fullyConflictedJudges.map(judge => `
+                                    <div class="judge-item unavailable">
+                                        <div class="judge-item-content">
+                                            <div class="judge-avatar conflicted">${judge.initials}</div>
+                                            <div class="judge-info">
+                                                <div class="judge-name">${judge.name}</div>
+                                                <div class="judge-role">${judge.role}</div>
+                                            </div>
+                                            <div class="unavailable-badge">Unavailable</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="selection-summary">
+                    <span id="selectedJudgesCount">0 judges selected</span>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeAssignmentModal()">Cancel</button>
-                <button class="btn-primary" onclick="executeTaskTypeAssignment()">Assign Task Types</button>
+                <button class="btn-secondary" onclick="closeAssignmentModal()">
+                    <span class="btn-icon">✕</span>
+                    Cancel
+                </button>
+                <button class="btn-primary" onclick="executeTaskTypeAssignmentFromModal()" id="assignButton" disabled>
+                    <span class="btn-icon">✓</span>
+                    Assign to Selected Judges
+                </button>
             </div>
         </div>
     `;
 
     document.body.appendChild(modal);
+    updateSelectedJudgesCount();
+}
+
+function getTaskTypeAssignmentStatus(selectedTaskTypes) {
+    const judgeStatus = new Map(); // judgeId -> { assignedTaskTypes: Set, conflictCount: number }
+    
+    selectedTaskTypes.forEach(taskType => {
+        // Get all queries for this task type
+        const taskTypeQueries = experimentData.queries.filter(query =>
+            (query.taskType?.name || 'Unknown') === taskType
+        );
+        
+        taskTypeQueries.forEach(query => {
+            if (query.assignments) {
+                query.assignments.forEach(assignment => {
+                    const judgeKey = assignment.judge.name; // Using name as key for demo
+                    
+                    if (!judgeStatus.has(judgeKey)) {
+                        judgeStatus.set(judgeKey, {
+                            assignedTaskTypes: new Set(),
+                            conflictCount: 0
+                        });
+                    }
+                    
+                    if (!judgeStatus.get(judgeKey).assignedTaskTypes.has(taskType)) {
+                        judgeStatus.get(judgeKey).assignedTaskTypes.add(taskType);
+                        judgeStatus.get(judgeKey).conflictCount++;
+                    }
+                });
+            }
+        });
+    });
+    
+    return judgeStatus;
+}
+
+function getQueryCountForTaskType(taskType) {
+    if (!experimentData || !experimentData.queries) return 0;
+    return experimentData.queries.filter(query =>
+        (query.taskType?.name || 'Unknown') === taskType
+    ).length;
+}
+
+function executeTaskTypeAssignmentFromModal() {
+    const selectedJudges = Array.from(document.querySelectorAll('input[name="selectedJudges"]:checked')).map(cb => cb.value);
+    
+    if (selectedJudges.length === 0) {
+        alert('Please select at least one judge');
+        return;
+    }
+    
+    const selectedTaskTypes = getSelectedTaskTypes();
+    console.log('🎯 Executing task type assignment:', { selectedTaskTypes, selectedJudges });
+    
+    // Calculate assignment results
+    let totalNewAssignments = 0;
+    const assignmentDetails = selectedJudges.map(judgeId => {
+        const availableJudges = getAvailableJudges();
+        const judge = availableJudges.find(j => j.id === judgeId);
+        const judgeName = judge ? judge.name : judgeId;
+        
+        // Calculate how many queries will be assigned for each task type
+        let newAssignments = 0;
+        selectedTaskTypes.forEach(taskType => {
+            const queryCount = getQueryCountForTaskType(taskType);
+            newAssignments += queryCount;
+        });
+        
+        totalNewAssignments += newAssignments;
+        
+        return {
+            name: judgeName,
+            newAssignments,
+            taskTypes: selectedTaskTypes.length
+        };
+    });
+    
+    // Create detailed success message
+    let message = `✅ Task Type Assignment Completed!\n\n`;
+    message += `📊 Summary:\n`;
+    message += `• Total new assignments: ${totalNewAssignments}\n`;
+    message += `• Judges selected: ${selectedJudges.length}\n`;
+    message += `• Task types assigned: ${selectedTaskTypes.length}\n\n`;
+    
+    message += `👥 Assignment Details:\n`;
+    assignmentDetails.forEach(detail => {
+        message += `• ${detail.name}: +${detail.newAssignments} new assignments across ${detail.taskTypes} task types\n`;
+    });
+    
+    alert(message);
+    
+    closeAssignmentModal();
+    
+    // Refresh the displays
+    loadTaskTypes();
+    loadQueries();
 }
 
 function getAvailableJudges() {
@@ -1916,6 +2189,9 @@ function closeAssignmentModal() {
     if (modal) {
         modal.remove();
     }
+    
+    // 重置assignment状态
+    resetAssignmentState();
 }
 
 function toggleSelectAllJudges() {
@@ -1936,76 +2212,7 @@ function toggleSelectAllTaskTypes() {
     });
 }
 
-function executeQueryAssignment() {
-    const selectedJudges = Array.from(document.querySelectorAll('input[name="selectedJudges"]:checked')).map(cb => cb.value);
-    
-    if (selectedJudges.length === 0) {
-        alert('Please select at least one judge');
-        return;
-    }
-    
-    const selectedQueries = getSelectedQueries();
-    const judgeAssignmentStatus = getJudgeAssignmentStatus(selectedQueries);
-    
-    // Calculate smart assignment results
-    let totalNewAssignments = 0;
-    const assignmentDetails = selectedJudges.map(judgeId => {
-        const availableJudges = getAvailableJudges();
-        const judge = availableJudges.find(j => j.id === judgeId);
-        const judgeName = judge ? judge.name : judgeId;
-        
-        const status = judgeAssignmentStatus.get(judgeName);
-        const newAssignments = status ? selectedQueries.length - status.conflictCount : selectedQueries.length;
-        totalNewAssignments += newAssignments;
-        
-        return {
-            name: judgeName,
-            newAssignments,
-            skippedDuplicates: status ? status.conflictCount : 0
-        };
-    });
-    
-    // Create detailed success message
-    let message = `✅ Smart Assignment Completed!\n\n`;
-    message += `📊 Summary:\n`;
-    message += `• Total new assignments: ${totalNewAssignments}\n`;
-    message += `• Judges selected: ${selectedJudges.length}\n`;
-    message += `• Queries processed: ${selectedQueries.length}\n\n`;
-    
-    message += `👥 Assignment Details:\n`;
-    assignmentDetails.forEach(detail => {
-        message += `• ${detail.name}: +${detail.newAssignments} new`;
-        if (detail.skippedDuplicates > 0) {
-            message += ` (${detail.skippedDuplicates} duplicates prevented)`;
-        }
-        message += `\n`;
-    });
-    
-    alert(message);
-    
-    closeAssignmentModal();
-    
-    // Refresh the query list to show assignments
-    loadQueries();
-}
 
-function executeTaskTypeAssignment() {
-    const selectedJudges = Array.from(document.querySelectorAll('input[name="selectedJudges"]:checked')).map(cb => cb.value);
-    const selectedTaskTypes = Array.from(document.querySelectorAll('input[name="selectedTaskTypes"]:checked')).map(cb => cb.value);
-    
-    if (selectedJudges.length === 0) {
-        alert('Please select at least one judge');
-        return;
-    }
-    
-    if (selectedTaskTypes.length === 0) {
-        alert('Please select at least one task type');
-        return;
-    }
-    
-    alert(`Assigning ${selectedTaskTypes.length} task types to ${selectedJudges.length} judges`);
-    closeAssignmentModal();
-}
 
 // Header action functions
 function deleteExperiment() {
@@ -2034,33 +2241,8 @@ function cloneExperiment() {
 
 // Update UI based on user role and experiment settings
 function updateUIBasedOnRole() {
-    const assignButton = document.querySelector('button[onclick="assignQueries()"]');
-    
-    if (assignButton) {
-        // Only Owner and Co-Owner can assign queries
-        const hasRolePermission = (currentUser.role === 'owner' || currentUser.role === 'co-owner');
-        const allowAnyoneDisabled = !experimentConfig.allowAnyoneToJudge;
-        const canAssign = hasRolePermission && allowAnyoneDisabled;
-        
-        if (!canAssign) {
-            assignButton.disabled = true;
-            assignButton.style.opacity = '0.5';
-            assignButton.style.cursor = 'not-allowed';
-            
-            if (experimentConfig.allowAnyoneToJudge) {
-                assignButton.title = 'Judgment is open to everyone for this experiment. Assigning judges is disabled.';
-            } else if (currentUser.role === 'judge') {
-                assignButton.title = 'You do not have permission to assign queries. Only Owner and Co-Owner can assign queries.';
-            } else {
-                assignButton.title = 'You do not have permission to assign queries';
-            }
-        } else {
-            assignButton.disabled = false;
-            assignButton.style.opacity = '1';
-            assignButton.style.cursor = 'pointer';
-            assignButton.title = 'Assign selected queries to judges';
-        }
-    }
+    // Use the new unified button state management
+    updateAssignButtonState();
 }
 
 
@@ -2107,8 +2289,6 @@ window.toggleConfigurationPanel = toggleConfigurationPanel;
 window.closeAssignmentModal = closeAssignmentModal;
 window.toggleSelectAllJudges = toggleSelectAllJudges;
 window.toggleSelectAllTaskTypes = toggleSelectAllTaskTypes;
-window.executeQueryAssignment = executeQueryAssignment;
-window.executeTaskTypeAssignment = executeTaskTypeAssignment;
 window.deleteExperiment = deleteExperiment;
 window.cloneExperiment = cloneExperiment;
 window.viewQueryAssignments = viewQueryAssignments;
@@ -2278,7 +2458,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.log('🎨 Updating UI based on role...');
     updateUIBasedOnRole();
     
+    // Initialize assignment state to default (but don't clear selections)
+    console.log('🔄 Setting initial assignment state...');
+    assignmentMode = AssignmentStates.DEFAULT;
+    isHighlightingSelections = false;
+    
     // Initialize button state
+    console.log('🔘 Updating assign button state...');
+    updateAssignButtonState();
+    
+    // Initialize query selections
     console.log('🔘 Updating selected queries...');
     updateSelectedQueries();
     
@@ -2472,12 +2661,30 @@ function initializeTaskTypeSidebar() {
 function loadTaskTypes() {
     if (!experimentData || !experimentData.queries) return;
     
-    // Count queries for each task type
+    // Count queries and collect assignment info for each task type
     const taskTypeCounts = {};
+    const taskTypeAssignmentInfo = {};
     
     experimentData.queries.forEach(query => {
         const taskType = query.taskType?.name || 'Unknown';
+        
+        // Count queries
         taskTypeCounts[taskType] = (taskTypeCounts[taskType] || 0) + 1;
+        
+        // Collect assignment info
+        if (!taskTypeAssignmentInfo[taskType]) {
+            taskTypeAssignmentInfo[taskType] = new Set();
+        }
+        
+        // Add assigned judges to the set
+        query.assignments?.forEach(assignment => {
+            if (assignment.judge) {
+                taskTypeAssignmentInfo[taskType].add(JSON.stringify({
+                    name: assignment.judge.name,
+                    initials: assignment.judge.initials
+                }));
+            }
+        });
     });
     
     // Render task type list
@@ -2495,15 +2702,54 @@ function loadTaskTypes() {
         const item = document.createElement('div');
         item.className = 'task-type-item';
         item.setAttribute('data-task-type', taskType);
-        item.onclick = () => filterByTaskType(taskType, item);
+        
+        // Get assigned members
+        const assignedMembers = Array.from(taskTypeAssignmentInfo[taskType] || [])
+            .map(memberStr => JSON.parse(memberStr));
+        
+        // Create assignments display
+        let assignmentsHtml = '';
+        if (assignedMembers.length > 0) {
+            const membersHtml = assignedMembers.map(member =>
+                `<div class="member-avatar" title="${member.name}">${member.initials}</div>`
+            ).join('');
+            assignmentsHtml = `
+                <div class="assigned-members">
+                    ${membersHtml}
+                </div>
+                <span class="assignment-summary">${assignedMembers.length} assigned</span>
+            `;
+        } else {
+            assignmentsHtml = '<span class="no-assignments">No assignments</span>';
+        }
         
         item.innerHTML = `
-            <span class="task-type-name">${taskType}</span>
-            <span class="task-type-count">${count}</span>
+            <div class="task-type-checkbox">
+                <input type="checkbox" value="${taskType}" onchange="updateSelectedTaskTypes()" onclick="event.stopPropagation()">
+            </div>
+            <div class="task-type-content">
+                <div class="task-type-header">
+                    <span class="task-type-name">${taskType}</span>
+                    <span class="task-type-count">${count}</span>
+                </div>
+                <div class="task-type-assignments">
+                    ${assignmentsHtml}
+                </div>
+            </div>
         `;
+        
+        // Add click handler for filtering (but not for checkbox)
+        item.addEventListener('click', (e) => {
+            if (!e.target.closest('.task-type-checkbox')) {
+                filterByTaskType(taskType, item);
+            }
+        });
         
         taskTypeList.appendChild(item);
     });
+    
+    // Update assign button state
+    updateAssignButtonState();
 }
 
 function filterByTaskType(taskType, itemElement) {
@@ -2532,6 +2778,205 @@ function clearTaskTypeFilter() {
     
     // Reload all queries
     loadQueries();
+}
+
+// Task Type Selection Management
+function updateSelectedTaskTypes() {
+    const checkboxes = document.querySelectorAll('.task-type-item input[type="checkbox"]:checked');
+    selectedTaskTypes = Array.from(checkboxes).map(cb => cb.value);
+    
+    console.log('Selected task types:', selectedTaskTypes);
+    
+    // Update visual selection state
+    document.querySelectorAll('.task-type-item').forEach(item => {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox && checkbox.checked) {
+            item.classList.add('selected');
+        } else {
+            item.classList.remove('selected');
+        }
+    });
+    
+    // Update "Select All" checkbox state
+    updateSelectAllTaskTypesState();
+    
+    // Update assign button state
+    updateAssignButtonState();
+}
+
+function toggleSelectAllTaskTypes() {
+    const selectAllCheckbox = document.getElementById('selectAllTaskTypes');
+    const taskTypeCheckboxes = document.querySelectorAll('.task-type-item input[type="checkbox"]');
+    
+    taskTypeCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateSelectedTaskTypes();
+}
+
+function updateSelectAllTaskTypesState() {
+    const selectAllCheckbox = document.getElementById('selectAllTaskTypes');
+    const taskTypeCheckboxes = document.querySelectorAll('.task-type-item input[type="checkbox"]');
+    const checkedCount = document.querySelectorAll('.task-type-item input[type="checkbox"]:checked').length;
+    
+    if (checkedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (checkedCount === taskTypeCheckboxes.length) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
+}
+
+function updateAssignButtonState() {
+    const assignBtn = document.getElementById('assignJudgesBtn');
+    if (!assignBtn) return;
+    
+    // Check permissions
+    const hasPermission = currentUser.role !== 'judge' && !experimentConfig.allowAnyoneToJudge;
+    if (!hasPermission) {
+        assignBtn.disabled = true;
+        assignBtn.textContent = 'Assign Judges';
+        assignBtn.className = 'btn-secondary';
+        return;
+    }
+    
+    if (isAdHocExperiment()) {
+        updateAdHocAssignButton(assignBtn);
+    } else {
+        updateQuerySetAssignButton(assignBtn);
+    }
+}
+
+function updateQuerySetAssignButton(assignBtn) {
+    const selectedQueries = getSelectedQueries();
+    
+    switch (assignmentMode) {
+        case AssignmentStates.DEFAULT:
+            assignBtn.textContent = 'Assign Judges';
+            assignBtn.className = 'btn-secondary';
+            assignBtn.disabled = false;
+            break;
+            
+        case AssignmentStates.QUERY_SELECTION:
+            if (selectedQueries.length === 0) {
+                assignBtn.textContent = 'Assign Queries';
+                assignBtn.className = 'btn-secondary';
+                assignBtn.disabled = false;
+            } else {
+                assignBtn.textContent = `Assign Queries (${selectedQueries.length})`;
+                assignBtn.className = 'btn-primary'; // 高亮
+                assignBtn.disabled = false;
+            }
+            break;
+    }
+}
+
+function updateAdHocAssignButton(assignBtn) {
+    const selectedTaskTypes = getSelectedTaskTypes();
+    
+    switch (assignmentMode) {
+        case AssignmentStates.DEFAULT:
+            assignBtn.textContent = 'Assign Judges';
+            assignBtn.className = 'btn-secondary';
+            assignBtn.disabled = false;
+            break;
+            
+        case AssignmentStates.TASKTYPE_SELECTION:
+            if (selectedTaskTypes.length === 0) {
+                assignBtn.textContent = 'Assign Task Types';
+                assignBtn.className = 'btn-secondary';
+                assignBtn.disabled = false;
+            } else {
+                assignBtn.textContent = `Assign Task Types (${selectedTaskTypes.length})`;
+                assignBtn.className = 'btn-primary'; // 高亮
+                assignBtn.disabled = false;
+            }
+            break;
+    }
+}
+
+function getSelectedTaskTypes() {
+    const checkboxes = document.querySelectorAll('.task-type-item input[type="checkbox"]:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Highlight management functions
+function highlightQueryCheckboxes() {
+    isHighlightingSelections = true;
+    
+    // 高亮所有query复选框 - 但不包括disabled的
+    document.querySelectorAll('.query-row input[type="checkbox"]:not([disabled])').forEach(checkbox => {
+        checkbox.closest('.checkbox-column').classList.add('highlighted');
+    });
+    
+    // 高亮表头全选复选框
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox && !selectAllCheckbox.disabled) {
+        selectAllCheckbox.closest('.checkbox-column').classList.add('highlighted');
+    }
+}
+
+function highlightTaskTypeCheckboxes() {
+    isHighlightingSelections = true;
+    
+    // 高亮所有task type复选框
+    document.querySelectorAll('.task-type-item input[type="checkbox"]').forEach(checkbox => {
+        checkbox.closest('.task-type-checkbox').classList.add('highlighted');
+    });
+    
+    // 高亮全选复选框
+    const selectAllTaskTypes = document.getElementById('selectAllTaskTypes');
+    if (selectAllTaskTypes) {
+        selectAllTaskTypes.closest('.select-all-task-types').classList.add('highlighted');
+    }
+}
+
+function removeHighlights() {
+    isHighlightingSelections = false;
+    document.querySelectorAll('.highlighted').forEach(element => {
+        element.classList.remove('highlighted');
+    });
+}
+
+function resetAssignmentState() {
+    assignmentMode = AssignmentStates.DEFAULT;
+    removeHighlights();
+    
+    // 清除所有选择状态
+    document.querySelectorAll('.query-row input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.querySelectorAll('.task-type-item input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // 重置全选状态
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    }
+    
+    const selectAllTaskTypes = document.getElementById('selectAllTaskTypes');
+    if (selectAllTaskTypes) {
+        selectAllTaskTypes.checked = false;
+        selectAllTaskTypes.indeterminate = false;
+    }
+    
+    // 清除选中的数组
+    selectedTaskTypes = [];
+    
+    updateAssignButtonState();
+}
+
+function getSelectedQueries() {
+    const checkboxes = document.querySelectorAll('.query-row input[type="checkbox"]:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
 }
 
 // Make function globally accessible
@@ -2567,3 +3012,10 @@ window.downloadReport = downloadReport;
 window.exportData = exportData;
 window.filterByTaskType = filterByTaskType;
 window.clearTaskTypeFilter = clearTaskTypeFilter;
+window.updateSelectedTaskTypes = updateSelectedTaskTypes;
+window.toggleSelectAllTaskTypes = toggleSelectAllTaskTypes;
+window.resetAssignmentState = resetAssignmentState;
+window.highlightQueryCheckboxes = highlightQueryCheckboxes;
+window.highlightTaskTypeCheckboxes = highlightTaskTypeCheckboxes;
+window.removeHighlights = removeHighlights;
+window.executeTaskTypeAssignmentFromModal = executeTaskTypeAssignmentFromModal;

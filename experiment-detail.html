@@ -146,9 +146,15 @@
                     <div class="task-type-sidebar" id="taskTypeSidebar" style="display: none;">
                         <div class="sidebar-header">
                             <h4>Task Types</h4>
-                            <button class="clear-filter-btn" onclick="clearTaskTypeFilter()" title="Show all queries">
-                                Clear Filter
-                            </button>
+                            <div class="sidebar-actions">
+                                <label class="select-all-task-types">
+                                    <input type="checkbox" id="selectAllTaskTypes" onchange="toggleSelectAllTaskTypes()">
+                                    <span>All</span>
+                                </label>
+                                <button class="clear-filter-btn" onclick="clearTaskTypeFilter()" title="Show all queries">
+                                    Clear Filter
+                                </button>
+                            </div>
                         </div>
                         <div class="task-type-list" id="taskTypeList">
                             <!-- Task types will be dynamically loaded here -->

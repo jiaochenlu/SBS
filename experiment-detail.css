@@ -2335,6 +2335,28 @@ body {
     color: #1e293b;
 }
 
+.sidebar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.select-all-task-types {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.select-all-task-types input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: #667eea;
+}
+
 .clear-filter-btn {
     background: none;
     border: 1px solid #667eea;
@@ -2361,9 +2383,9 @@ body {
 
 .task-type-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1rem;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
     margin-bottom: 0.5rem;
     border-radius: 8px;
     cursor: pointer;
@@ -2388,6 +2410,37 @@ body {
     box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
 }
 
+.task-type-item.selected {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: #10b981;
+    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.1);
+}
+
+.task-type-checkbox {
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+}
+
+.task-type-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #10b981;
+}
+
+.task-type-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.task-type-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .task-type-name {
     font-weight: 500;
     color: #1e293b;
@@ -2397,6 +2450,11 @@ body {
 
 .task-type-item.active .task-type-name {
     color: #667eea;
+    font-weight: 600;
+}
+
+.task-type-item.selected .task-type-name {
+    color: #10b981;
     font-weight: 600;
 }
 
@@ -2414,6 +2472,49 @@ body {
 .task-type-item.active .task-type-count {
     background: #667eea;
     color: white;
+}
+
+.task-type-item.selected .task-type-count {
+    background: #10b981;
+    color: white;
+}
+
+.task-type-assignments {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.assigned-members {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.member-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #667eea;
+    color: white;
+    font-size: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.assignment-summary {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-left: 0.25rem;
+}
+
+.no-assignments {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    font-style: italic;
 }
 
 .query-content-area {
@@ -2519,4 +2620,77 @@ body {
 .task-type-sidebar[style*="display: block"] {
     opacity: 1;
     transform: translateX(0);
+}
+
+/* Highlighted checkbox styles for assignment mode */
+.checkbox-column.highlighted,
+.task-type-checkbox.highlighted,
+.select-all-task-types.highlighted {
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 6px;
+    padding: 4px;
+    border: 2px solid #667eea;
+    animation: highlight-pulse 1.5s ease-in-out;
+    position: relative;
+}
+
+@keyframes highlight-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(102, 126, 234, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+    }
+}
+
+/* Enhanced checkbox appearance when highlighted */
+.highlighted input[type="checkbox"] {
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+}
+
+/* Disabled checkbox styles for ad hoc experiments */
+.query-row input[type="checkbox"]:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.query-row input[type="checkbox"]:disabled + label {
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Special styling for disabled checkboxes in ad hoc mode */
+.checkbox-column:has(input[type="checkbox"]:disabled) {
+    opacity: 0.6;
+}
+
+/* Task Type Assignment Modal Styles */
+.selected-task-types-summary {
+    margin-bottom: 1.5rem;
+}
+
+.selected-task-types-summary h4 {
+    margin-bottom: 0.75rem;
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+
+.task-type-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.task-type-chip {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid rgba(102, 126, 234, 0.2);
 }
