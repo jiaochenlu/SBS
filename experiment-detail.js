@@ -890,9 +890,9 @@ function updateResultPermissions() {
 function updateQueryListPermissions() {
     const selectAllCheckbox = document.getElementById('selectAll');
     
-    // Disable select all checkbox for Judge users
+    // Disable select all checkbox for Judge users or when allowAnyoneToJudge is enabled
     if (selectAllCheckbox) {
-        if (currentUser.role === 'judge') {
+        if (currentUser.role === 'judge' || experimentConfig.allowAnyoneToJudge) {
             selectAllCheckbox.disabled = true;
             selectAllCheckbox.checked = false;
         } else {
@@ -986,7 +986,7 @@ function createQueryRow(query) {
     }
     
     // Determine if checkbox should be disabled
-    const isCheckboxDisabled = currentUser.role === 'judge' || isAdHocExperiment();
+    const isCheckboxDisabled = currentUser.role === 'judge' || isAdHocExperiment() || experimentConfig.allowAnyoneToJudge;
     
     row.innerHTML = `
         <div class="checkbox-column">
@@ -1289,50 +1289,50 @@ function assignQueries() {
 function handleQuerySetAssignment() {
     const selectedQueries = getSelectedQueries();
     
-    switch (assignmentMode) {
-        case AssignmentStates.DEFAULT:
-            // 第一次点击：切换到query选择模式
-            console.log('🔄 Switching to query selection mode');
-            assignmentMode = AssignmentStates.QUERY_SELECTION;
+    if (assignmentMode === AssignmentStates.DEFAULT) {
+        // 默认状态：如果没有选中，则高亮复选框提示用户选择
+        if (selectedQueries.length === 0) {
+            console.log('🔄 Highlighting query checkboxes for user selection');
             highlightQueryCheckboxes();
-            updateAssignButtonState();
-            break;
-            
-        case AssignmentStates.QUERY_SELECTION:
-            if (selectedQueries.length > 0) {
-                // 有选中：执行分配
-                console.log('📋 Executing query assignment for:', selectedQueries);
-                executeQueryAssignment(selectedQueries);
-            } else {
-                // 没选中：保持当前状态，可以提示用户
-                console.log('⚠️ No queries selected, staying in selection mode');
-            }
-            break;
+            return;
+        } else {
+            // 如果已有选中，直接执行分配
+            console.log('📋 Executing query assignment for:', selectedQueries);
+            executeQueryAssignment(selectedQueries);
+        }
+    } else if (assignmentMode === AssignmentStates.QUERY_SELECTION) {
+        // 选择模式：直接执行分配（如果有选中）
+        if (selectedQueries.length > 0) {
+            console.log('📋 Executing query assignment for:', selectedQueries);
+            executeQueryAssignment(selectedQueries);
+        } else {
+            console.log('⚠️ No queries selected');
+        }
     }
 }
 
 function handleAdHocAssignment() {
     const selectedTaskTypes = getSelectedTaskTypes();
     
-    switch (assignmentMode) {
-        case AssignmentStates.DEFAULT:
-            // 第一次点击：切换到task type选择模式
-            console.log('🔄 Switching to task type selection mode');
-            assignmentMode = AssignmentStates.TASKTYPE_SELECTION;
+    if (assignmentMode === AssignmentStates.DEFAULT) {
+        // 默认状态：如果没有选中，则高亮复选框提示用户选择
+        if (selectedTaskTypes.length === 0) {
+            console.log('🔄 Highlighting task type checkboxes for user selection');
             highlightTaskTypeCheckboxes();
-            updateAssignButtonState();
-            break;
-            
-        case AssignmentStates.TASKTYPE_SELECTION:
-            if (selectedTaskTypes.length > 0) {
-                // 有选中：执行分配
-                console.log('📋 Executing task type assignment for:', selectedTaskTypes);
-                executeTaskTypeAssignment(selectedTaskTypes);
-            } else {
-                // 没选中：保持当前状态，可以提示用户
-                console.log('⚠️ No task types selected, staying in selection mode');
-            }
-            break;
+            return;
+        } else {
+            // 如果已有选中，直接执行分配
+            console.log('📋 Executing task type assignment for:', selectedTaskTypes);
+            executeTaskTypeAssignment(selectedTaskTypes);
+        }
+    } else if (assignmentMode === AssignmentStates.TASKTYPE_SELECTION) {
+        // 选择模式：直接执行分配（如果有选中）
+        if (selectedTaskTypes.length > 0) {
+            console.log('📋 Executing task type assignment for:', selectedTaskTypes);
+            executeTaskTypeAssignment(selectedTaskTypes);
+        } else {
+            console.log('⚠️ No task types selected');
+        }
     }
 }
 
@@ -1519,7 +1519,12 @@ function updateSelectedQueries() {
     const selectedQueries = getSelectedQueries();
     console.log('📋 Selected queries:', selectedQueries);
     
-    // Update assign button state (unified function)
+    // Clear highlights when selections change
+    if (isHighlightingSelections) {
+        removeHighlights();
+    }
+    
+    // Update assign button state (unified function) - this will auto-switch modes
     updateAssignButtonState();
     
     // Update select all checkbox state
@@ -1543,8 +1548,8 @@ function updateSelectedQueries() {
 }
 
 function toggleSelectAll() {
-    // Judge users cannot select queries
-    if (currentUser.role === 'judge') {
+    // Judge users cannot select queries, and if allowAnyoneToJudge is enabled
+    if (currentUser.role === 'judge' || experimentConfig.allowAnyoneToJudge) {
         return;
     }
     
@@ -2502,6 +2507,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     
+    // Add global click listener for assignment state reset
+    document.addEventListener('click', handleGlobalClick);
+    
     // Initialize search functionality
     const searchInput = document.querySelector('.search-input');
     if (searchInput) {
@@ -2785,22 +2793,30 @@ function updateSelectedTaskTypes() {
     const checkboxes = document.querySelectorAll('.task-type-item input[type="checkbox"]:checked');
     selectedTaskTypes = Array.from(checkboxes).map(cb => cb.value);
     
+    console.log('📋 updateSelectedTaskTypes called');
     console.log('Selected task types:', selectedTaskTypes);
     
-    // Update visual selection state
+    // Update visual selection state - 确保正确清除和添加 selected 类
     document.querySelectorAll('.task-type-item').forEach(item => {
         const checkbox = item.querySelector('input[type="checkbox"]');
         if (checkbox && checkbox.checked) {
             item.classList.add('selected');
+            console.log('✅ Added selected class to:', checkbox.value);
         } else {
             item.classList.remove('selected');
+            console.log('❌ Removed selected class from item');
         }
     });
     
     // Update "Select All" checkbox state
     updateSelectAllTaskTypesState();
     
-    // Update assign button state
+    // Clear highlights when selections change
+    if (isHighlightingSelections) {
+        removeHighlights();
+    }
+    
+    // Update assign button state (this will auto-switch modes based on selection)
     updateAssignButtonState();
 }
 
@@ -2836,14 +2852,25 @@ function updateAssignButtonState() {
     const assignBtn = document.getElementById('assignJudgesBtn');
     if (!assignBtn) return;
     
-    // Check permissions
-    const hasPermission = currentUser.role !== 'judge' && !experimentConfig.allowAnyoneToJudge;
-    if (!hasPermission) {
+    // Check permissions and set appropriate tooltip
+    if (currentUser.role === 'judge') {
         assignBtn.disabled = true;
         assignBtn.textContent = 'Assign Judges';
         assignBtn.className = 'btn-secondary';
+        assignBtn.title = 'You do not have permission to assign judges. Only owners and co-owners can assign judges.';
         return;
     }
+    
+    if (experimentConfig.allowAnyoneToJudge) {
+        assignBtn.disabled = true;
+        assignBtn.textContent = 'Assign Judges';
+        assignBtn.className = 'btn-secondary';
+        assignBtn.title = 'Assignment is disabled because this experiment allows anyone to judge. No manual assignment is required.';
+        return;
+    }
+    
+    // Clear any previous title and enable the button
+    assignBtn.title = '';
     
     if (isAdHocExperiment()) {
         updateAdHocAssignButton(assignBtn);
@@ -2855,48 +2882,36 @@ function updateAssignButtonState() {
 function updateQuerySetAssignButton(assignBtn) {
     const selectedQueries = getSelectedQueries();
     
-    switch (assignmentMode) {
-        case AssignmentStates.DEFAULT:
-            assignBtn.textContent = 'Assign Judges';
-            assignBtn.className = 'btn-secondary';
-            assignBtn.disabled = false;
-            break;
-            
-        case AssignmentStates.QUERY_SELECTION:
-            if (selectedQueries.length === 0) {
-                assignBtn.textContent = 'Assign Queries';
-                assignBtn.className = 'btn-secondary';
-                assignBtn.disabled = false;
-            } else {
-                assignBtn.textContent = `Assign Queries (${selectedQueries.length})`;
-                assignBtn.className = 'btn-primary'; // 高亮
-                assignBtn.disabled = false;
-            }
-            break;
+    if (selectedQueries.length === 0) {
+        // 没有选中任何query，显示默认状态
+        assignBtn.textContent = 'Assign Judges';
+        assignBtn.className = 'btn-secondary';
+        assignBtn.disabled = false;
+        assignmentMode = AssignmentStates.DEFAULT; // 自动重置为默认模式
+    } else {
+        // 有选中的queries，自动切换到assignment模式
+        assignBtn.textContent = `Assign Queries (${selectedQueries.length})`;
+        assignBtn.className = 'btn-primary'; // 高亮
+        assignBtn.disabled = false;
+        assignmentMode = AssignmentStates.QUERY_SELECTION; // 自动切换模式
     }
 }
 
 function updateAdHocAssignButton(assignBtn) {
     const selectedTaskTypes = getSelectedTaskTypes();
     
-    switch (assignmentMode) {
-        case AssignmentStates.DEFAULT:
-            assignBtn.textContent = 'Assign Judges';
-            assignBtn.className = 'btn-secondary';
-            assignBtn.disabled = false;
-            break;
-            
-        case AssignmentStates.TASKTYPE_SELECTION:
-            if (selectedTaskTypes.length === 0) {
-                assignBtn.textContent = 'Assign Task Types';
-                assignBtn.className = 'btn-secondary';
-                assignBtn.disabled = false;
-            } else {
-                assignBtn.textContent = `Assign Task Types (${selectedTaskTypes.length})`;
-                assignBtn.className = 'btn-primary'; // 高亮
-                assignBtn.disabled = false;
-            }
-            break;
+    if (selectedTaskTypes.length === 0) {
+        // 没有选中任何task type，显示默认状态
+        assignBtn.textContent = 'Assign Judges';
+        assignBtn.className = 'btn-secondary';
+        assignBtn.disabled = false;
+        assignmentMode = AssignmentStates.DEFAULT; // 自动重置为默认模式
+    } else {
+        // 有选中的task types，自动切换到assignment模式
+        assignBtn.textContent = `Assign Task Types (${selectedTaskTypes.length})`;
+        assignBtn.className = 'btn-primary'; // 高亮
+        assignBtn.disabled = false;
+        assignmentMode = AssignmentStates.TASKTYPE_SELECTION; // 自动切换模式
     }
 }
 
@@ -2944,10 +2959,15 @@ function removeHighlights() {
 }
 
 function resetAssignmentState() {
+    console.log('🔄 Resetting assignment state');
+    
+    // Reset mode to default
     assignmentMode = AssignmentStates.DEFAULT;
+    
+    // Remove any highlights
     removeHighlights();
     
-    // 清除所有选择状态
+    // Clear all selections
     document.querySelectorAll('.query-row input[type="checkbox"]').forEach(checkbox => {
         checkbox.checked = false;
     });
@@ -2955,7 +2975,12 @@ function resetAssignmentState() {
         checkbox.checked = false;
     });
     
-    // 重置全选状态
+    // Clear task type visual selection states
+    document.querySelectorAll('.task-type-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    
+    // Reset select all checkboxes
     const selectAllCheckbox = document.getElementById('selectAll');
     if (selectAllCheckbox) {
         selectAllCheckbox.checked = false;
@@ -2968,10 +2993,65 @@ function resetAssignmentState() {
         selectAllTaskTypes.indeterminate = false;
     }
     
-    // 清除选中的数组
+    // Clear selected arrays
     selectedTaskTypes = [];
     
+    // Force update task type visual states
+    updateSelectedTaskTypes();
+    
+    // Update button to default state
     updateAssignButtonState();
+    
+    console.log('✅ Assignment state reset complete');
+}
+
+// Global click handler for resetting assignment state
+function handleGlobalClick(event) {
+    // Only handle clicks when in selection mode or when there are selections
+    if (assignmentMode === AssignmentStates.DEFAULT && !hasAnySelections()) {
+        return; // No need to handle clicks when already in default state with no selections
+    }
+    
+    // Check if the click is outside the relevant UI elements
+    const clickedElement = event.target;
+    
+    // Define elements that should NOT trigger reset when clicked
+    const protectedElements = [
+        '.query-row',
+        '.task-type-item',
+        '.checkbox-column',
+        '#assignJudgesBtn',
+        '#selectAll',
+        '#selectAllTaskTypes',
+        '.task-type-header',
+        '.queries-tab-content',
+        '.task-type-sidebar',
+        '.modal',
+        '.dropdown',
+        '.tab-button'
+    ];
+    
+    // Check if click is on any protected element
+    let isProtectedClick = false;
+    for (const selector of protectedElements) {
+        if (clickedElement.closest(selector)) {
+            isProtectedClick = true;
+            break;
+        }
+    }
+    
+    // If click is outside protected areas, reset state
+    if (!isProtectedClick) {
+        console.log('🔄 Global click detected outside protected areas, resetting assignment state');
+        resetAssignmentState();
+    }
+}
+
+// Helper function to check if there are any current selections
+function hasAnySelections() {
+    const selectedQueries = getSelectedQueries();
+    const selectedTaskTypes = getSelectedTaskTypes();
+    return selectedQueries.length > 0 || selectedTaskTypes.length > 0 || isHighlightingSelections;
 }
 
 function getSelectedQueries() {
@@ -3019,3 +3099,5 @@ window.highlightQueryCheckboxes = highlightQueryCheckboxes;
 window.highlightTaskTypeCheckboxes = highlightTaskTypeCheckboxes;
 window.removeHighlights = removeHighlights;
 window.executeTaskTypeAssignmentFromModal = executeTaskTypeAssignmentFromModal;
+window.handleGlobalClick = handleGlobalClick;
+window.hasAnySelections = hasAnySelections;
