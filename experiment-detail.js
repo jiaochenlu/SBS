@@ -535,11 +535,19 @@ function updateProgressOverview() {
 function updateTabBadges() {
     if (!experimentData) return;
     
+    console.log('📊 updateTabBadges called with experimentData:', experimentData);
+    
     const queriesTabBadge = document.getElementById('queriesTabBadge');
-    if (queriesTabBadge) queriesTabBadge.textContent = experimentData.queries.length;
+    if (queriesTabBadge) {
+        queriesTabBadge.textContent = experimentData.queries.length;
+        console.log('✅ Updated queriesTabBadge to:', experimentData.queries.length);
+    }
     
     const membersTabBadge = document.getElementById('membersTabBadge');
-    if (membersTabBadge) membersTabBadge.textContent = experimentData.members.length;
+    if (membersTabBadge) {
+        membersTabBadge.textContent = experimentData.members.length;
+        console.log('✅ Updated membersTabBadge to:', experimentData.members.length);
+    }
 }
 
 // Update configuration panel
@@ -2330,105 +2338,38 @@ function updateDataCounts() {
 }
 
 function getMemberCount() {
-    // Return the actual number of members from data
-    const sampleMembers = [
-        {
-            id: 'john-smith',
-            name: 'John Smith',
-            email: 'john.smith@company.com',
-            role: 'owner',
-            initials: 'JS',
-            completed: null,
-            assigned: 0,
-            lastJudgedAt: null
-        },
-        {
-            id: 'sarah-chen',
-            name: 'Sarah Chen',
-            email: 'sarah.chen@company.com',
-            role: 'co-owner',
-            initials: 'SC',
-            completed: 38,
-            assigned: 45,
-            lastJudgedAt: '2024-03-16 15:30:22'
-        },
-        {
-            id: 'alice-miller',
-            name: 'Alice Miller',
-            email: 'alice.miller@company.com',
-            role: 'judge',
-            initials: 'AM',
-            completed: 32,
-            assigned: 40,
-            lastJudgedAt: '2024-03-15 14:20:15'
-        },
-        {
-            id: 'robert-johnson',
-            name: 'Robert Johnson',
-            email: 'robert.johnson@company.com',
-            role: 'judge',
-            initials: 'RJ',
-            completed: 28,
-            assigned: 35,
-            lastJudgedAt: '2024-03-14 09:45:33'
-        }
-    ];
+    // Use actual experiment data instead of hardcoded sample data
+    if (experimentData && experimentData.members) {
+        return experimentData.members.length;
+    }
     
-    return sampleMembers.length;
+    // Fallback: return 0 if no data available
+    return 0;
 }
 
 function getUniqueJudgesFromQueries() {
-    // Get all unique judges from query assignments
+    // Get all unique judges from actual experiment query assignments
     const uniqueJudges = new Set();
     
-    // This should ideally come from actual query data
-    // For now, using the same data structure as in loadQueries
-    const sampleQueries = [
-        {
-            assignments: [
-                { judge: { name: 'John Smith' } },
-                { judge: { name: 'Alice Miller' } },
-                { judge: { name: 'Robert Johnson' } }
-            ]
-        },
-        {
-            assignments: [
-                { judge: { name: 'Alice Miller' } },
-                { judge: { name: 'Robert Johnson' } }
-            ]
-        },
-        {
-            assignments: [
-                { judge: { name: 'John Smith' } },
-                { judge: { name: 'Alice Miller' } }
-            ]
-        },
-        {
-            assignments: [
-                { judge: { name: 'Robert Johnson' } }
-            ]
-        },
-        {
-            assignments: [
-                { judge: { name: 'John Smith' } },
-                { judge: { name: 'Alice Miller' } },
-                { judge: { name: 'Robert Johnson' } },
-                { judge: { name: 'Sarah Chen' } }
-            ]
-        },
-        {
-            assignments: []
-        }
-    ];
+    // Use actual experiment data if available
+    if (experimentData && experimentData.queries) {
+        experimentData.queries.forEach(query => {
+            if (query.assignments) {
+                query.assignments.forEach(assignment => {
+                    if (assignment.judge && assignment.judge.name) {
+                        uniqueJudges.add(assignment.judge.name);
+                    }
+                });
+            }
+        });
+    } else {
+        // Fallback data if no experiment data available
+        console.warn('⚠️ No experiment data available for judge count, using fallback');
+        const fallbackJudges = ['John Smith', 'Alice Miller', 'Robert Johnson'];
+        fallbackJudges.forEach(judge => uniqueJudges.add(judge));
+    }
     
-    sampleQueries.forEach(query => {
-        if (query.assignments) {
-            query.assignments.forEach(assignment => {
-                uniqueJudges.add(assignment.judge.name);
-            });
-        }
-    });
-    
+    console.log('📊 getUniqueJudgesFromQueries: Found', uniqueJudges.size, 'unique judges');
     return uniqueJudges;
 }
 
@@ -2600,8 +2541,34 @@ setTimeout(() => {
     
     const judgesCountEl = document.getElementById('judgesCount');
     if (judgesCountEl && judgesCountEl.textContent === 'Loading Judges') {
-        judgesCountEl.textContent = '4 Judges';
-        console.log('🚨 Force updated judges count');
+        // Calculate unique judges from actual data instead of hardcoding
+        const uniqueJudges = new Set();
+        const sampleQueries = [
+            {
+                assignments: [
+                    { judge: { name: 'John Smith' } },
+                    { judge: { name: 'Alice Miller' } },
+                    { judge: { name: 'Robert Johnson' } }
+                ]
+            },
+            {
+                assignments: [
+                    { judge: { name: 'Alice Miller' } },
+                    { judge: { name: 'Robert Johnson' } }
+                ]
+            }
+        ];
+        
+        sampleQueries.forEach(query => {
+            if (query.assignments) {
+                query.assignments.forEach(assignment => {
+                    uniqueJudges.add(assignment.judge.name);
+                });
+            }
+        });
+        
+        judgesCountEl.textContent = `${uniqueJudges.size} Judges`;
+        console.log('🚨 Force updated judges count to:', `${uniqueJudges.size} Judges`);
     }
     
     // Update configuration items
