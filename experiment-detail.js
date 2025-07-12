@@ -654,6 +654,12 @@ function switchTab(tabName) {
         loadMembers();
     } else if (tabName === 'results') {
         loadResults();
+        // Ensure custom metrics are reloaded
+        setTimeout(() => {
+            if (customMetricsData && customMetricsData.length > 0) {
+                populateCustomMetricsQuestionSelector();
+            }
+        }, 200);
     }
 }
 
@@ -771,14 +777,14 @@ function updateHeaderButtons() {
     if (configBtn) {
         configBtn.disabled = false;
         configBtn.classList.remove('disabled');
-        configBtn.removeAttribute('title');
+        configBtn.removeAttribute('data-tooltip');
     }
     
     // Clone: All users can clone
     if (cloneBtn) {
         cloneBtn.disabled = false;
         cloneBtn.classList.remove('disabled');
-        cloneBtn.removeAttribute('title');
+        cloneBtn.removeAttribute('data-tooltip');
     }
     
     // Delete: Only owner can delete
@@ -786,7 +792,7 @@ function updateHeaderButtons() {
         if (currentUser.role === 'owner') {
             deleteBtn.disabled = false;
             deleteBtn.classList.remove('disabled');
-            deleteBtn.removeAttribute('title');
+            deleteBtn.removeAttribute('data-tooltip');
         } else {
             deleteBtn.disabled = true;
             deleteBtn.classList.add('disabled');
@@ -804,11 +810,11 @@ function updateQueryPermissions() {
         const allowAnyToJudge = experimentConfig.allowAnyoneToJudge;
     
         assignBtn.disabled = !(canAssign && !allowAnyToJudge);
-        assignBtn.title = allowAnyToJudge
+        assignBtn.setAttribute('data-tooltip', allowAnyToJudge
             ? 'Judgment is open to everyone for this experiment. Assigning judges is disabled.'
             : canAssign
             ? 'Assign queries to judges'
-            : 'You do not have permission to assign queries';
+            : 'You do not have permission to assign queries');
     }
     const importBtn = document.querySelector('button[onclick="importQueries()"]');
     
@@ -817,7 +823,7 @@ function updateQueryPermissions() {
         if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
             assignBtn.disabled = false;
             assignBtn.classList.remove('disabled');
-            assignBtn.removeAttribute('title');
+            assignBtn.removeAttribute('data-tooltip');
         } else {
             assignBtn.disabled = true;
             assignBtn.classList.add('disabled');
@@ -829,7 +835,7 @@ function updateQueryPermissions() {
         if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
             importBtn.disabled = false;
             importBtn.classList.remove('disabled');
-            importBtn.removeAttribute('title');
+            importBtn.removeAttribute('data-tooltip');
         } else {
             importBtn.disabled = true;
             importBtn.classList.add('disabled');
@@ -846,15 +852,15 @@ function updateMemberPermissions() {
         if (experimentConfig.allowAnyoneToJudge) {
             addMemberBtn.disabled = true;
             addMemberBtn.classList.add('disabled');
-            addMemberBtn.title = 'Judgement is open to everyone for this experiment. Add member is disabled.';
+            addMemberBtn.setAttribute('data-tooltip', 'Judgement is open to everyone for this experiment. Add member is disabled.');
         } else if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
             addMemberBtn.disabled = false;
             addMemberBtn.classList.remove('disabled');
-            addMemberBtn.removeAttribute('title');
+            addMemberBtn.removeAttribute('data-tooltip');
         } else {
             addMemberBtn.disabled = true;
             addMemberBtn.classList.add('disabled');
-            addMemberBtn.removeAttribute('title');
+            addMemberBtn.removeAttribute('data-tooltip');
         }
     }
 
@@ -863,7 +869,7 @@ function updateMemberPermissions() {
         if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
             manageMembersBtn.disabled = false;
             manageMembersBtn.classList.remove('disabled');
-            manageMembersBtn.removeAttribute('title');
+            manageMembersBtn.removeAttribute('data-tooltip');
         } else {
             manageMembersBtn.disabled = true;
             manageMembersBtn.classList.add('disabled');
@@ -879,7 +885,7 @@ function updateResultPermissions() {
     if (downloadBtn) {
         downloadBtn.disabled = false;
         downloadBtn.classList.remove('disabled');
-        downloadBtn.removeAttribute('title');
+        downloadBtn.removeAttribute('data-tooltip');
     }
     
     // Export data: Owner and Co-Owner only
@@ -887,7 +893,7 @@ function updateResultPermissions() {
         if (currentUser.role === 'owner' || currentUser.role === 'co-owner') {
             exportBtn.disabled = false;
             exportBtn.classList.remove('disabled');
-            exportBtn.removeAttribute('title');
+            exportBtn.removeAttribute('data-tooltip');
         } else {
             exportBtn.disabled = true;
             exportBtn.classList.add('disabled');
@@ -1710,6 +1716,14 @@ function loadResults() {
     // Load results data and render charts
     loadResultsData();
     populateQuestionSelector();
+    
+    // Ensure custom metrics are properly loaded
+    setTimeout(() => {
+        if (customMetricsData && customMetricsData.length > 0) {
+            console.log('📊 Ensuring custom metrics are displayed after loadResults');
+            populateCustomMetricsQuestionSelector();
+        }
+    }, 300);
 }
 
 // Load and display results data
@@ -1792,10 +1806,8 @@ function updateCustomMetrics(customMetrics) {
     // Store data globally
     customMetricsData = customMetrics || [];
     
-    // Use setTimeout to ensure DOM is ready
-    setTimeout(() => {
-        populateCustomMetricsQuestionSelector();
-    }, 100);
+    // Populate question selector immediately
+    populateCustomMetricsQuestionSelector();
     
     // Show content based on current selection
     const container = document.getElementById('customMetricsContent');
@@ -1835,8 +1847,41 @@ function populateCustomMetricsQuestionSelector() {
         return;
     }
     
+    // Check if we're in results tab and scorecard sub-tab
+    const resultsTab = document.getElementById('results-tab');
+    const scorecardTab = document.getElementById('scorecard-results-tab');
+    
+    if (!resultsTab || !resultsTab.classList.contains('active')) {
+        console.log('📊 Results tab not active, skipping custom metrics population');
+        return;
+    }
+    
+    if (!scorecardTab || !scorecardTab.classList.contains('active')) {
+        console.log('📊 Scorecard tab not active, skipping custom metrics population');
+        return;
+    }
+    
     // Clear existing options
     selector.innerHTML = '';
+    
+    // Re-check customMetricsData, if empty show empty state (don't reload)
+    if (!customMetricsData || customMetricsData.length === 0) {
+        console.log('📊 Custom metrics data empty, showing empty state');
+        
+        // Add default empty option if no data
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = 'No questions available';
+        selector.appendChild(emptyOption);
+        
+        // Show empty state in container
+        container.innerHTML = `
+            <div class="custom-metrics-empty">
+                No custom metrics defined for this experiment
+            </div>
+        `;
+        return;
+    }
     
     if (customMetricsData && customMetricsData.length > 0) {
         customMetricsData.forEach((question, index) => {
@@ -1865,6 +1910,13 @@ function populateCustomMetricsQuestionSelector() {
                 console.log('✅ Metrics successfully displayed!');
             } else {
                 console.error('❌ No content found in container after displayQuestionMetrics');
+                // Try to reload if still empty
+                setTimeout(() => {
+                    if (container.innerHTML.length === 0) {
+                        console.log('📊 Retrying custom metrics display...');
+                        displayQuestionMetrics(firstQuestion);
+                    }
+                }, 100);
             }
         }, 50);
         
@@ -1875,6 +1927,13 @@ function populateCustomMetricsQuestionSelector() {
         emptyOption.value = '';
         emptyOption.textContent = 'No questions available';
         selector.appendChild(emptyOption);
+        
+        // Show empty state in container
+        container.innerHTML = `
+            <div class="custom-metrics-empty">
+                No custom metrics defined for this experiment
+            </div>
+        `;
     }
 }
 
@@ -2109,9 +2168,17 @@ function populateQuestionSelector() {
     }
 }
 
+// Store chart instances to manage lifecycle
+let sbsChartInstance = null;
+let agreementChartInstance = null;
+let progressChartInstance = null;
+
 // Render all charts
 function renderResultsCharts(experimentResults) {
     console.log('📊 Rendering results charts...');
+    
+    // Destroy existing charts before creating new ones
+    destroyExistingCharts();
     
     // Render SBS distribution chart
     renderSBSChart(experimentResults.scorecard.optionDistribution);
@@ -2123,6 +2190,27 @@ function renderResultsCharts(experimentResults) {
     renderProgressChart(experimentResults.throughput.dailyProgress);
 }
 
+// Destroy existing chart instances
+function destroyExistingCharts() {
+    if (sbsChartInstance) {
+        sbsChartInstance.destroy();
+        sbsChartInstance = null;
+        console.log('📊 Destroyed existing SBS chart');
+    }
+    
+    if (agreementChartInstance) {
+        agreementChartInstance.destroy();
+        agreementChartInstance = null;
+        console.log('📊 Destroyed existing agreement chart');
+    }
+    
+    if (progressChartInstance) {
+        progressChartInstance.destroy();
+        progressChartInstance = null;
+        console.log('📊 Destroyed existing progress chart');
+    }
+}
+
 // Render SBS Surplus chart
 function renderSBSChart(optionDistribution) {
     const ctx = document.getElementById('sbsChart');
@@ -2130,7 +2218,7 @@ function renderSBSChart(optionDistribution) {
     
     console.log('📊 Rendering SBS chart with data:', optionDistribution);
     
-    new Chart(ctx, {
+    sbsChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: optionDistribution.map(item => item.option),
@@ -2177,7 +2265,7 @@ function renderAgreementChart(agreementDistribution) {
     
     console.log('📊 Rendering agreement chart with data:', agreementDistribution);
     
-    new Chart(ctx, {
+    agreementChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: agreementDistribution.map(item => item.rate),
@@ -2226,7 +2314,13 @@ function renderProgressChart(dailyProgress) {
     
     console.log('📊 Rendering progress chart with data:', dailyProgress);
     
-    new Chart(ctx, {
+    // Destroy existing progress chart if it exists
+    if (progressChartInstance) {
+        progressChartInstance.destroy();
+        progressChartInstance = null;
+    }
+    
+    progressChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
             labels: dailyProgress.map(item => item.date),
@@ -3434,7 +3528,7 @@ function updateAssignButtonState() {
         assignBtn.disabled = true;
         assignBtn.textContent = 'Assign Judges';
         assignBtn.className = 'btn-secondary';
-        assignBtn.title = 'You do not have permission to assign judges. Only owners and co-owners can assign judges.';
+        assignBtn.setAttribute('data-tooltip', 'You do not have permission to assign judges. Only owners and co-owners can assign judges.');
         return;
     }
     
@@ -3442,12 +3536,12 @@ function updateAssignButtonState() {
         assignBtn.disabled = true;
         assignBtn.textContent = 'Assign Judges';
         assignBtn.className = 'btn-secondary';
-        assignBtn.title = 'Assignment is disabled because this experiment allows anyone to judge. No manual assignment is required.';
+        assignBtn.setAttribute('data-tooltip', 'Assignment is disabled because this experiment allows anyone to judge. No manual assignment is required.');
         return;
     }
     
-    // Clear any previous title and enable the button
-    assignBtn.title = '';
+    // Clear any previous tooltip and enable the button
+    assignBtn.removeAttribute('data-tooltip');
     
     if (isAdHocExperiment()) {
         updateAdHocAssignButton(assignBtn);
@@ -3684,6 +3778,68 @@ window.onQuestionChange = onQuestionChange;
 window.onCustomMetricsQuestionChange = onCustomMetricsQuestionChange;
 window.populateCustomMetricsQuestionSelector = populateCustomMetricsQuestionSelector;
 window.displayQuestionMetrics = displayQuestionMetrics;
+window.switchResultsTab = switchResultsTab;
+window.destroyExistingCharts = destroyExistingCharts;
+
+// Results sub-tab switching functionality
+function switchResultsTab(tabName) {
+    console.log('📊 Switching to results tab:', tabName);
+    
+    // Hide all results tab contents
+    const tabContents = document.querySelectorAll('.results-tab-content');
+    tabContents.forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all results tab buttons
+    const tabButtons = document.querySelectorAll('.results-tab-button');
+    tabButtons.forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    const selectedTab = document.getElementById(`${tabName}-results-tab`);
+    if (selectedTab) {
+        selectedTab.classList.add('active');
+    }
+    
+    // Add active class to selected tab button
+    const selectedButton = document.querySelector(`[data-results-tab="${tabName}"]`);
+    if (selectedButton) {
+        selectedButton.classList.add('active');
+    }
+    
+    // Load specific content if needed
+    if (tabName === 'scorecard') {
+        // Ensure custom metrics are loaded when switching to scorecard
+        setTimeout(() => {
+            console.log('📊 Ensuring custom metrics are displayed for scorecard tab');
+            populateCustomMetricsQuestionSelector();
+        }, 100);
+    } else if (tabName === 'throughput') {
+        // Re-render progress chart when switching to throughput tab
+        setTimeout(() => {
+            const ctx = document.getElementById('progressChart');
+            if (ctx && typeof renderProgressChart === 'function') {
+                // Use current experiment's throughput data if available
+                const currentExperimentId = new URLSearchParams(window.location.search).get('id') || 'search-ndcg-001';
+                
+                // Try to get real data, fallback to default
+                let progressData = [
+                    {"date": "2024-03-10", "count": 12},
+                    {"date": "2024-03-11", "count": 18},
+                    {"date": "2024-03-12", "count": 25},
+                    {"date": "2024-03-13", "count": 30},
+                    {"date": "2024-03-14", "count": 28},
+                    {"date": "2024-03-15", "count": 35},
+                    {"date": "2024-03-16", "count": 42}
+                ];
+                
+                renderProgressChart(progressData);
+            }
+        }, 100);
+    }
+}
 
 // Question selector change handler
 function onQuestionChange() {

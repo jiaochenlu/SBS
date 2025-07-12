@@ -23,7 +23,6 @@
       "customMetrics": [
         {
           "questionId": 1,
-          "questionText": "Item relevance",
           "metrics": [
             {
               "name": "NDCG@1",
@@ -74,7 +73,6 @@
         },
         {
           "questionId": 3,
-          "questionText": "Comment",
           "metrics": [
             {
               "name": "ChangeRate@3",

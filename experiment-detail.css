@@ -108,6 +108,38 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.btn-header.disabled:hover::after,
+.btn-header:disabled:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a202c;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 10000;
+    margin-bottom: 0.25rem;
+    animation: tooltipFadeIn 0.2s ease-in;
+}
+
+.btn-header.disabled:hover::before,
+.btn-header:disabled:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #1a202c;
+    z-index: 10000;
+    margin-bottom: -4px;
+    animation: tooltipFadeIn 0.2s ease-in;
+}
+
 
 /* Back按钮样式 */
 .back-btn {
@@ -547,11 +579,44 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary.disabled:hover::after,
+.btn-primary:disabled:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a202c;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 10000;
+    margin-bottom: 0.25rem;
+    animation: tooltipFadeIn 0.2s ease-in;
+}
+
+.btn-primary.disabled:hover::before,
+.btn-primary:disabled:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #1a202c;
+    z-index: 10000;
+    margin-bottom: -4px;
+    animation: tooltipFadeIn 0.2s ease-in;
 }
 
 .btn-secondary {
@@ -563,11 +628,44 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .btn-secondary:hover {
     background: #667eea;
     color: white;
+}
+
+.btn-secondary.disabled:hover::after,
+.btn-secondary:disabled:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a202c;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 10000;
+    margin-bottom: 0.25rem;
+    animation: tooltipFadeIn 0.2s ease-in;
+}
+
+.btn-secondary.disabled:hover::before,
+.btn-secondary:disabled:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #1a202c;
+    z-index: 10000;
+    margin-bottom: -4px;
+    animation: tooltipFadeIn 0.2s ease-in;
 }
 
 .btn-link {
@@ -588,6 +686,46 @@ body {
     font-weight: 600;
     cursor: pointer;
     margin-right: 1rem;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger.disabled:hover::after,
+.btn-danger:disabled:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a202c;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 10000;
+    margin-bottom: 0.25rem;
+    animation: tooltipFadeIn 0.2s ease-in;
+}
+
+.btn-danger.disabled:hover::before,
+.btn-danger:disabled:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #1a202c;
+    z-index: 10000;
+    margin-bottom: -4px;
+    animation: tooltipFadeIn 0.2s ease-in;
 }
 
 .btn-icon {
@@ -597,10 +735,43 @@ body {
     border-radius: 4px;
     cursor: pointer;
     transition: background 0.2s ease;
+    position: relative;
 }
 
 .btn-icon:hover {
     background: #f1f5f9;
+}
+
+.btn-icon.disabled:hover::after,
+.btn-icon:disabled:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a202c;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 10000;
+    margin-bottom: 0.25rem;
+    animation: tooltipFadeIn 0.2s ease-in;
+}
+
+.btn-icon.disabled:hover::before,
+.btn-icon:disabled:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #1a202c;
+    z-index: 10000;
+    margin-bottom: -4px;
+    animation: tooltipFadeIn 0.2s ease-in;
 }
 
 /* Query Management */
@@ -1079,10 +1250,18 @@ body {
     font-weight: 500;
 }
 
+/* Member card specific stat value styling */
+.member-stats .stat-value {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.85rem;
+}
+
+/* Generic stat value (fallback) */
 .stat-value {
     font-weight: 600;
     color: #1e293b;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .stat-value.empty {
@@ -1157,11 +1336,44 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .pagination-btn:hover {
     background: #f8fafc;
     border-color: #667eea;
+}
+
+.pagination-btn.disabled:hover::after,
+.pagination-btn:disabled:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a202c;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 10000;
+    margin-bottom: 0.25rem;
+    animation: tooltipFadeIn 0.2s ease-in;
+}
+
+.pagination-btn.disabled:hover::before,
+.pagination-btn:disabled:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #1a202c;
+    z-index: 10000;
+    margin-bottom: -4px;
+    animation: tooltipFadeIn 0.2s ease-in;
 }
 
 .pagination-info {
@@ -2276,6 +2488,37 @@ body {
     box-shadow: none;
 }
 
+/* Enhanced tooltip styles - only show on disabled buttons when data-tooltip attribute exists and has content */
+.btn-header.disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.btn-header:disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.btn-primary.disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.btn-primary:disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.btn-secondary.disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.btn-secondary:disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.btn-danger.disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.btn-danger:disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.btn-icon.disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.btn-icon:disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.pagination-btn.disabled[data-tooltip]:not([data-tooltip=""]):hover::after,
+.pagination-btn:disabled[data-tooltip]:not([data-tooltip=""]):hover::after {
+    content: attr(data-tooltip);
+}
+
+.btn-header.disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.btn-header:disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.btn-primary.disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.btn-primary:disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.btn-secondary.disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.btn-secondary:disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.btn-danger.disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.btn-danger:disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.btn-icon.disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.btn-icon:disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.pagination-btn.disabled[data-tooltip]:not([data-tooltip=""]):hover::before,
+.pagination-btn:disabled[data-tooltip]:not([data-tooltip=""]):hover::before {
+    content: '';
+}
+
 /* Tooltip styles for disabled buttons */
 .btn-header.disabled:hover::after,
 .btn-primary.disabled:hover::after,
@@ -2847,6 +3090,62 @@ button:disabled:hover {
     border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
+/* Results Sub-tabs Styles */
+.results-tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0;
+}
+
+.results-tabs {
+    display: flex;
+    gap: 0;
+}
+
+.results-tab-button {
+    background: none;
+    border: none;
+    padding: 15px 25px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #6c757d;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.results-tab-button:hover {
+    color: #495057;
+    background-color: #f8f9fa;
+}
+
+.results-tab-button.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+    background-color: #fff;
+}
+
+.results-actions {
+    display: flex;
+    align-items: center;
+}
+
+.results-tab-content {
+    display: none;
+}
+
+.results-tab-content.active {
+    display: block;
+}
+
+.btn-icon {
+    margin-right: 8px;
+}
+
 /* Scorecard Section Styles */
 .scorecard-section {
     margin-bottom: 40px;
@@ -3143,7 +3442,9 @@ button:disabled:hover {
     font-weight: 500;
 }
 
-.stat-value {
+/* Results section specific stat value styling */
+.throughput-stats .stat-value,
+.stat-card .stat-value {
     font-size: 2rem;
     font-weight: 700;
     color: #28a745;
