@@ -1705,7 +1705,468 @@ function exportData() {
 
 // Results functions
 function loadResults() {
-    // Initialize results view - placeholder for future implementation
+    console.log('📊 Loading Results tab...');
+    
+    // Load results data and render charts
+    loadResultsData();
+    populateQuestionSelector();
+}
+
+// Load and display results data
+async function loadResultsData() {
+    try {
+        console.log('📊 Loading results data...');
+        
+        // Get current experiment ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const experimentId = urlParams.get('id') || 'search-ndcg-001'; // Default fallback
+        
+        // Load results configuration
+        const response = await fetch('./experiment-result-config.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const resultsConfig = await response.json();
+        console.log('✅ Results config loaded:', resultsConfig);
+        
+        // Get results for current experiment
+        const experimentResults = resultsConfig.experimentResults[experimentId];
+        if (!experimentResults) {
+            console.warn(`No results found for experiment ${experimentId}`);
+            return;
+        }
+        
+        console.log('📊 Found experiment results:', experimentResults);
+        
+        // Update Scorecard data
+        updateScorecardData(experimentResults.scorecard, experimentResults.agreement);
+        
+        // Update Custom Metrics data
+        updateCustomMetrics(experimentResults.customMetrics);
+        
+        // Update Throughput data
+        updateThroughputData(experimentResults.throughput);
+        
+        // Render charts
+        renderResultsCharts(experimentResults);
+        
+    } catch (error) {
+        console.error('❌ Error loading results data:', error);
+        // Load fallback data
+        loadFallbackResultsData();
+    }
+}
+
+// Update Scorecard data display
+function updateScorecardData(scorecardData, agreementData) {
+    console.log('📊 Updating scorecard data:', scorecardData, agreementData);
+    
+    // Update SBS Surplus
+    const sbsSurplusElement = document.getElementById('sbsSurplus');
+    const pValueElement = document.getElementById('pValue');
+    
+    if (sbsSurplusElement) {
+        sbsSurplusElement.textContent = scorecardData.sbsSurplus.toFixed(4);
+    }
+    
+    if (pValueElement) {
+        pValueElement.textContent = scorecardData.pValue.toFixed(4);
+    }
+    
+    // Update Agreement Rate
+    const agreementRateElement = document.getElementById('agreementRate');
+    if (agreementRateElement) {
+        const percentage = (agreementData.totalAgreementRate * 100).toFixed(2);
+        agreementRateElement.textContent = `${percentage}%`;
+    }
+}
+
+// Update Custom Metrics data display
+function updateCustomMetrics(customMetrics) {
+    console.log('📊 Updating custom metrics:', customMetrics);
+    
+    const container = document.getElementById('customMetricsContainer');
+    if (!container) return;
+    
+    if (!customMetrics || customMetrics.length === 0) {
+        // 显示空状态
+        container.innerHTML = `
+            <div class="custom-metrics-empty">
+                No custom metrics defined for this experiment
+            </div>
+        `;
+    } else {
+        // 显示 metrics 内容
+        container.innerHTML = `
+            <div class="custom-metrics-questions">
+                ${customMetrics.map(question => `
+                    <div class="custom-metrics-question">
+                        <div class="custom-metrics-question-title">
+                            Question ${question.questionId}: ${question.questionText}
+                        </div>
+                        <div class="custom-metrics-grid">
+                            ${question.metrics.map(metric => renderMetricCard(metric)).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+}
+
+// Render individual metric card
+function renderMetricCard(metric) {
+    if (metric.name.startsWith('DomainChange')) {
+        // Special handling for domain change metrics
+        return `
+            <div class="custom-metric-card">
+                <div class="custom-metric-name">${metric.name}</div>
+                <div class="domain-changes-grid">
+                    ${Object.entries(metric.domainChanges).map(([domain, value]) => `
+                        <div class="domain-change-item">
+                            <span class="domain-change-label">${domain}:</span>
+                            <span class="domain-change-value ${getValueClass(value)}">${formatValue(value)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else if (metric.changeRateCount !== undefined) {
+        // Change rate metrics
+        return `
+            <div class="custom-metric-card">
+                <div class="custom-metric-name">${metric.name}</div>
+                <div class="custom-metric-details">
+                    <div class="custom-metric-detail">
+                        <span class="custom-metric-label">Count:</span>
+                        <span class="custom-metric-value">${metric.changeRateCount}</span>
+                    </div>
+                    <div class="custom-metric-detail">
+                        <span class="custom-metric-label">Average:</span>
+                        <span class="custom-metric-value">${formatValue(metric.changeRateAverage)}</span>
+                    </div>
+                    <div class="custom-metric-detail">
+                        <span class="custom-metric-label">P-value:</span>
+                        <span class="custom-metric-value">${formatValue(metric.pValue)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        // Standard control/treatment metrics
+        return `
+            <div class="custom-metric-card">
+                <div class="custom-metric-name">${metric.name}</div>
+                <div class="custom-metric-details">
+                    <div class="custom-metric-detail">
+                        <span class="custom-metric-label">Control Avg:</span>
+                        <span class="custom-metric-value">${formatValue(metric.controlAvgScore)}</span>
+                    </div>
+                    <div class="custom-metric-detail">
+                        <span class="custom-metric-label">Treatment Avg:</span>
+                        <span class="custom-metric-value">${formatValue(metric.treatmentAvgScore)}</span>
+                    </div>
+                    <div class="custom-metric-detail">
+                        <span class="custom-metric-label">Control Count:</span>
+                        <span class="custom-metric-value">${metric.controlCount}</span>
+                    </div>
+                    <div class="custom-metric-detail">
+                        <span class="custom-metric-label">Treatment Count:</span>
+                        <span class="custom-metric-value">${metric.treatmentCount}</span>
+                    </div>
+                    <div class="custom-metric-detail">
+                        <span class="custom-metric-label">Delta:</span>
+                        <span class="custom-metric-value ${getValueClass(metric.delta)}">${formatValue(metric.delta)}</span>
+                    </div>
+                    <div class="custom-metric-detail">
+                        <span class="custom-metric-label">P-value:</span>
+                        <span class="custom-metric-value">${formatValue(metric.pValue)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Helper function to get CSS class for value coloring
+function getValueClass(value) {
+    if (value > 0) return 'positive';
+    if (value < 0) return 'negative';
+    return 'neutral';
+}
+
+// Helper function to format numeric values
+function formatValue(value) {
+    if (typeof value === 'number') {
+        if (value === 0) return '0';
+        if (Math.abs(value) < 0.001) return value.toExponential(3);
+        return value.toFixed(4);
+    }
+    return value;
+}
+
+// Update Throughput data display
+function updateThroughputData(throughputData) {
+    console.log('📊 Updating throughput data:', throughputData);
+    
+    // Update statistics
+    const totalJudgementsElement = document.getElementById('totalJudgements');
+    const totalJudgesElement = document.getElementById('totalJudges');
+    const avgCompletionTimeElement = document.getElementById('avgCompletionTime');
+    
+    if (totalJudgementsElement) {
+        totalJudgementsElement.textContent = throughputData.totalJudgementCount.toString();
+    }
+    
+    if (totalJudgesElement) {
+        totalJudgesElement.textContent = throughputData.totalJudgesCount.toString();
+    }
+    
+    if (avgCompletionTimeElement) {
+        avgCompletionTimeElement.textContent = `${throughputData.averageCompletionTime} min`;
+    }
+}
+
+// Populate question selector dropdown
+function populateQuestionSelector() {
+    const selector = document.getElementById('questionSelector');
+    if (!selector || !experimentData) return;
+    
+    console.log('📊 Populating question selector...');
+    
+    // Clear existing options except the first one
+    selector.innerHTML = '<option value="">Select a question...</option>';
+    
+    // Get Query Level Side-by-Side questions
+    const judgementQuestions = experimentData.configuration.judgementQuestions || [];
+    const sideBySideQuestions = judgementQuestions.filter(q =>
+        q.type.includes('Query Level Side-by-Side') &&
+        (q.type.includes('Single Choice') || q.type.includes('Multiple Choice'))
+    );
+    
+    console.log('📊 Found side-by-side questions:', sideBySideQuestions);
+    
+    sideBySideQuestions.forEach(question => {
+        const option = document.createElement('option');
+        option.value = question.id;
+        option.textContent = question.text;
+        selector.appendChild(option);
+    });
+    
+    // Select first question by default if available
+    if (sideBySideQuestions.length > 0) {
+        selector.value = sideBySideQuestions[0].id;
+    }
+}
+
+// Render all charts
+function renderResultsCharts(experimentResults) {
+    console.log('📊 Rendering results charts...');
+    
+    // Render SBS distribution chart
+    renderSBSChart(experimentResults.scorecard.optionDistribution);
+    
+    // Render Agreement distribution chart
+    renderAgreementChart(experimentResults.agreement.agreementDistribution);
+    
+    // Render Progress over time chart
+    renderProgressChart(experimentResults.throughput.dailyProgress);
+}
+
+// Render SBS Surplus chart
+function renderSBSChart(optionDistribution) {
+    const ctx = document.getElementById('sbsChart');
+    if (!ctx) return;
+    
+    console.log('📊 Rendering SBS chart with data:', optionDistribution);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: optionDistribution.map(item => item.option),
+            datasets: [{
+                label: 'Judgement Count',
+                data: optionDistribution.map(item => item.count),
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(255, 206, 86, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(255, 206, 86, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Render Agreement Rate chart
+function renderAgreementChart(agreementDistribution) {
+    const ctx = document.getElementById('agreementChart');
+    if (!ctx) return;
+    
+    console.log('📊 Rendering agreement chart with data:', agreementDistribution);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: agreementDistribution.map(item => item.rate),
+            datasets: [{
+                label: 'Count',
+                data: agreementDistribution.map(item => item.count),
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(255, 159, 64, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 205, 86, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 205, 86, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Render Progress over time chart
+function renderProgressChart(dailyProgress) {
+    const ctx = document.getElementById('progressChart');
+    if (!ctx) return;
+    
+    console.log('📊 Rendering progress chart with data:', dailyProgress);
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dailyProgress.map(item => item.date),
+            datasets: [{
+                label: 'Daily Judgements',
+                data: dailyProgress.map(item => item.count),
+                borderColor: 'rgba(102, 126, 234, 1)',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 5
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45
+                    }
+                }
+            },
+            layout: {
+                padding: {
+                    top: 10,
+                    bottom: 10
+                }
+            }
+        }
+    });
+}
+
+// Load fallback results data if main loading fails
+function loadFallbackResultsData() {
+    console.log('📊 Loading fallback results data...');
+    
+    const fallbackData = {
+        scorecard: {
+            sbsSurplus: 0.0228,
+            pValue: 0.6904,
+            optionDistribution: [
+                {"option": "Left is better", "count": 45},
+                {"option": "Right is better", "count": 32},
+                {"option": "Tie", "count": 18}
+            ]
+        },
+        agreement: {
+            totalAgreementRate: 0.153846,
+            agreementDistribution: [
+                {"rate": "3/3", "count": 15},
+                {"rate": "2/3", "count": 35},
+                {"rate": "1/3", "count": 45}
+            ]
+        },
+        customMetrics: [], // 默认为空
+        throughput: {
+            totalJudgementCount: 295,
+            totalJudgesCount: 4,
+            averageCompletionTime: 2.3,
+            dailyProgress: [
+                {"date": "2024-03-10", "count": 12},
+                {"date": "2024-03-11", "count": 18},
+                {"date": "2024-03-12", "count": 25},
+                {"date": "2024-03-13", "count": 30},
+                {"date": "2024-03-14", "count": 28},
+                {"date": "2024-03-15", "count": 35},
+                {"date": "2024-03-16", "count": 42}
+            ]
+        }
+    };
+    
+    // Update data and render charts with fallback
+    updateScorecardData(fallbackData.scorecard, fallbackData.agreement);
+    updateCustomMetrics(fallbackData.customMetrics);
+    updateThroughputData(fallbackData.throughput);
+    renderResultsCharts(fallbackData);
 }
 
 // Configuration panel toggle function
@@ -3068,3 +3529,22 @@ window.removeHighlights = removeHighlights;
 window.executeTaskTypeAssignmentFromModal = executeTaskTypeAssignmentFromModal;
 window.handleGlobalClick = handleGlobalClick;
 window.hasAnySelections = hasAnySelections;
+window.loadResults = loadResults;
+window.loadResultsData = loadResultsData;
+window.onQuestionChange = onQuestionChange;
+
+// Question selector change handler
+function onQuestionChange() {
+    const selector = document.getElementById('questionSelector');
+    if (!selector) return;
+    
+    const selectedQuestionId = selector.value;
+    console.log('📊 Question changed to:', selectedQuestionId);
+    
+    if (selectedQuestionId) {
+        // Here you could load different data based on the selected question
+        // For now, we'll just reload the same data since it's mock data
+        console.log('📊 Loading data for question:', selectedQuestionId);
+        loadResultsData();
+    }
+}

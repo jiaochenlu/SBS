@@ -245,38 +245,95 @@
         <div id="results-tab" class="tab-content">
             <div class="content-container">
                 <div class="section-header">
-                    <h3>Annotation Results</h3>
+                    <h3>Judgement Results</h3>
                     <div class="header-actions">
-                        <button class="btn-secondary" onclick="downloadReport()">Download Report</button>
-                        <button class="btn-primary" onclick="exportData()">Export Data</button>
+                        <button class="btn-primary" onclick="exportData()">Export Judgement Data</button>
                     </div>
                 </div>
 
-                <!-- Results Summary -->
-                <div class="results-summary">
-                    <div class="summary-card">
-                        <div class="summary-title">Inter-Annotator Agreement</div>
-                        <div class="summary-value">87.3%</div>
+                <!-- Scorecard Section -->
+                <div class="scorecard-section">
+                    <div class="section-title">
+                        <h4>Scorecard</h4>
                     </div>
-                    <div class="summary-card">
-                        <div class="summary-title">Average Completion Time</div>
-                        <div class="summary-value">2.3 min</div>
+                    
+                    <div class="sbs-quality-container">
+                        <div class="subsection-header">
+                            <h5>SBS Overall Quality</h5>
+                            <div class="question-selector-container">
+                                <label class="question-selector-label">SBS query level questions:</label>
+                                <select class="question-selector" id="questionSelector" onchange="onQuestionChange()">
+                                    <option value="">Select a question...</option>
+                                    <!-- Options will be populated dynamically from judgementQuestions -->
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="metrics-grid">
+                            <!-- SBS Surplus -->
+                            <div class="metric-container">
+                                <div class="metric-card">
+                                    <div class="metric-title">SBS Surplus</div>
+                                    <div class="metric-value" id="sbsSurplus">0.0228</div>
+                                    <div class="metric-subtitle">P-Value: <span id="pValue">0.6904</span></div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="sbsChart" width="300" height="200"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- Inter-judges Agreement -->
+                            <div class="metric-container">
+                                <div class="metric-card">
+                                    <div class="metric-title">Inter-judges Agreement</div>
+                                    <div class="metric-value" id="agreementRate">15.38%</div>
+                                    <div class="metric-subtitle">Total Agreement Rate</div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="agreementChart" width="300" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="summary-card">
-                        <div class="summary-title">Quality Score</div>
-                        <div class="summary-value">9.1/10</div>
+                    
+                    <!-- Custom Metrics Section within Scorecard -->
+                    <div class="custom-metrics-section">
+                        <div class="subsection-header">
+                            <h5>Custom Metrics</h5>
+                        </div>
+                        
+                        <div class="sbs-quality-container" id="customMetricsContainer">
+                            <!-- 动态内容将在这里填充 -->
+                        </div>
                     </div>
                 </div>
 
-                <!-- Charts Section -->
-                <div class="charts-section">
-                    <div class="chart-container">
-                        <h4>Completion Progress Over Time</h4>
-                        <div class="chart-placeholder">📈 Chart will be rendered here</div>
+                <!-- Throughput Section -->
+                <div class="throughput-section">
+                    <div class="section-title">
+                        <h4>Throughput</h4>
                     </div>
-                    <div class="chart-container">
-                        <h4>Answer Distribution</h4>
-                        <div class="chart-placeholder">📊 Chart will be rendered here</div>
+                    
+                    <div class="throughput-stats">
+                        <div class="stat-card">
+                            <div class="stat-title">Total Judgement Count</div>
+                            <div class="stat-value" id="totalJudgements">295</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Total Judges Count</div>
+                            <div class="stat-value" id="totalJudges">4</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Average Completion Time</div>
+                            <div class="stat-value" id="avgCompletionTime">2.3 min</div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-chart-container">
+                        <h6>Completion Progress Over Time</h6>
+                        <div class="progress-chart-wrapper">
+                            <canvas id="progressChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -372,6 +429,7 @@
 
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="experiment-detail.js"></script>
     <script>
         // 计算查询中实际参与的unique judges数量

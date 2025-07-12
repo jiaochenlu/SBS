@@ -1,0 +1,188 @@
+{
+  "version": "1.0",
+  "description": "Mock results data for experiments",
+  "experimentResults": {
+    "search-ndcg-001": {
+      "scorecard": {
+        "sbsSurplus": 0.0228,
+        "pValue": 0.6904,
+        "optionDistribution": [
+          {"option": "Left is better", "count": 45},
+          {"option": "Right is better", "count": 32},
+          {"option": "Tie", "count": 18}
+        ]
+      },
+      "agreement": {
+        "totalAgreementRate": 0.153846,
+        "agreementDistribution": [
+          {"rate": "3/3", "count": 15},
+          {"rate": "2/3", "count": 35},
+          {"rate": "1/3", "count": 45}
+        ]
+      },
+      "customMetrics": [
+        {
+          "questionId": 1,
+          "questionText": "Item relevance (Toggle - Item Level Side-by-Side)",
+          "metrics": [
+            {
+              "name": "NDCG@1",
+              "controlAvgScore": 0.212,
+              "treatmentAvgScore": 0,
+              "controlCount": 77,
+              "treatmentCount": 77,
+              "delta": -0.212,
+              "pValue": 0
+            },
+            {
+              "name": "NDCG@3",
+              "controlAvgScore": 0.349,
+              "treatmentAvgScore": 0.358,
+              "controlCount": 77,
+              "treatmentCount": 77,
+              "delta": 0.0089,
+              "pValue": 0.8308
+            },
+            {
+              "name": "NDCG@5",
+              "controlAvgScore": 0.4544,
+              "treatmentAvgScore": 0.4488,
+              "controlCount": 77,
+              "treatmentCount": 77,
+              "delta": -0.0056,
+              "pValue": 0.871
+            },
+            {
+              "name": "VGAP@5",
+              "controlAvgScore": 0.8701,
+              "treatmentAvgScore": 0.9221,
+              "controlCount": 77,
+              "treatmentCount": 77,
+              "delta": 0.0519,
+              "pValue": 0.2939
+            },
+            {
+              "name": "GAP@5",
+              "controlAvgScore": 0.961,
+              "treatmentAvgScore": 0.961,
+              "controlCount": 77,
+              "treatmentCount": 77,
+              "delta": 0,
+              "pValue": 1
+            }
+          ]
+        },
+        {
+          "questionId": 3,
+          "questionText": "Comment (Text Box - Query Level Side-by-Side)",
+          "metrics": [
+            {
+              "name": "ChangeRate@3",
+              "changeRateCount": 77,
+              "changeRateAverage": 0.8637,
+              "pValue": 0
+            },
+            {
+              "name": "ChangeRate@5",
+              "changeRateCount": 77,
+              "changeRateAverage": 0.8564,
+              "pValue": 0
+            },
+            {
+              "name": "DomainChange@5",
+              "domainChanges": {
+                "Chat": 0.4117,
+                "Email": 0.8564,
+                "External": 0,
+                "File": -0.5974
+              }
+            }
+          ]
+        }
+      ],
+      "throughput": {
+        "totalJudgementCount": 295,
+        "totalJudgesCount": 4,
+        "averageCompletionTime": 2.3,
+        "dailyProgress": [
+          {"date": "2024-03-10", "count": 12},
+          {"date": "2024-03-11", "count": 18},
+          {"date": "2024-03-12", "count": 25},
+          {"date": "2024-03-13", "count": 30},
+          {"date": "2024-03-14", "count": 28},
+          {"date": "2024-03-15", "count": 35},
+          {"date": "2024-03-16", "count": 42}
+        ]
+      }
+    },
+    "search-ndcg-002": {
+      "scorecard": {
+        "sbsSurplus": 0.0156,
+        "pValue": 0.4520,
+        "optionDistribution": [
+          {"option": "Left is better", "count": 28},
+          {"option": "Right is better", "count": 19},
+          {"option": "Tie", "count": 12}
+        ]
+      },
+      "agreement": {
+        "totalAgreementRate": 0.236842,
+        "agreementDistribution": [
+          {"rate": "3/3", "count": 9},
+          {"rate": "2/3", "count": 23},
+          {"rate": "1/3", "count": 27}
+        ]
+      },
+      "customMetrics": [],
+      "throughput": {
+        "totalJudgementCount": 128,
+        "totalJudgesCount": 3,
+        "averageCompletionTime": 1.8,
+        "dailyProgress": [
+          {"date": "2025-07-05", "count": 8},
+          {"date": "2025-07-06", "count": 15},
+          {"date": "2025-07-07", "count": 22},
+          {"date": "2025-07-08", "count": 18},
+          {"date": "2025-07-09", "count": 25},
+          {"date": "2025-07-10", "count": 20},
+          {"date": "2025-07-11", "count": 20}
+        ]
+      }
+    },
+    "search-ndcg-003": {
+      "scorecard": {
+        "sbsSurplus": 0.0334,
+        "pValue": 0.8123,
+        "optionDistribution": [
+          {"option": "Left is better", "count": 38},
+          {"option": "Right is better", "count": 25},
+          {"option": "Tie", "count": 15}
+        ]
+      },
+      "agreement": {
+        "totalAgreementRate": 0.3125,
+        "agreementDistribution": [
+          {"rate": "4/4", "count": 12},
+          {"rate": "3/4", "count": 28},
+          {"rate": "2/4", "count": 25},
+          {"rate": "1/4", "count": 13}
+        ]
+      },
+      "customMetrics": [],
+      "throughput": {
+        "totalJudgementCount": 167,
+        "totalJudgesCount": 4,
+        "averageCompletionTime": 2.7,
+        "dailyProgress": [
+          {"date": "2025-07-06", "count": 10},
+          {"date": "2025-07-07", "count": 16},
+          {"date": "2025-07-08", "count": 23},
+          {"date": "2025-07-09", "count": 19},
+          {"date": "2025-07-10", "count": 28},
+          {"date": "2025-07-11", "count": 32},
+          {"date": "2025-07-12", "count": 39}
+        ]
+      }
+    }
+  }
+}

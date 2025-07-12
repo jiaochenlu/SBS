@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Results Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .feature {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Judgement Results 页面重构完成！</h1>
+        
+        <div class="success">
+            <p>🎉 恭喜！您的 Results tab 已经成功重构完成。</p>
+        </div>
+        
+        <h2>🔧 已完成的功能：</h2>
+        
+        <div class="feature">
+            <h3>📊 Scorecard 部分</h3>
+            <ul>
+                <li>SBS Overall Quality 标题</li>
+                <li>问题选择下拉框（动态填充 Query Level Side-by-Side 问题）</li>
+                <li>SBS Surplus 指标卡片（显示分值和 P-Value）</li>
+                <li>Inter-judges Agreement 指标卡片（显示一致性率）</li>
+                <li>两个维度的柱状图展示</li>
+            </ul>
+        </div>
+        
+        <div class="feature">
+            <h3>📈 Throughput 部分</h3>
+            <ul>
+                <li>Total Judgement Count 统计卡片</li>
+                <li>Total Judges Count 统计卡片</li>
+                <li>Average Completion Time 统计卡片</li>
+                <li>Completion Progress Over Time 折线图</li>
+            </ul>
+        </div>
+        
+        <div class="feature">
+            <h3>🗂️ 数据管理</h3>
+            <ul>
+                <li>独立的 experiment-result-config.json 文件</li>
+                <li>与现有实验 ID 关联的 mock 数据</li>
+                <li>三个实验的不同数据集</li>
+            </ul>
+        </div>
+        
+        <div class="feature">
+            <h3>🎨 用户界面</h3>
+            <ul>
+                <li>响应式设计，支持不同屏幕尺寸</li>
+                <li>Chart.js 图表库集成</li>
+                <li>现代化的 CSS 样式</li>
+                <li>交互式问题切换功能</li>
+            </ul>
+        </div>
+        
+        <h2>🔗 如何访问：</h2>
+        <ol>
+            <li>打开 experiment-detail.html 页面</li>
+            <li>点击 "Results" tab</li>
+            <li>查看新的 Scorecard 和 Throughput 部分</li>
+            <li>尝试切换不同的问题查看效果</li>
+        </ol>
+        
+        <h2>📝 术语更新：</h2>
+        <ul>
+            <li>✅ "Annotation" → "Judgement"</li>
+            <li>✅ "Annotator" → "Judges"</li>
+            <li>✅ "Export Data" → "Export Judgement Data"</li>
+            <li>✅ 移除了 "Download Report" 按钮</li>
+        </ul>
+        
+        <div style="margin-top: 30px; padding: 15px; background: #e7f3ff; border-radius: 5px;">
+            <p><strong>📋 注意：</strong> 当前使用的是 mock 数据用于演示。在实际部署时，需要将这些数据连接到真实的后端 API。</p>
+        </div>
+    </div>
+</body>
+</html>
