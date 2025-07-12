@@ -295,14 +295,23 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Custom Metrics Section within Scorecard -->
-                    <div class="custom-metrics-section">
+                </div>
+
+                <!-- Custom Metrics Section -->
+                <div class="custom-metrics-section">
+                    <div class="sbs-quality-container">
                         <div class="subsection-header">
                             <h5>Custom Metrics</h5>
+                            <div class="question-selector-container">
+                                <label class="question-selector-label">Other question:</label>
+                                <select class="question-selector" id="customMetricsQuestionSelector" onchange="onCustomMetricsQuestionChange()">
+                                    <option value="">Select a question...</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
                         </div>
                         
-                        <div class="sbs-quality-container" id="customMetricsContainer">
+                        <div class="custom-metrics-content" id="customMetricsContent">
                             <!-- 动态内容将在这里填充 -->
                         </div>
                     </div>

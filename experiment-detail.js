@@ -1782,11 +1782,23 @@ function updateScorecardData(scorecardData, agreementData) {
     }
 }
 
+// Store custom metrics data globally
+let customMetricsData = [];
+
 // Update Custom Metrics data display
 function updateCustomMetrics(customMetrics) {
     console.log('📊 Updating custom metrics:', customMetrics);
     
-    const container = document.getElementById('customMetricsContainer');
+    // Store data globally
+    customMetricsData = customMetrics || [];
+    
+    // Use setTimeout to ensure DOM is ready
+    setTimeout(() => {
+        populateCustomMetricsQuestionSelector();
+    }, 100);
+    
+    // Show content based on current selection
+    const container = document.getElementById('customMetricsContent');
     if (!container) return;
     
     if (!customMetrics || customMetrics.length === 0) {
@@ -1797,22 +1809,159 @@ function updateCustomMetrics(customMetrics) {
             </div>
         `;
     } else {
-        // 显示 metrics 内容
+        // Content will be populated by populateCustomMetricsQuestionSelector
+        // which will auto-select the first question
+        container.innerHTML = '';
+    }
+}
+
+// Populate custom metrics question selector
+function populateCustomMetricsQuestionSelector() {
+    const selector = document.getElementById('customMetricsQuestionSelector');
+    const container = document.getElementById('customMetricsContent');
+    
+    console.log('📊 Populating custom metrics question selector...');
+    console.log('📊 Selector element found:', !!selector);
+    console.log('📊 Container element found:', !!container);
+    console.log('📊 Available custom metrics data:', customMetricsData);
+    
+    if (!selector) {
+        console.error('❌ customMetricsQuestionSelector element not found!');
+        return;
+    }
+    
+    if (!container) {
+        console.error('❌ customMetricsContent element not found!');
+        return;
+    }
+    
+    // Clear existing options
+    selector.innerHTML = '';
+    
+    if (customMetricsData && customMetricsData.length > 0) {
+        customMetricsData.forEach((question, index) => {
+            const option = document.createElement('option');
+            option.value = question.questionId;
+            option.textContent = question.questionText;
+            selector.appendChild(option);
+            console.log(`📊 Added option ${index + 1}: ${question.questionText}`);
+        });
+        
+        // Set first question as default selection
+        const firstQuestion = customMetricsData[0];
+        selector.value = firstQuestion.questionId;
+        
+        console.log('📊 Setting default selection to:', firstQuestion.questionText);
+        console.log('📊 Selector value after setting:', selector.value);
+        
+        // Immediately show the first question's metrics
+        console.log('📊 Calling displayQuestionMetrics for first question...');
+        displayQuestionMetrics(firstQuestion);
+        
+        // Verify content was added
+        setTimeout(() => {
+            console.log('📊 Container innerHTML length after display:', container.innerHTML.length);
+            if (container.innerHTML.length > 0) {
+                console.log('✅ Metrics successfully displayed!');
+            } else {
+                console.error('❌ No content found in container after displayQuestionMetrics');
+            }
+        }, 50);
+        
+    } else {
+        console.log('📊 No custom metrics data available');
+        // Add default empty option if no data
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = 'No questions available';
+        selector.appendChild(emptyOption);
+    }
+}
+
+// Display metrics for a specific question
+function displayQuestionMetrics(questionData) {
+    console.log('📊 displayQuestionMetrics called with:', questionData);
+    
+    const container = document.getElementById('customMetricsContent');
+    
+    if (!container) {
+        console.error('❌ customMetricsContent container not found!');
+        return;
+    }
+    
+    if (!questionData) {
+        console.error('❌ No question data provided!');
+        return;
+    }
+    
+    if (!questionData.metrics || questionData.metrics.length === 0) {
+        console.warn('⚠️ No metrics found for question:', questionData.questionText);
         container.innerHTML = `
-            <div class="custom-metrics-questions">
-                ${customMetrics.map(question => `
-                    <div class="custom-metrics-question">
-                        <div class="custom-metrics-question-title">
-                            Question ${question.questionId}: ${question.questionText}
-                        </div>
-                        <div class="custom-metrics-grid">
-                            ${question.metrics.map(metric => renderMetricCard(metric)).join('')}
-                        </div>
-                    </div>
-                `).join('')}
+            <div class="custom-metrics-empty">
+                No metrics available for this question
             </div>
         `;
+        return;
     }
+    
+    console.log('📊 Displaying', questionData.metrics.length, 'metrics for question:', questionData.questionText);
+    
+    // Display metrics for the question
+    const metricsHtml = questionData.metrics.map(metric => {
+        const cardHtml = renderMetricCard(metric);
+        console.log('📊 Generated metric card for:', metric.name);
+        return cardHtml;
+    }).join('');
+    
+    const finalHtml = `
+        <div class="custom-metrics-grid">
+            ${metricsHtml}
+        </div>
+    `;
+    
+    container.innerHTML = finalHtml;
+    
+    console.log('📊 Successfully set container innerHTML, length:', finalHtml.length);
+}
+
+// Handle custom metrics question change
+function onCustomMetricsQuestionChange() {
+    const selector = document.getElementById('customMetricsQuestionSelector');
+    
+    if (!selector) return;
+    
+    const selectedQuestionId = parseInt(selector.value);
+    console.log('📊 Custom metrics question changed to:', selectedQuestionId);
+    
+    if (!selectedQuestionId) {
+        const container = document.getElementById('customMetricsContent');
+        if (container) {
+            container.innerHTML = `
+                <div class="custom-metrics-empty" style="padding: 20px; text-align: center; color: #6c757d;">
+                    Please select a question above to view its custom metrics
+                </div>
+            `;
+        }
+        return;
+    }
+    
+    // Find the selected question data
+    const questionData = customMetricsData.find(q => q.questionId === selectedQuestionId);
+    
+    if (!questionData) {
+        const container = document.getElementById('customMetricsContent');
+        if (container) {
+            container.innerHTML = `
+                <div class="custom-metrics-empty">
+                    No data found for the selected question
+                </div>
+            `;
+        }
+        return;
+    }
+    
+    // Display metrics for the selected question
+    displayQuestionMetrics(questionData);
 }
 
 // Render individual metric card
@@ -3532,6 +3681,9 @@ window.hasAnySelections = hasAnySelections;
 window.loadResults = loadResults;
 window.loadResultsData = loadResultsData;
 window.onQuestionChange = onQuestionChange;
+window.onCustomMetricsQuestionChange = onCustomMetricsQuestionChange;
+window.populateCustomMetricsQuestionSelector = populateCustomMetricsQuestionSelector;
+window.displayQuestionMetrics = displayQuestionMetrics;
 
 // Question selector change handler
 function onQuestionChange() {

@@ -23,7 +23,7 @@
       "customMetrics": [
         {
           "questionId": 1,
-          "questionText": "Item relevance (Toggle - Item Level Side-by-Side)",
+          "questionText": "Item relevance",
           "metrics": [
             {
               "name": "NDCG@1",
@@ -74,7 +74,7 @@
         },
         {
           "questionId": 3,
-          "questionText": "Comment (Text Box - Query Level Side-by-Side)",
+          "questionText": "Comment",
           "metrics": [
             {
               "name": "ChangeRate@3",
