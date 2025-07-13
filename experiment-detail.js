@@ -1887,16 +1887,35 @@ function populateCustomMetricsQuestionSelector() {
         customMetricsData.forEach((question, index) => {
             const option = document.createElement('option');
             option.value = question.questionId;
-            option.textContent = question.questionText;
+            
+            // Get question text from experiment config by questionId
+            let questionText = question.questionText;
+            if (!questionText && experimentData && experimentData.configuration && experimentData.configuration.judgementQuestions) {
+                const judgementQuestion = experimentData.configuration.judgementQuestions.find(q => q.id === question.questionId);
+                if (judgementQuestion) {
+                    questionText = judgementQuestion.text;
+                }
+            }
+            
+            option.textContent = questionText || `Question ${question.questionId}`;
             selector.appendChild(option);
-            console.log(`📊 Added option ${index + 1}: ${question.questionText}`);
+            console.log(`📊 Added option ${index + 1}: ${questionText || `Question ${question.questionId}`}`);
         });
         
         // Set first question as default selection
         const firstQuestion = customMetricsData[0];
         selector.value = firstQuestion.questionId;
         
-        console.log('📊 Setting default selection to:', firstQuestion.questionText);
+        // Get question text for logging
+        let questionText = firstQuestion.questionText;
+        if (!questionText && experimentData && experimentData.configuration && experimentData.configuration.judgementQuestions) {
+            const judgementQuestion = experimentData.configuration.judgementQuestions.find(q => q.id === firstQuestion.questionId);
+            if (judgementQuestion) {
+                questionText = judgementQuestion.text;
+            }
+        }
+        
+        console.log('📊 Setting default selection to:', questionText || `Question ${firstQuestion.questionId}`);
         console.log('📊 Selector value after setting:', selector.value);
         
         // Immediately show the first question's metrics
@@ -1939,7 +1958,7 @@ function populateCustomMetricsQuestionSelector() {
 
 // Display metrics for a specific question
 function displayQuestionMetrics(questionData) {
-    console.log('📊 displayQuestionMetrics called with:', questionData);
+    console.log('📊 displayQuestionMetrics called with:', {questionId: questionData?.questionId, metrics: questionData?.metrics});
     
     const container = document.getElementById('customMetricsContent');
     
@@ -1953,8 +1972,22 @@ function displayQuestionMetrics(questionData) {
         return;
     }
     
+    // Get question text from experiment config by questionId
+    let questionText = questionData.questionText;
+    if (!questionText && experimentData && experimentData.configuration && experimentData.configuration.judgementQuestions) {
+        const judgementQuestion = experimentData.configuration.judgementQuestions.find(q => q.id === questionData.questionId);
+        if (judgementQuestion) {
+            questionText = judgementQuestion.text;
+        }
+    }
+    
+    // Use fallback if still no text found
+    if (!questionText) {
+        questionText = `Question ${questionData.questionId}`;
+    }
+    
     if (!questionData.metrics || questionData.metrics.length === 0) {
-        console.warn('⚠️ No metrics found for question:', questionData.questionText);
+        console.warn('⚠️ No metrics found for question:', questionText);
         container.innerHTML = `
             <div class="custom-metrics-empty">
                 No metrics available for this question
@@ -1963,7 +1996,7 @@ function displayQuestionMetrics(questionData) {
         return;
     }
     
-    console.log('📊 Displaying', questionData.metrics.length, 'metrics for question:', questionData.questionText);
+    console.log('📊 Displaying', questionData.metrics.length, 'metrics for question:', questionText);
     
     // Display metrics for the question
     const metricsHtml = questionData.metrics.map(metric => {
@@ -2010,9 +2043,18 @@ function onCustomMetricsQuestionChange() {
     if (!questionData) {
         const container = document.getElementById('customMetricsContent');
         if (container) {
+            // Get question text from experiment config for better error message
+            let questionText = `Question ${selectedQuestionId}`;
+            if (experimentData && experimentData.configuration && experimentData.configuration.judgementQuestions) {
+                const judgementQuestion = experimentData.configuration.judgementQuestions.find(q => q.id === selectedQuestionId);
+                if (judgementQuestion) {
+                    questionText = judgementQuestion.text;
+                }
+            }
+            
             container.innerHTML = `
                 <div class="custom-metrics-empty">
-                    No data found for the selected question
+                    No data found for the selected question: ${questionText}
                 </div>
             `;
         }
