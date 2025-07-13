@@ -446,399 +446,51 @@
 
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="experiment-detail.js"></script>
+    
+    <!-- 引入优化后的所有模块 -->
+    <script type="module">
+        import { initializeExperimentDetail } from './experiment-detail-init.js';
+        import { initializeMainExperimentDetail } from './experiment-detail-core.js';
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Starting optimized modular initialization...');
+            await initializeExperimentDetail();
+            initializeMainExperimentDetail();
+        });
+        
+        // 立即执行初始化（如果DOM已就绪）
+        if (document.readyState !== 'loading') {
+            console.log('Document already ready, running immediate optimized initialization');
+            initializeExperimentDetail().then(() => {
+                initializeMainExperimentDetail();
+            });
+        }
+    </script>
+    
+    <!-- 保留原有JS文件作为fallback -->
+    <script src="experiment-detail.js" defer></script>
+    
+    <!-- Pagination placeholders - these would typically be implemented in separate modules -->
     <script>
-        // 计算查询中实际参与的unique judges数量
-        function calculateUniqueJudges(exp) {
-            if (!exp || !exp.queries) {
-                return '0 Judges';
-            }
-            
-            const uniqueJudges = new Set();
-            exp.queries.forEach(query => {
-                if (query.assignments) {
-                    query.assignments.forEach(assignment => {
-                        if (assignment.judge && assignment.judge.name) {
-                            uniqueJudges.add(assignment.judge.name);
-                        }
-                    });
-                }
-            });
-            
-            console.log('📊 calculateUniqueJudges: Found', uniqueJudges.size, 'unique judges in assignments');
-            return `${uniqueJudges.size} Judges`;
+        function previousPage() {
+            console.log('Previous page functionality would be implemented');
         }
         
-        // 计算进度统计的辅助函数
-        function calculateProgressStats(exp) {
-            if (!exp || !exp.queries) {
-                return {
-                    completed: '0 Completed (0%)',
-                    inProgress: '0 In Progress (0%)',
-                    notStarted: '0 Not Started (0%)'
-                };
-            }
-            
-            const queries = exp.queries;
-            let completedCount = 0, inProgressCount = 0, notStartedCount = 0;
-            
-            queries.forEach(query => {
-                const assignments = query.assignments || [];
-                const completedAssignments = assignments.filter(a => a.status === 'completed').length;
-                const totalAssignments = assignments.length;
-                
-                if (completedAssignments === totalAssignments && totalAssignments > 0) {
-                    completedCount++;
-                } else if (completedAssignments > 0) {
-                    inProgressCount++;
-                } else {
-                    notStartedCount++;
-                }
-            });
-            
-            const total = queries.length;
-            const completedPercentage = total > 0 ? Math.round((completedCount / total) * 100) : 0;
-            const inProgressPercentage = total > 0 ? Math.round((inProgressCount / total) * 100) : 0;
-            const notStartedPercentage = total > 0 ? Math.round((notStartedCount / total) * 100) : 0;
-            
-            return {
-                completed: `${completedCount} Completed (${completedPercentage}%)`,
-                inProgress: `${inProgressCount} In Progress (${inProgressPercentage}%)`,
-                notStarted: `${notStartedCount} Not Started (${notStartedPercentage}%)`,
-                completedCount,
-                inProgressCount,
-                notStartedCount,
-                completedPercentage,
-                inProgressPercentage,
-                notStartedPercentage
-            };
+        function nextPage() {
+            console.log('Next page functionality would be implemented');
         }
         
-        // 用户下拉菜单生成函数
-        function generateUserDropdown() {
-            // 检查数据源（优先使用全局变量，然后是window.exp）
-            const expData = window.experimentData || window.exp;
-            
-            if (!expData || !expData.members) {
-                console.warn('⚠️ No experiment data or members available for user dropdown');
-                console.warn('  - window.experimentData:', window.experimentData);
-                console.warn('  - window.exp:', window.exp);
-                return;
-            }
-            
-            const dropdown = document.getElementById('userDropdown');
-            if (!dropdown) {
-                console.warn('⚠️ User dropdown element not found');
-                return;
-            }
-            
-            console.log('🔄 Generating user dropdown with data:', expData.members);
-            dropdown.innerHTML = '';
-            
-            expData.members.forEach(member => {
-                const userOption = document.createElement('div');
-                userOption.className = 'user-option';
-                userOption.onclick = () => {
-                    console.log('👤 User clicked:', member.name);
-                    if (window.switchUser) {
-                        window.switchUser(member.id);
-                    } else {
-                        console.warn('⚠️ switchUser function not available');
-                    }
-                };
-                
-                userOption.innerHTML = `
-                    <div class="user-avatar">${member.initials}</div>
-                    <div class="user-info">
-                        <div class="user-name">${member.name}</div>
-                        <div class="user-role">${member.role.charAt(0).toUpperCase() + member.role.slice(1)}</div>
-                    </div>
-                `;
-                
-                dropdown.appendChild(userOption);
-            });
-            
-            console.log('✅ User dropdown generated with', expData.members.length, 'members');
+        // Task type filter placeholders
+        function toggleSelectAllTaskTypes() {
+            console.log('Toggle select all task types functionality would be implemented');
         }
-
-        // Immediate config loading and UI update
-        (async function() {
-            console.log('🚀 Immediate config loader starting...');
-            
-            try {
-                // Fetch config immediately
-                const response = await fetch('./experiment-config-merged.json');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const config = await response.json();
-                console.log('✅ Config loaded immediately:', config);
-                
-                // 获取当前实验数据
-                function getCurrentExperiment() {
-                    // 尝试从URL参数获取实验ID
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const experimentId = urlParams.get('id');
-                    
-                    if (experimentId) {
-                        const experiment = config.experiments.find(exp => exp.id === experimentId);
-                        if (experiment) {
-                            console.log(`✅ Found experiment by ID: ${experimentId}`);
-                            return experiment;
-                        }
-                    }
-                    
-                    // 如果没有找到或没有指定ID，返回第一个实验
-                    console.log('⚠️ No experiment ID specified or not found, using first experiment');
-                    return config.experiments[0];
-                }
-                
-                const exp = getCurrentExperiment();
-                window.exp = exp; // 让后续脚本可直接访问
-                window.experimentData = exp; // 也设置这个全局变量以兼容JS文件
-                
-                console.log(`📋 Loading experiment: ${exp.name} (${exp.id})`);
-                console.log(`📋 Set global variables - exp:`, exp, 'experimentData:', window.experimentData);
-                
-                // 延迟生成用户下拉菜单，确保DOM和数据都就绪
-                setTimeout(() => {
-                    console.log('🔄 Generating user dropdown...');
-                    generateUserDropdown();
-                    
-                    // 确保Members tab badge显示正确的值
-                    const membersTabBadge = document.getElementById('membersTabBadge');
-                    if (membersTabBadge && exp.members) {
-                        membersTabBadge.textContent = exp.members.length;
-                        console.log('🔧 Force updated membersTabBadge to:', exp.members.length);
-                    }
-                    
-                    // 同时确保judges count显示正确的值
-                    const judgesCountEl = document.getElementById('judgesCount');
-                    if (judgesCountEl && exp.queries) {
-                        const correctJudgesCount = calculateUniqueJudges(exp);
-                        judgesCountEl.textContent = correctJudgesCount;
-                        console.log('🔧 Force updated judgesCount to:', correctJudgesCount);
-                    }
-                }, 100);
-                
-                // 额外的检查，在更长的延迟后再次确保正确值
-                setTimeout(() => {
-                    const membersTabBadge = document.getElementById('membersTabBadge');
-                    if (membersTabBadge && exp.members) {
-                        const currentValue = membersTabBadge.textContent;
-                        const expectedValue = exp.members.length;
-                        
-                        console.log('🔍 Final check - Current members badge:', currentValue, 'Expected:', expectedValue);
-                        
-                        if (currentValue !== expectedValue.toString()) {
-                            membersTabBadge.textContent = expectedValue;
-                            console.log('🔧 Corrected membersTabBadge from', currentValue, 'to', expectedValue);
-                        }
-                    }
-                    
-                    // 最终检查judges count
-                    const judgesCountEl = document.getElementById('judgesCount');
-                    if (judgesCountEl && exp.queries) {
-                        const currentJudgesValue = judgesCountEl.textContent;
-                        const expectedJudgesValue = calculateUniqueJudges(exp);
-                        
-                        console.log('🔍 Final check - Current judges count:', currentJudgesValue, 'Expected:', expectedJudgesValue);
-                        
-                        if (currentJudgesValue !== expectedJudgesValue) {
-                            judgesCountEl.textContent = expectedJudgesValue;
-                            console.log('🔧 Corrected judgesCount from', currentJudgesValue, 'to', expectedJudgesValue);
-                        }
-                    }
-                }, 500);
-                
-                // Update all hardcoded "Loading..." immediately
-                const updates = [
-                    { id: 'experimentTitle', value: exp.name, title: exp.name },
-                    { id: 'experimentStatus', value: exp.status.charAt(0).toUpperCase() + exp.status.slice(1) },
-                    { id: 'experimentCreated', value: `Created: ${exp.createdAt}` },
-                    { id: 'experimentOwner', value: `Owner: ${exp.owner.name}` },
-                    { id: 'experimentQueryCount', value: `${exp.queries ? exp.queries.length : 0} queries` },
-                    { id: 'totalQueriesDisplay', value: `${exp.queries ? exp.queries.length : 0} Total Queries` },
-                    { id: 'completedStat', value: calculateProgressStats(exp).completed },
-                    { id: 'inProgressStat', value: calculateProgressStats(exp).inProgress },
-                    { id: 'notStartedStat', value: calculateProgressStats(exp).notStarted },
-                    { id: 'judgesCount', value: calculateUniqueJudges(exp) },
-                    { id: 'configExperimentType', value: exp.configuration.experimentType },
-                    { id: 'configExperimentName', value: exp.name },
-                    { id: 'configExperimentDescription', value: exp.description },
-                    { id: 'configDataSchema', value: exp.configuration.dataSchema },
-                    { id: 'configDataSource', value: exp.configuration.dataSource },
-                    { id: 'configQuerySetSelection', value: exp.configuration.querySetSelection },
-                    { id: 'configQuerySetFile', value: `${exp.configuration.querySetFile.name} (${exp.configuration.querySetFile.queryCount} queries)` },
-                    { id: 'configControlProfile', value: exp.configuration.controlProfile },
-                    { id: 'configTreatmentProfile', value: exp.configuration.treatmentProfile },
-                    { id: 'configDataFieldsDisplay', value: exp.configuration.dataFieldsDisplay },
-                    { id: 'configBlindTest', value: exp.configuration.additionalSettings.blindTest ? 'Enabled' : 'Disabled' },
-                    { id: 'configAllowAnyToJudge', value: exp.configuration.additionalSettings.allowAnyToJudge ? 'Enabled' : 'Disabled' },
-                    { id: 'configJudgementGuide', value: exp.configuration.additionalSettings.judgementGuide },
-                    { id: 'queriesTabBadge', value: exp.queries.length },
-                    { id: 'membersTabBadge', value: exp.members.length }
-                ];
-                
-                // Apply all updates
-                updates.forEach(update => {
-                    const element = document.getElementById(update.id);
-                    if (element) {
-                        element.textContent = update.value;
-                        // 如果有title属性，也更新它（用于tooltip）
-                        if (update.title) {
-                            element.setAttribute('title', update.title);
-                        }
-                        console.log(`✅ Updated ${update.id} to: ${update.value}`);
-                    } else {
-                        console.warn(`❌ Element ${update.id} not found`);
-                    }
-                });
-                
-                // Update progress bars using calculated stats
-                const progressStats = calculateProgressStats(exp);
-                
-                const progressCompleted = document.getElementById('progressCompleted');
-                if (progressCompleted) {
-                    progressCompleted.style.width = `${progressStats.completedPercentage}%`;
-                    progressCompleted.title = progressStats.completed;
-                }
-                
-                const progressInProgress = document.getElementById('progressInProgress');
-                if (progressInProgress) {
-                    progressInProgress.style.width = `${progressStats.inProgressPercentage}%`;
-                    progressInProgress.title = progressStats.inProgress;
-                }
-                
-                const progressNotStarted = document.getElementById('progressNotStarted');
-                if (progressNotStarted) {
-                    progressNotStarted.style.width = `${progressStats.notStartedPercentage}%`;
-                    progressNotStarted.title = progressStats.notStarted;
-                }
-                
-                // Update experiment status badge class
-                const statusElement = document.getElementById('experimentStatus');
-                if (statusElement) {
-                    statusElement.className = `status-badge status-${exp.status}`;
-                }
-                
-                console.log('🎉 All UI elements updated successfully!');
-                console.log('📊 Members count from HTML update:', exp.members.length);
-                
-                // Load queries into the query list
-                console.log('📋 Loading queries...');
-                const queryListBody = document.getElementById('queryListBody');
-                if (queryListBody && exp.queries) {
-                    queryListBody.innerHTML = ''; // Clear existing content
-                    
-                    exp.queries.forEach(query => {
-                        const row = document.createElement('div');
-                        row.className = 'query-row';
-                        
-                        // Calculate progress for this query
-                        const assignments = query.assignments || [];
-                        const completedAssignments = assignments.filter(a => a.status === 'completed').length;
-                        const totalAssignments = assignments.length;
-                        
-                        let overallStatus = 'not-started';
-                        if (completedAssignments === totalAssignments && totalAssignments > 0) {
-                            overallStatus = 'completed';
-                        } else if (completedAssignments > 0) {
-                            overallStatus = 'in-progress';
-                        }
-                        
-                        const overallProgress = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
-                        
-                        // Create assignees display
-                        const assigneesHtml = assignments.length > 0 ?
-                            assignments.map(assignment => `
-                                <div class="assignment-item" title="${assignment.judge.name} - ${assignment.status}">
-                                    <div class="assignee-avatar ${assignment.status}">${assignment.judge.initials}</div>
-                                    <div class="assignment-status-dot ${assignment.status}"></div>
-                                </div>
-                            `).join('') :
-                            '<div class="no-assignments">Not assigned</div>';
-                        
-                        // Calculate last judged time
-                        const completedAssignmentsForTime = assignments.filter(a => a.status === 'completed');
-                        let lastJudgedAt = '--';
-                        if (completedAssignmentsForTime.length > 0) {
-                            const latestCompletion = completedAssignmentsForTime.reduce((latest, current) => {
-                                const currentTime = new Date(current.completedAt).getTime();
-                                const latestTime = new Date(latest.completedAt).getTime();
-                                return currentTime > latestTime ? current : latest;
-                            });
-                            
-                            const date = new Date(latestCompletion.completedAt);
-                            lastJudgedAt = date.getFullYear() + '-' +
-                                          String(date.getMonth() + 1).padStart(2, '0') + '-' +
-                                          String(date.getDate()).padStart(2, '0') + ' ' +
-                                          String(date.getHours()).padStart(2, '0') + ':' +
-                                          String(date.getMinutes()).padStart(2, '0') + ':' +
-                                          String(date.getSeconds()).padStart(2, '0');
-                        }
-                        
-                        row.innerHTML = `
-                            <div class="checkbox-column">
-                                <input type="checkbox" value="${query.id}" onchange="updateSelectedQueries()">
-                            </div>
-                            <div class="query-column">
-                                <div class="query-text">${query.text}</div>
-                                <div class="query-meta">#${query.id}</div>
-                            </div>
-                            <div class="task-type-column">
-                                <div class="task-type-text">${query.taskType || 'N/A'}</div>
-                            </div>
-                            <div class="assignments-column">
-                                <div class="assignments-container">
-                                    ${assigneesHtml}
-                                </div>
-                                <div class="assignment-summary">
-                                    ${totalAssignments} assigned | ${completedAssignments} completed
-                                </div>
-                            </div>
-                            <div class="status-column">
-                                <span class="status-badge status-${overallStatus}">${overallStatus}</span>
-                            </div>
-                            <div class="last-judged-column">
-                                ${lastJudgedAt}
-                            </div>
-                        `;
-                        
-                        queryListBody.appendChild(row);
-                    });
-                    
-                    console.log(`✅ Loaded ${exp.queries.length} queries`);
-                } else {
-                    console.warn('❌ queryListBody element not found or no queries in config');
-                }
-            
-                
-            } catch (error) {
-                console.error('❌ Immediate config loading failed:', error);
-                // Set fallback values if config loading fails
-                const fallbackUpdates = [
-                    { id: 'experimentTitle', value: 'Search NDCG Experiment (Fallback)' },
-                    { id: 'experimentStatus', value: 'Active' },
-                    { id: 'experimentCreated', value: 'Created: March 15, 2024' },
-                    { id: 'experimentOwner', value: 'Owner: John Smith' },
-                    { id: 'experimentQueryCount', value: '50 queries' },
-                    { id: 'totalQueriesDisplay', value: '50 Total Queries' },
-                    { id: 'completedStat', value: '30 Completed (60%)' },
-                    { id: 'inProgressStat', value: '10 In Progress (20%)' },
-                    { id: 'notStartedStat', value: '10 Not Started (20%)' },
-                    { id: 'judgesCount', value: '3 Judges' }
-                ];
-                
-                fallbackUpdates.forEach(update => {
-                    const element = document.getElementById(update.id);
-                    if (element) {
-                        element.textContent = update.value;
-                    }
-                });
-            }
-        })();
+        
+        function clearTaskTypeFilter() {
+            console.log('Clear task type filter functionality would be implemented');
+        }
     </script>
 </body>
 </html>
