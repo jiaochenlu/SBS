@@ -238,6 +238,78 @@
                         </div>
                     </div>
                 </div>
+        
+                <!-- Submit Query Modal -->
+                <div id="submitQueryModal" class="modal" style="display: none;">
+                    <div class="modal-content submit-query-modal">
+                        <div class="modal-header">
+                            <div class="modal-header-content">
+                                <div class="modal-icon">📝</div>
+                                <div class="modal-title-section">
+                                    <h3>Submit New Query</h3>
+                                    <p class="modal-subtitle">Submit a query for a specific task type</p>
+                                </div>
+                            </div>
+                            <button class="modal-close" onclick="closeSubmitQueryModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="submit-query-info">
+                                <div class="info-card">
+                                    <div class="info-icon">💡</div>
+                                    <div class="info-text">
+                                        <strong>Ad Hoc Query Submission:</strong> Select a task type and provide your query.
+                                        Once submitted, any team member can judge this query.
+                                    </div>
+                                </div>
+                            </div>
+        
+                            <div class="form-section">
+                                <div class="section-header-small">
+                                    <h4>Task Type Selection</h4>
+                                </div>
+                                <div class="task-type-selection">
+                                    <div class="task-type-options" id="taskTypeOptions">
+                                        <!-- Task types will be populated dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+        
+                            <div class="form-section">
+                                <div class="section-header-small">
+                                    <h4>Query Details</h4>
+                                </div>
+                                <div class="form-group">
+                                    <label for="queryText">Query Text *</label>
+                                    <textarea id="queryText" class="form-control" placeholder="Enter your query here..." rows="4" required></textarea>
+                                    <div class="form-help">Provide a clear and specific query that matches the selected task type.</div>
+                                </div>
+                            </div>
+        
+                            <div class="submit-summary" id="submitSummary" style="display: none;">
+                                <div class="summary-card">
+                                    <div class="summary-title">Submission Summary</div>
+                                    <div class="summary-content">
+                                        <div class="summary-item">
+                                            <span class="summary-label">Task Type:</span>
+                                            <span class="summary-value" id="selectedTaskTypeDisplay">-</span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span class="summary-label">Query:</span>
+                                            <span class="summary-value" id="queryTextDisplay">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-secondary" onclick="closeSubmitQueryModal()">Cancel</button>
+                            <button class="btn-primary" id="submitQueryConfirmBtn" onclick="submitQuery()" disabled>
+                                <span class="btn-icon">📤</span>
+                                Submit Query
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

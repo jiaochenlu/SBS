@@ -245,7 +245,7 @@ export function createQueryRowHTML(query) {
                 ${assigneesHtml}
             </div>
             <div class="assignment-summary">
-                ${totalAssignments} assigned | ${completedAssignments} completed
+                ${totalAssignments} judges | ${completedAssignments} completed
             </div>
         </div>
         <div class="status-column">

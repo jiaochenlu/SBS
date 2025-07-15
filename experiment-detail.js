@@ -1016,7 +1016,7 @@ function createQueryRow(query) {
         <div class="assignments-column">
             ${assignmentsContainer.outerHTML}
             <div class="assignment-summary">
-                ${totalAssignments} assigned | ${completedAssignments} completed
+                ${totalAssignments} judges | ${completedAssignments} completed
             </div>
         </div>
         <div class="status-column">
@@ -3450,8 +3450,11 @@ function loadTaskTypes() {
             </div>
             <div class="task-type-content">
                 <div class="task-type-header">
-                    <span class="task-type-name">${taskType}</span>
-                    <span class="task-type-count">${count}</span>
+                    <div class="task-type-name-with-count">
+                        <span class="task-type-name">${taskType}</span>
+                        <span class="task-type-count">${count}</span>
+                    </div>
+                    <a href="#" class="task-type-submit-link" onclick="submitQueryForTaskType('${taskType}', '${taskType}'); return false;">Submit Query</a>
                 </div>
                 <div class="task-type-assignments">
                     ${assignmentsHtml}
@@ -3468,6 +3471,9 @@ function loadTaskTypes() {
         
         taskTypeList.appendChild(item);
     });
+    
+    // Update submit query visibility based on experiment type
+    updateTaskTypeSidebarForSubmitQuery();
     
     // Update assign button state
     updateAssignButtonState();
@@ -3898,3 +3904,39 @@ function onQuestionChange() {
         loadResultsData();
     }
 }
+// Submit Query for Task Type Function
+function submitQueryForTaskType(taskTypeId, taskTypeName) {
+    // Mock function - shows alert for now
+    alert(`Submit Query clicked for Task Type: ${taskTypeName} (ID: ${taskTypeId})`);
+    
+    // In a real implementation, this would:
+    // 1. Open a modal with the task type pre-selected
+    // 2. Allow user to enter query text
+    // 3. Submit the query to the backend
+    console.log(`Submitting query for task type: ${taskTypeName}`);
+}
+
+// Function to update task type sidebar based on experiment type
+function updateTaskTypeSidebarForSubmitQuery() {
+    const taskTypeSidebar = document.getElementById('taskTypeSidebar');
+    
+    if (!taskTypeSidebar || !experimentData) return;
+    
+    // Check if this is an ad hoc + allow anyone judge experiment
+    const isAdHocExperiment = experimentData.configuration &&
+                             experimentData.configuration.querySetSelection === 'Ad hoc query';
+    const allowAnyoneToJudge = experimentData.configuration &&
+                              experimentData.configuration.additionalSettings &&
+                              experimentData.configuration.additionalSettings.allowAnyToJudge;
+    
+    // Add or remove the allow-submit class
+    if (isAdHocExperiment && allowAnyoneToJudge) {
+        taskTypeSidebar.classList.add('allow-submit');
+    } else {
+        taskTypeSidebar.classList.remove('allow-submit');
+    }
+}
+
+// Export functions for global access
+window.submitQueryForTaskType = submitQueryForTaskType;
+window.updateTaskTypeSidebarForSubmitQuery = updateTaskTypeSidebarForSubmitQuery;
