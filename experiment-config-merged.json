@@ -4,7 +4,7 @@
   "experiments": [
     {
       "id": "search-ndcg-001",
-      "name": "Search NDCG - queryset judge assignment",
+      "name": "Search NDCG - queryset + need assign",
       "description": "Evaluating search result quality using NDCG metrics for better ranking performance",
       "status": "active",
       "createdAt": "March 15, 2024",
@@ -248,7 +248,7 @@
     },
     {
       "id": "search-ndcg-002",
-      "name": "Search NDCG - allow anyone to judge",
+      "name": "Search NDCG - queryset + allow anyone",
       "description": "Evaluating search result quality using NDCG metrics with open judgment contributions",
       "status": "active",
       "createdAt": "July 7, 2025",
@@ -364,7 +364,7 @@
     },
     {
       "id": "search-ndcg-003",
-      "name": "Search NDCG - ad hoc query need assign",
+      "name": "Search NDCG - ad hoc query + need assign",
       "description": "Evaluating search result quality using NDCG metrics for ad hoc queries with task type assignments.",
       "status": "active",
       "createdAt": "July 8, 2025",
@@ -400,6 +400,29 @@
           "allowAnyToJudge": false,
           "judgementGuide": "Configured (Markdown format)"
         }
+      },
+      "taskTypeAssignments": {
+        "Meeting": [
+          {
+            "id": "mike-johnson",
+            "name": "Mike Johnson",
+            "role": "judge"
+          }
+        ],
+        "Email": [
+          {
+            "id": "alex-matos",
+            "name": "Alex Matos",
+            "role": "judge"
+          }
+        ],
+        "People": [
+          {
+            "id": "alex-matos",
+            "name": "Alex Matos",
+            "role": "judge"
+          }
+        ]
       },
       "members": [
         {
@@ -508,7 +531,7 @@
     },
     {
       "id": "search-ndcg-004",
-      "name": "Search NDCG - ad hoc query allow anyone",
+      "name": "Search NDCG - ad hoc query + allow anyone",
       "description": "Evaluating search result quality using NDCG metrics for ad hoc queries with open judgment contributions.",
       "status": "active",
       "createdAt": "July 15, 2025",
@@ -545,6 +568,7 @@
           "judgementGuide": "Configured (Markdown format)"
         }
       },
+      "taskTypeAssignments": "no need",
       "members": [
         {
           "id": "john-smith",

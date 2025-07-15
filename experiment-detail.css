@@ -2884,6 +2884,18 @@ body {
     text-decoration: underline;
 }
 
+.task-type-submit-link.disabled {
+    color: #999;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+.task-type-submit-link.disabled:hover {
+    color: #999;
+    background: none;
+    text-decoration: none;
+}
+
 .task-type-submit-link.hidden {
     display: none;
 }

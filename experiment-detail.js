@@ -708,6 +708,12 @@ function switchUser(userId) {
         dropdown.classList.remove('show');
     }
     
+    // Reload task type sidebar to update permissions
+    if (isAdHocExperiment()) {
+        console.log('🔄 Reloading task types after user switch');
+        loadTaskTypes();
+    }
+    
     // Reload content to apply role-based filtering
     const activeTab = document.querySelector('.tab-button.active');
     if (activeTab) {
@@ -749,6 +755,46 @@ function updateUserDisplay() {
     } else {
         console.warn('❌ currentUserRole element not found');
     }
+    
+    // Update user dropdown
+    updateUserDropdown();
+}
+
+function updateUserDropdown() {
+    const dropdown = document.getElementById('userDropdown');
+    if (!dropdown) {
+        console.warn('❌ userDropdown element not found');
+        return;
+    }
+    
+    // Clear existing options
+    dropdown.innerHTML = '';
+    
+    // Add all users to dropdown
+    Object.values(users).forEach(user => {
+        const option = document.createElement('div');
+        option.className = 'user-option';
+        option.setAttribute('data-user-id', user.id);
+        option.onclick = () => switchUser(user.id);
+        
+        const isActive = currentUser && currentUser.id === user.id;
+        if (isActive) {
+            option.classList.add('active');
+        }
+        
+        option.innerHTML = `
+            <div class="user-avatar">${user.initials}</div>
+            <div class="user-info">
+                <div class="user-name">${user.name}</div>
+                <div class="user-role">${getRoleDisplayName(user.role)}</div>
+            </div>
+            ${isActive ? '<div class="active-indicator">✓</div>' : ''}
+        `;
+        
+        dropdown.appendChild(option);
+    });
+    
+    console.log('✅ Updated user dropdown with', Object.keys(users).length, 'users');
 }
 
 function getRoleDisplayName(role) {
@@ -3380,84 +3426,109 @@ function initializeTaskTypeSidebar() {
 }
 
 function loadTaskTypes() {
-    if (!experimentData || !experimentData.queries) return;
+    if (!experimentData) return;
     
-    // Count queries and collect assignment info for each task type
+    // Get experiment configuration
+    const experimentConfig = experimentData.configuration;
+    if (!experimentConfig) return;
+    
+    // Check if task type sidebar should be shown
+    const isAdHocExperiment = experimentConfig.querySetSelection === 'Ad hoc query';
+    const sidebar = document.getElementById('taskTypeSidebar');
+    if (!sidebar) return;
+    
+    if (isAdHocExperiment) {
+        sidebar.style.display = 'block';
+        // Continue with loading task types
+    } else {
+        sidebar.style.display = 'none';
+        return;
+    }
+    
+    // Get all task types from experiment configuration
+    const configuredTaskTypes = experimentConfig.querySetFile?.taskTypes || [];
+    
+    // Count queries and judges by task type
     const taskTypeCounts = {};
-    const taskTypeAssignmentInfo = {};
+    const taskTypeJudges = {};
     
-    experimentData.queries.forEach(query => {
-        const taskType = query.taskType?.name || 'Unknown';
-        
-        // Count queries
-        taskTypeCounts[taskType] = (taskTypeCounts[taskType] || 0) + 1;
-        
-        // Collect assignment info
-        if (!taskTypeAssignmentInfo[taskType]) {
-            taskTypeAssignmentInfo[taskType] = new Set();
-        }
-        
-        // Add assigned judges to the set
-        query.assignments?.forEach(assignment => {
-            if (assignment.judge) {
-                taskTypeAssignmentInfo[taskType].add(JSON.stringify({
-                    name: assignment.judge.name,
-                    initials: assignment.judge.initials
-                }));
+    // Initialize with configured task types
+    configuredTaskTypes.forEach(taskType => {
+        taskTypeCounts[taskType.name] = 0;
+        taskTypeJudges[taskType.name] = new Set();
+    });
+    
+    // Count actual queries and judges if queries exist
+    if (experimentData.queries) {
+        experimentData.queries.forEach(query => {
+            const taskType = query.taskType?.name || 'Unknown';
+            
+            // Count queries
+            if (taskTypeCounts.hasOwnProperty(taskType)) {
+                taskTypeCounts[taskType] = (taskTypeCounts[taskType] || 0) + 1;
+            }
+            
+            // Count unique judges assigned to this task type
+            if (query.assignments) {
+                query.assignments.forEach(assignment => {
+                    if (assignment.judge) {
+                        if (!taskTypeJudges[taskType]) {
+                            taskTypeJudges[taskType] = new Set();
+                        }
+                        taskTypeJudges[taskType].add(assignment.judge.name);
+                    }
+                });
             }
         });
-    });
+    }
     
     // Render task type list
     const taskTypeList = document.getElementById('taskTypeList');
     if (!taskTypeList) return;
-    
-    if (Object.keys(taskTypeCounts).length === 0) {
-        taskTypeList.innerHTML = '<div class="task-type-empty">No task types found</div>';
+
+    if (configuredTaskTypes.length === 0) {
+        taskTypeList.innerHTML = '<div class="task-type-empty">No task types configured</div>';
         return;
     }
-    
+
     taskTypeList.innerHTML = '';
-    
-    Object.entries(taskTypeCounts).forEach(([taskType, count]) => {
+
+    configuredTaskTypes.forEach(taskTypeConfig => {
+        const taskTypeName = taskTypeConfig.name;
+        const queryCount = taskTypeCounts[taskTypeName] || 0;
+        const judgeCount = taskTypeJudges[taskTypeName] ? taskTypeJudges[taskTypeName].size : 0;
+        
+        // Check if current user has permission to submit queries for this task type
+        console.log('🔍 Checking permission for task type:', taskTypeName);
+        const canSubmitQuery = canUserSubmitQueryForTaskType(taskTypeName);
+        console.log('🔍 Permission result for', taskTypeName, ':', canSubmitQuery);
+        
         const item = document.createElement('div');
         item.className = 'task-type-item';
-        item.setAttribute('data-task-type', taskType);
+        item.setAttribute('data-task-type', taskTypeName);
         
-        // Get assigned members
-        const assignedMembers = Array.from(taskTypeAssignmentInfo[taskType] || [])
-            .map(memberStr => JSON.parse(memberStr));
+        // Generate submit query link with conditional styling
+        const submitLinkHtml = canSubmitQuery
+            ? `<a href="#" class="task-type-submit-link" onclick="submitQueryForTaskType('${taskTypeName}', '${taskTypeName}'); return false;">Submit Query</a>`
+            : `<span class="task-type-submit-link disabled" title="No permission to submit queries for this task type">Submit Query</span>`;
         
-        // Create assignments display
-        let assignmentsHtml = '';
-        if (assignedMembers.length > 0) {
-            const membersHtml = assignedMembers.map(member =>
-                `<div class="member-avatar" title="${member.name}">${member.initials}</div>`
-            ).join('');
-            assignmentsHtml = `
-                <div class="assigned-members">
-                    ${membersHtml}
-                </div>
-                <span class="assignment-summary">${assignedMembers.length} assigned</span>
-            `;
-        } else {
-            assignmentsHtml = '<span class="no-assignments">No assignments</span>';
-        }
+        // Check if checkboxes should be disabled (for allow anyone judge experiments)
+        const isAllowAnyoneToJudge = experimentConfig.additionalSettings && experimentConfig.additionalSettings.allowAnyToJudge;
+        const checkboxDisabled = isAllowAnyoneToJudge ? 'disabled' : '';
         
         item.innerHTML = `
             <div class="task-type-checkbox">
-                <input type="checkbox" value="${taskType}" onchange="updateSelectedTaskTypes()" onclick="event.stopPropagation()">
+                <input type="checkbox" value="${taskTypeName}" onchange="updateSelectedTaskTypes()" onclick="event.stopPropagation()" ${checkboxDisabled}>
             </div>
             <div class="task-type-content">
                 <div class="task-type-header">
                     <div class="task-type-name-with-count">
-                        <span class="task-type-name">${taskType}</span>
-                        <span class="task-type-count">${count}</span>
+                        <span class="task-type-name">${taskTypeName}</span>
                     </div>
-                    <a href="#" class="task-type-submit-link" onclick="submitQueryForTaskType('${taskType}', '${taskType}'); return false;">Submit Query</a>
+                    ${submitLinkHtml}
                 </div>
                 <div class="task-type-assignments">
-                    ${assignmentsHtml}
+                    <div class="assignment-summary">${judgeCount} judges | ${queryCount} queries</div>
                 </div>
             </div>
         `;
@@ -3465,7 +3536,7 @@ function loadTaskTypes() {
         // Add click handler for filtering (but not for checkbox)
         item.addEventListener('click', (e) => {
             if (!e.target.closest('.task-type-checkbox')) {
-                filterByTaskType(taskType, item);
+                toggleTaskTypeFilter(taskTypeName, item);
             }
         });
         
@@ -3475,8 +3546,30 @@ function loadTaskTypes() {
     // Update submit query visibility based on experiment type
     updateTaskTypeSidebarForSubmitQuery();
     
+    // Disable "Select All Task Types" checkbox if allow anyone to judge
+    const selectAllTaskTypesCheckbox = document.getElementById('selectAllTaskTypes');
+    if (selectAllTaskTypesCheckbox) {
+        const isAllowAnyoneToJudge = experimentConfig.additionalSettings && experimentConfig.additionalSettings.allowAnyToJudge;
+        if (isAllowAnyoneToJudge) {
+            selectAllTaskTypesCheckbox.disabled = true;
+            selectAllTaskTypesCheckbox.checked = false;
+        } else {
+            selectAllTaskTypesCheckbox.disabled = false;
+        }
+    }
+    
     // Update assign button state
     updateAssignButtonState();
+}
+
+function toggleTaskTypeFilter(taskType, itemElement) {
+    // If clicking on the same task type that's already active, clear the filter
+    if (currentTaskTypeFilter === taskType) {
+        clearTaskTypeFilter();
+    } else {
+        // Otherwise, filter by this task type
+        filterByTaskType(taskType, itemElement);
+    }
 }
 
 function filterByTaskType(taskType, itemElement) {
@@ -3809,6 +3902,7 @@ window.toggleUserDropdown = toggleUserDropdown;
 window.switchUser = switchUser;
 window.downloadReport = downloadReport;
 window.exportData = exportData;
+window.toggleTaskTypeFilter = toggleTaskTypeFilter;
 window.filterByTaskType = filterByTaskType;
 window.clearTaskTypeFilter = clearTaskTypeFilter;
 window.updateSelectedTaskTypes = updateSelectedTaskTypes;
@@ -3922,21 +4016,71 @@ function updateTaskTypeSidebarForSubmitQuery() {
     
     if (!taskTypeSidebar || !experimentData) return;
     
-    // Check if this is an ad hoc + allow anyone judge experiment
+    // Check if this is an ad hoc experiment
     const isAdHocExperiment = experimentData.configuration &&
                              experimentData.configuration.querySetSelection === 'Ad hoc query';
-    const allowAnyoneToJudge = experimentData.configuration &&
-                              experimentData.configuration.additionalSettings &&
-                              experimentData.configuration.additionalSettings.allowAnyToJudge;
     
-    // Add or remove the allow-submit class
-    if (isAdHocExperiment && allowAnyoneToJudge) {
+    // Add or remove the allow-submit class for all ad hoc experiments
+    if (isAdHocExperiment) {
         taskTypeSidebar.classList.add('allow-submit');
     } else {
         taskTypeSidebar.classList.remove('allow-submit');
     }
 }
 
+// Check if user can submit query for a specific task type
+function canUserSubmitQueryForTaskType(taskTypeName) {
+    console.log('🔍 Checking permission for task type:', taskTypeName);
+    console.log('  - currentUser:', currentUser);
+    console.log('  - experimentData:', experimentData);
+    
+    if (!experimentData || !currentUser) {
+        console.log('❌ No experimentData or currentUser');
+        return false;
+    }
+    
+    const config = experimentData.configuration;
+    if (!config) {
+        console.log('❌ No configuration found');
+        return false;
+    }
+    
+    console.log('  - config.querySetSelection:', config.querySetSelection);
+    console.log('  - config.additionalSettings:', config.additionalSettings);
+    console.log('  - experimentData.taskTypeAssignments:', experimentData.taskTypeAssignments);
+    
+    // For ad hoc experiments, check specific conditions
+    if (config.querySetSelection === 'Ad hoc query') {
+        // If allow anyone to judge is enabled, anyone can submit
+        if (config.additionalSettings && config.additionalSettings.allowAnyToJudge) {
+            console.log('✅ Allow anyone to judge is enabled');
+            return true;
+        }
+        
+        // For experiments like 003, only judges assigned to this task type can submit
+        // Check if current user is assigned as judge to this task type using taskTypeAssignments
+        if (experimentData.taskTypeAssignments && experimentData.taskTypeAssignments !== "no need") {
+            const assignedJudges = experimentData.taskTypeAssignments[taskTypeName] || [];
+            console.log('  - assignedJudges for', taskTypeName, ':', assignedJudges);
+            console.log('  - currentUser.id:', currentUser.id);
+            
+            // Check if current user is in the assigned judges list for this task type
+            const userIsAssignedToTaskType = assignedJudges.some(judge => {
+                console.log('  - checking judge:', judge.id, 'against currentUser:', currentUser.id);
+                return judge.id === currentUser.id;
+            });
+            
+            console.log('  - userIsAssignedToTaskType:', userIsAssignedToTaskType);
+            return userIsAssignedToTaskType;
+        }
+    }
+    
+    // For non-ad hoc experiments, no submit query functionality
+    console.log('❌ Not ad hoc experiment or no task type assignments');
+    return false;
+}
+
 // Export functions for global access
 window.submitQueryForTaskType = submitQueryForTaskType;
 window.updateTaskTypeSidebarForSubmitQuery = updateTaskTypeSidebarForSubmitQuery;
+window.canUserSubmitQueryForTaskType = canUserSubmitQueryForTaskType;
