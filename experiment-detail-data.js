@@ -10,7 +10,8 @@ export let currentUser = null;
 export let experimentConfig = {
     allowAnyoneToJudge: false,
     experimentType: 'search-ndcg',
-    isRealTimeAdHoc: false
+    isRealTimeAdHoc: false,
+    querySetSelection: 'Upload query set'
 };
 
 /**
@@ -66,15 +67,17 @@ export async function loadExperimentConfig() {
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+            console.error('❌ Failed to load config, using fallback data');
+            loadFallbackData();
+            return false;
         }
         
         const config = await response.json();
         console.log('✨ CONFIG DATA LOADED SUCCESSFULLY:', config);
-        console.log('✨ Experiment data:', config.experiment);
+        console.log('✨ Available experiments:', config.experiments.map(exp => ({ id: exp.id, name: exp.name })));
         
         const urlParams = new URLSearchParams(window.location.search);
-        const experimentId = urlParams.get('id');
+        const experimentId = urlParams.get('id') || 'search-ndcg-001'; // Default to first experiment if no ID
         console.log('🔍 URL Parameters:', urlParams.toString());
         console.log('🔍 Experiment ID from URL:', experimentId);
         
@@ -83,14 +86,16 @@ export async function loadExperimentConfig() {
         
         if (!foundExperiment) {
             console.error(`Experiment with ID "${experimentId}" not found.`);
-            alert('Experiment not found. Please check the URL.');
             console.error('❌ Experiment not found. Available experiments:', config.experiments.map(exp => exp.id));
+            console.error('❌ Using fallback data instead');
+            loadFallbackData();
             return false;
         }
         
         // 设置实验数据
         setExperimentData(foundExperiment);
         console.log('✨ Set experimentData to:', experimentData);
+        console.log('✨ Experiment queries:', foundExperiment.queries);
         
         // Convert members array to users object for compatibility
         const userData = {};
@@ -109,7 +114,16 @@ export async function loadExperimentConfig() {
         updateExperimentConfig({
             allowAnyoneToJudge: experimentData.configuration.additionalSettings.allowAnyToJudge,
             experimentType: experimentData.configuration.experimentType,
-            isRealTimeAdHoc: experimentData.configuration.dataSource === 'ad-hoc'
+            isRealTimeAdHoc: experimentData.configuration.dataSource === 'ad-hoc',
+            querySetSelection: experimentData.configuration.querySetSelection
+        });
+        
+        // Debug logging
+        console.log('🔍 Experiment config updated:', {
+            allowAnyoneToJudge: experimentData.configuration.additionalSettings.allowAnyToJudge,
+            querySetSelection: experimentData.configuration.querySetSelection,
+            dataSource: experimentData.configuration.dataSource,
+            fullConfig: experimentConfig
         });
         
         // Dynamically hide "Assign Judges" button if allowAnyoneToJudge is true
@@ -181,7 +195,8 @@ export function loadFallbackData() {
     updateExperimentConfig({
         allowAnyoneToJudge: false,
         experimentType: 'search-ndcg',
-        isRealTimeAdHoc: false
+        isRealTimeAdHoc: false,
+        querySetSelection: 'Upload query set'
     });
     
     // Set fallback experimentData

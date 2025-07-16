@@ -20,6 +20,66 @@ const AssignmentStates = {
 };
 
 /**
+ * 计算查询状态 - 根据新的状态规则
+ */
+export function getQueryStatus(query, experimentConfig) {
+    const assignments = query.assignments || [];
+    const completedCount = assignments.filter(a => a.status === 'completed').length;
+    const totalAssignments = assignments.length;
+    
+    const isUploadQuerySet = experimentConfig.querySetSelection === 'Upload query set';
+    const isAdHocQuery = experimentConfig.querySetSelection === 'Ad hoc query';
+    const allowAnyOne = experimentConfig.allowAnyoneToJudge;
+    
+    // 1. Upload query set + allow any one = false
+    if (isUploadQuerySet && !allowAnyOne) {
+        if (totalAssignments === 0) {
+            return 'not-assigned';  // assign judges = 0
+        }
+        if (completedCount === totalAssignments) {
+            return 'completed';     // completed judges == all assigned judges
+        }
+        return 'in-progress';       // completed judges < all assigned judges
+    }
+    
+    // 2. Upload query set + allow any one = true
+    if (isUploadQuerySet && allowAnyOne) {
+        if (completedCount === 0) {
+            return 'in-progress';   // completed judge = 0
+        }
+        return 'completed';         // completed judges > 0
+    }
+    
+    // 3. Ad hoc query + allow any one = false
+    // 4. Ad hoc query + allow any one = true
+    if (isAdHocQuery) {
+        // 只有 judge 提交了一个 query 之后才有一条 query 记录
+        // 所以 query 列表里的 query 永远只有一个状态：completed
+        return 'completed';         // completed judges > 0
+    }
+    
+    // Fallback to old logic for backwards compatibility
+    if (completedCount === totalAssignments && totalAssignments > 0) {
+        return 'completed';
+    } else if (completedCount > 0) {
+        return 'in-progress';
+    }
+    return 'not-assigned';
+}
+
+/**
+ * 获取状态显示名称
+ */
+export function getStatusDisplayName(status) {
+    const statusNames = {
+        'not-assigned': 'Not Assigned',
+        'in-progress': 'In Progress',
+        'completed': 'Completed'
+    };
+    return statusNames[status] || status;
+}
+
+/**
  * 创建查询行 - 整合版本，移除重复代码
  */
 export function createQueryRow(query) {
@@ -30,13 +90,19 @@ export function createQueryRow(query) {
     const completedAssignments = assignments.filter(a => a.status === 'completed').length;
     const totalAssignments = assignments.length;
     
-    // Calculate overall status
-    let overallStatus = 'not-started';
-    if (completedAssignments === totalAssignments && totalAssignments > 0) {
-        overallStatus = 'completed';
-    } else if (completedAssignments > 0) {
-        overallStatus = 'in-progress';
-    }
+    // Calculate overall status using new logic
+    const experimentConfig = getExperimentConfig();
+    const overallStatus = getQueryStatus(query, experimentConfig);
+    
+    // Debug logging
+    console.log('🔍 Query status calculation:', {
+        queryId: query.id,
+        querySetSelection: experimentConfig.querySetSelection,
+        allowAnyoneToJudge: experimentConfig.allowAnyoneToJudge,
+        totalAssignments: totalAssignments,
+        completedAssignments: completedAssignments,
+        overallStatus: overallStatus
+    });
     
     // Create assignments container
     const assignmentsContainer = createAssignmentsContainer(assignments);
@@ -48,7 +114,6 @@ export function createQueryRow(query) {
     const taskType = query.taskType?.name || 'N/A';
     
     // Check if this is an ad hoc experiment
-    const experimentConfig = getExperimentConfig();
     const currentUser = getCurrentUser();
     const isAdHocExperiment = () => experimentConfig.isRealTimeAdHoc;
     
@@ -73,7 +138,7 @@ export function createQueryRow(query) {
             </div>
         </div>
         <div class="status-column">
-            <span class="status-badge status-${overallStatus}">${overallStatus}</span>
+            <span class="status-badge status-${overallStatus}" data-debug="Status: ${overallStatus}">${getStatusDisplayName(overallStatus)}</span>
         </div>
         <div class="last-judged-column">
             ${lastJudgedAt}
@@ -239,6 +304,8 @@ export function loadQueries() {
  */
 function getQueriesData() {
     const experimentData = getExperimentData();
+    
+    console.log('🔍 getQueriesData called - experimentData:', experimentData);
     
     if (experimentData && experimentData.queries) {
         console.log('✅ Using queries from experimentData:', experimentData.queries);
@@ -444,3 +511,5 @@ window.toggleSelectAll = toggleSelectAll;
 window.updateSelectedQueries = updateSelectedQueries;
 window.createQueryRow = createQueryRow;
 window.renderQueryListHeader = renderQueryListHeader;
+window.getQueryStatus = getQueryStatus;
+window.getStatusDisplayName = getStatusDisplayName;

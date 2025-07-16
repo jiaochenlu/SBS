@@ -12,7 +12,7 @@ import {
 } from './experiment-detail-data.js';
 
 import { chartManager, renderResultsCharts, loadFallbackChartsData } from './experiment-detail-charts.js';
-import { loadQueries, updateSelectedQueries } from './experiment-detail-queries.js';
+import { loadQueries, updateSelectedQueries, getQueryStatus, getStatusDisplayName } from './experiment-detail-queries.js';
 import { loadMembers } from './experiment-detail-members.js';
 import { modalManager, showConfigurationModal, showDeleteConfirmationModal } from './experiment-detail-modals.js';
 
@@ -63,11 +63,25 @@ function updateProgressOverview() {
         return;
     }
     
+    const experimentConfig = getExperimentConfig();
     const queries = experimentData.queries || [];
+    const isAdHocExperiment = experimentConfig.querySetSelection === 'Ad hoc query';
+    
     console.log('📊 Queries data:', queries);
+    console.log('📊 Is ad hoc experiment:', isAdHocExperiment);
 
     // Calculate total queries
-    const totalQueries = queries.length;
+    let totalQueries;
+    if (isAdHocExperiment) {
+        // For ad hoc experiments, total = per task type minimum query count × task type count
+        const taskTypes = experimentData.configuration?.querySetFile?.taskTypes || [];
+        totalQueries = taskTypes.reduce((total, taskType) => {
+            return total + (taskType.minQueries || 0);
+        }, 0);
+        console.log('📊 Ad hoc total queries calculated:', totalQueries, 'from task types:', taskTypes);
+    } else {
+        totalQueries = queries.length;
+    }
 
     // Calculate unique judges
     const uniqueJudges = new Set();
@@ -79,29 +93,54 @@ function updateProgressOverview() {
         }
     });
 
-    // Calculate query statuses
+    // Calculate query statuses using new logic
     let completedCount = 0;
     let inProgressCount = 0;
-    let notStartedCount = 0;
+    let notAssignedCount = 0;
 
-    queries.forEach(query => {
-        const assignments = query.assignments || [];
-        const completedAssignments = assignments.filter(a => a.status === 'completed').length;
-        const totalAssignments = assignments.length;
-
-        if (completedAssignments === totalAssignments && totalAssignments > 0) {
-            completedCount++;
-        } else if (completedAssignments > 0) {
-            inProgressCount++;
-        } else {
-            notStartedCount++;
-        }
-    });
+    if (isAdHocExperiment) {
+        // For ad hoc experiments: only completed and in progress states
+        queries.forEach(query => {
+            const status = getQueryStatus(query, experimentConfig);
+            if (status === 'completed') {
+                completedCount++;
+            }
+            // In ad hoc experiments, submitted queries are either completed or in progress
+            // We don't count them as "in progress" since they're already submitted
+        });
+        
+        // In progress = total expected queries - completed queries
+        inProgressCount = totalQueries - completedCount;
+        notAssignedCount = 0; // No "not assigned" state in ad hoc experiments
+        
+        console.log('📊 Ad hoc calculation:', {
+            totalQueries,
+            completedCount,
+            inProgressCount,
+            actualSubmittedQueries: queries.length
+        });
+    } else {
+        // For upload query set experiments: use existing logic
+        queries.forEach(query => {
+            const status = getQueryStatus(query, experimentConfig);
+            switch(status) {
+                case 'completed':
+                    completedCount++;
+                    break;
+                case 'in-progress':
+                    inProgressCount++;
+                    break;
+                case 'not-assigned':
+                    notAssignedCount++;
+                    break;
+            }
+        });
+    }
 
     // Calculate percentages
     const completedPercentage = totalQueries > 0 ? Math.round((completedCount / totalQueries) * 100) : 0;
     const inProgressPercentage = totalQueries > 0 ? Math.round((inProgressCount / totalQueries) * 100) : 0;
-    const notStartedPercentage = totalQueries > 0 ? Math.round((notStartedCount / totalQueries) * 100) : 0;
+    const notAssignedPercentage = totalQueries > 0 ? Math.round((notAssignedCount / totalQueries) * 100) : 0;
     
     // Update DOM elements
     updateElementSafely('totalQueriesDisplay', `${totalQueries} Total Queries`);
@@ -110,12 +149,24 @@ function updateProgressOverview() {
     // Update progress segments
     updateProgressSegment('progressCompleted', completedPercentage, `${completedCount} Completed (${completedPercentage}%)`);
     updateProgressSegment('progressInProgress', inProgressPercentage, `${inProgressCount} In Progress (${inProgressPercentage}%)`);
-    updateProgressSegment('progressNotStarted', notStartedPercentage, `${notStartedCount} Not Started (${notStartedPercentage}%)`);
+    
+    if (isAdHocExperiment) {
+        // Hide "Not Assigned" segment for ad hoc experiments
+        updateProgressSegment('progressNotStarted', 0, `0 Not Assigned (0%)`);
+    } else {
+        updateProgressSegment('progressNotStarted', notAssignedPercentage, `${notAssignedCount} Not Assigned (${notAssignedPercentage}%)`);
+    }
     
     // Update progress statistics
     updateElementSafely('completedStat', `${completedCount} Completed (${completedPercentage}%)`);
     updateElementSafely('inProgressStat', `${inProgressCount} In Progress (${inProgressPercentage}%)`);
-    updateElementSafely('notStartedStat', `${notStartedCount} Not Started (${notStartedPercentage}%)`);
+    
+    if (isAdHocExperiment) {
+        // Hide "Not Assigned" stat for ad hoc experiments
+        updateElementSafely('notStartedStat', `0 Not Assigned (0%)`);
+    } else {
+        updateElementSafely('notStartedStat', `${notAssignedCount} Not Assigned (${notAssignedPercentage}%)`);
+    }
     
     console.log('✅ updateProgressOverview completed');
 }

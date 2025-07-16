@@ -319,21 +319,23 @@ function updateUIWithConfigData() {
             console.error('❌❌❌ experimentQueryCount element not found');
         }
 
-        // 动态计算 derivedStatus
-        let completedCount = 0, inProgressCount = 0, notStartedCount = 0;
+        // 动态计算 derivedStatus using new logic
+        let completedCount = 0, inProgressCount = 0, notAssignedCount = 0;
         experimentData.queries.forEach(query => {
-            const assignments = query.assignments || [];
-            const completedAssignments = assignments.filter(a => a.status === 'completed').length;
-            const totalAssignments = assignments.length;
-            if (completedAssignments === totalAssignments && totalAssignments > 0) {
-                completedCount++;
-            } else if (completedAssignments > 0) {
-                inProgressCount++;
-            } else {
-                notStartedCount++;
+            const status = getQueryStatusFromFallback(query);
+            switch(status) {
+                case 'completed':
+                    completedCount++;
+                    break;
+                case 'in-progress':
+                    inProgressCount++;
+                    break;
+                case 'not-assigned':
+                    notAssignedCount++;
+                    break;
             }
         });
-        let derivedStatus = "Not started";
+        let derivedStatus = "Not assigned";
         if (completedCount === experimentData.queries.length && experimentData.queries.length > 0) {
             derivedStatus = "Completed";
         } else if (inProgressCount > 0 || completedCount > 0) {
@@ -426,10 +428,23 @@ function updateProgressOverview() {
     }
     
     const queries = experimentData.queries || [];
+    const isAdHocExperiment = experimentData.configuration?.querySetSelection === 'Ad hoc query';
+    
     console.log('📊 Queries data:', queries);
+    console.log('📊 Is ad hoc experiment:', isAdHocExperiment);
 
     // Calculate total queries
-    const totalQueries = queries.length;
+    let totalQueries;
+    if (isAdHocExperiment) {
+        // For ad hoc experiments, total = per task type minimum query count × task type count
+        const taskTypes = experimentData.configuration?.querySetFile?.taskTypes || [];
+        totalQueries = taskTypes.reduce((total, taskType) => {
+            return total + (taskType.minQueries || 0);
+        }, 0);
+        console.log('📊 Ad hoc total queries calculated:', totalQueries, 'from task types:', taskTypes);
+    } else {
+        totalQueries = queries.length;
+    }
 
     // Calculate unique judges
     const uniqueJudges = new Set();
@@ -441,29 +456,54 @@ function updateProgressOverview() {
         }
     });
 
-    // Calculate query statuses
+    // Calculate query statuses using new logic
     let completedCount = 0;
     let inProgressCount = 0;
-    let notStartedCount = 0;
+    let notAssignedCount = 0;
 
-    queries.forEach(query => {
-        const assignments = query.assignments || [];
-        const completedAssignments = assignments.filter(a => a.status === 'completed').length;
-        const totalAssignments = assignments.length;
-
-        if (completedAssignments === totalAssignments && totalAssignments > 0) {
-            completedCount++;
-        } else if (completedAssignments > 0) {
-            inProgressCount++;
-        } else {
-            notStartedCount++;
-        }
-    });
+    if (isAdHocExperiment) {
+        // For ad hoc experiments: only completed and in progress states
+        queries.forEach(query => {
+            const status = getQueryStatusFromFallback(query);
+            if (status === 'completed') {
+                completedCount++;
+            }
+            // In ad hoc experiments, submitted queries are either completed or in progress
+            // We don't count them as "in progress" since they're already submitted
+        });
+        
+        // In progress = total expected queries - completed queries
+        inProgressCount = totalQueries - completedCount;
+        notAssignedCount = 0; // No "not assigned" state in ad hoc experiments
+        
+        console.log('📊 Ad hoc calculation:', {
+            totalQueries,
+            completedCount,
+            inProgressCount,
+            actualSubmittedQueries: queries.length
+        });
+    } else {
+        // For upload query set experiments: use existing logic
+        queries.forEach(query => {
+            const status = getQueryStatusFromFallback(query);
+            switch(status) {
+                case 'completed':
+                    completedCount++;
+                    break;
+                case 'in-progress':
+                    inProgressCount++;
+                    break;
+                case 'not-assigned':
+                    notAssignedCount++;
+                    break;
+            }
+        });
+    }
 
     // Calculate percentages
     const completedPercentage = totalQueries > 0 ? Math.round((completedCount / totalQueries) * 100) : 0;
     const inProgressPercentage = totalQueries > 0 ? Math.round((inProgressCount / totalQueries) * 100) : 0;
-    const notStartedPercentage = totalQueries > 0 ? Math.round((notStartedCount / totalQueries) * 100) : 0;
+    const notAssignedPercentage = totalQueries > 0 ? Math.round((notAssignedCount / totalQueries) * 100) : 0;
     
     // Update total queries display
     const totalElement = document.getElementById('totalQueriesDisplay');
@@ -492,9 +532,15 @@ function updateProgressOverview() {
     }
     const notStartedSegment = document.getElementById('progressNotStarted');
     if (notStartedSegment) {
-        notStartedSegment.style.width = `${notStartedPercentage}%`;
-        notStartedSegment.title = `${notStartedCount} Not Started (${notStartedPercentage}%)`;
-        console.log('✅ Updated progressNotStarted width to:', `${notStartedPercentage}%`);
+        if (isAdHocExperiment) {
+            // Hide "Not Assigned" segment for ad hoc experiments
+            notStartedSegment.style.width = '0%';
+            notStartedSegment.title = '0 Not Assigned (0%)';
+        } else {
+            notStartedSegment.style.width = `${notAssignedPercentage}%`;
+            notStartedSegment.title = `${notAssignedCount} Not Assigned (${notAssignedPercentage}%)`;
+        }
+        console.log('✅ Updated progressNotStarted width to:', isAdHocExperiment ? '0%' : `${notAssignedPercentage}%`);
     } else {
         console.warn('❌ progressNotStarted element not found');
     }
@@ -515,8 +561,13 @@ function updateProgressOverview() {
     }
     const notStartedStat = document.getElementById('notStartedStat');
     if (notStartedStat) {
-        notStartedStat.textContent = `${notStartedCount} Not Started (${notStartedPercentage}%)`;
-        console.log('✅ Updated notStartedStat to:', `${notStartedCount} Not Started (${notStartedPercentage}%)`);
+        if (isAdHocExperiment) {
+            // Hide "Not Assigned" stat for ad hoc experiments
+            notStartedStat.textContent = '0 Not Assigned (0%)';
+        } else {
+            notStartedStat.textContent = `${notAssignedCount} Not Assigned (${notAssignedPercentage}%)`;
+        }
+        console.log('✅ Updated notStartedStat to:', isAdHocExperiment ? '0 Not Assigned (0%)' : `${notAssignedCount} Not Assigned (${notAssignedPercentage}%)`);
     } else {
         console.warn('❌ notStartedStat element not found');
     }
@@ -961,6 +1012,68 @@ function updateQueryListPermissions() {
     }
 }
 
+/**
+ * 计算查询状态 - 根据新的状态规则 (fallback version)
+ */
+function getQueryStatusFromFallback(query) {
+    const assignments = query.assignments || [];
+    const completedCount = assignments.filter(a => a.status === 'completed').length;
+    const totalAssignments = assignments.length;
+    
+    const isUploadQuerySet = experimentConfig.experimentType !== 'ad-hoc' &&
+                           (!experimentData?.configuration?.querySetSelection ||
+                            experimentData.configuration.querySetSelection === 'Upload query set');
+    const isAdHocQuery = experimentData?.configuration?.querySetSelection === 'Ad hoc query';
+    const allowAnyOne = experimentConfig.allowAnyoneToJudge;
+    
+    // 1. Upload query set + allow any one = false
+    if (isUploadQuerySet && !allowAnyOne) {
+        if (totalAssignments === 0) {
+            return 'not-assigned';  // assign judges = 0
+        }
+        if (completedCount === totalAssignments) {
+            return 'completed';     // completed judges == all assigned judges
+        }
+        return 'in-progress';       // completed judges < all assigned judges
+    }
+    
+    // 2. Upload query set + allow any one = true
+    if (isUploadQuerySet && allowAnyOne) {
+        if (completedCount === 0) {
+            return 'in-progress';   // completed judge = 0
+        }
+        return 'completed';         // completed judges > 0
+    }
+    
+    // 3. Ad hoc query + allow any one = false
+    // 4. Ad hoc query + allow any one = true
+    if (isAdHocQuery) {
+        // 只有 judge 提交了一个 query 之后才有一条 query 记录
+        // 所以 query 列表里的 query 永远只有一个状态：completed
+        return 'completed';         // completed judges > 0
+    }
+    
+    // Fallback to old logic for backwards compatibility
+    if (completedCount === totalAssignments && totalAssignments > 0) {
+        return 'completed';
+    } else if (completedCount > 0) {
+        return 'in-progress';
+    }
+    return 'not-assigned';
+}
+
+/**
+ * 获取状态显示名称 (fallback version)
+ */
+function getStatusDisplayNameFromFallback(status) {
+    const statusNames = {
+        'not-assigned': 'Not Assigned',
+        'in-progress': 'In Progress',
+        'completed': 'Completed'
+    };
+    return statusNames[status] || status;
+}
+
 // Query management functions
 function createQueryRow(query) {
     const row = document.createElement('div');
@@ -981,17 +1094,13 @@ function createQueryRow(query) {
         row.style.borderLeft = 'none';
     });
     
-    // Calculate overall progress and status
+    // Calculate overall progress and status using new logic
     const assignments = query.assignments || [];
     const completedAssignments = assignments.filter(a => a.status === 'completed').length;
     const totalAssignments = assignments.length;
     
-    let overallStatus = 'not-started';
-    if (completedAssignments === totalAssignments && totalAssignments > 0) {
-        overallStatus = 'completed';
-    } else if (completedAssignments > 0) {
-        overallStatus = 'in-progress';
-    }
+    // Use new status logic
+    let overallStatus = getQueryStatusFromFallback(query);
     
     // Create assignees display - limit to 5 avatars
     const maxAvatars = 5;
@@ -1066,7 +1175,7 @@ function createQueryRow(query) {
             </div>
         </div>
         <div class="status-column">
-            <span class="status-badge status-${overallStatus}">${overallStatus}</span>
+            <span class="status-badge status-${overallStatus}">${getStatusDisplayNameFromFallback(overallStatus)}</span>
         </div>
         <div class="last-judged-column">
             ${lastJudgedAt}
